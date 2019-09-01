@@ -1,3 +1,38 @@
 # Gin App
 
-Web FrameWork Test
+Go Web FrameWork Test
+
+## Gin 是什么？
+
+Gin 是一个用 Go (Golang) 编写的 HTTP web 框架。 它是一个类似于 martini 但拥有更好性能的 API 框架, 由于 httprouter，速度提高了近 40 倍。如果你需要极好的性能，使用 Gin 吧。
+
+## 特性
+
+Gin v1 稳定的特性:
+
+* 零分配路由。
+
+* 仍然是最快的 http 路由器和框架。
+
+* 完整的单元测试支持。
+
+* 实战考验。
+
+* API 冻结，新版本的发布不会破坏你的代码。
+
+
+## 使用 [Gin](https://github.com/gin-gonic/gin) web 框架的知名项目：
+
+* [gorush](https://github.com/appleboy/gorush)：Go 编写的通知推送服务器。
+
+* [fnproject](https://github.com/fnproject/fn)：原生容器，云 serverless 平台。
+
+* [photoprism](https://github.com/photoprism/photoprism)：由 Go 和 Google TensorFlow 提供支持的个人照片管理工具。
+
+* [krakend](https://github.com/devopsfaith/krakend)：拥有中间件的超高性能 API 网关。
+
+* [picfit](https://github.com/thoas/picfit)：Go 编写的图像尺寸调整服务器。
+
+* [gotify](https://github.com/gotify/server)：使用实时 web socket 做消息收发的简单服务器。
+
+* [cds](https://github.com/ovh/cds)：企业级持续交付和 DevOps 自动化开源平台。

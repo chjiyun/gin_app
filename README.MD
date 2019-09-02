@@ -1,6 +1,7 @@
 # Gin App
 
 Go Web FrameWork Test
+[中文文档])(https://gin-gonic.com/zh-cn/docs/)
 
 ## Gin 是什么？
 

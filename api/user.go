@@ -1,19 +1,19 @@
-package index
+package api
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func Index(c *gin.Context) {
+func Users(c *gin.Context) {
 	// 你也可以使用一个结构体
 	var msg struct {
-		Name    string `json:"user"`
+		Name    string
 		Message string
-		Number  int
+		Age     int
 	}
-	msg.Name = "Lena"
+	msg.Name = "Chjiyun"
 	msg.Message = "hey, Hello World!"
-	msg.Number = http.StatusOK
+	msg.Age = 27
 	c.JSON(http.StatusOK, msg)
 }

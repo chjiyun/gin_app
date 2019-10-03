@@ -8,6 +8,14 @@ Go Web FrameWork Test
 
 Gin 是一个用 Go (Golang) 编写的 HTTP web 框架。 它是一个类似于 martini 但拥有更好性能的 API 框架, 由于 httprouter，速度提高了近 40 倍。如果你需要极好的性能，使用 Gin 吧。
 
+## 环境配置
+
+1. 设置环境变量 GOPATH，可自定义文件夹
+2. 设置module代理：
+```
+go env -w GOPROXY=https://goproxy.cn,direct
+```
+
 ## 特性
 
 Gin v1 稳定的特性:

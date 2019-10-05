@@ -1,3 +1,4 @@
 # 忽略清单
 
-*.realize.yaml
+.realize.yaml
+*.log

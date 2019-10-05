@@ -3,7 +3,9 @@ package test
 import (
 	// "encoding/json"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
+
 	// "log"
 	"net/http"
 )
@@ -39,7 +41,7 @@ func Map(c *gin.Context) {
 
 	var movies = []Movie{
 		{
-			Title: "Casablanca", Year: 1943, Color: false,
+			Title: "Casablanca", Year: 1945, Color: false,
 			Actors: []string{"Humphrey Bogart", "Ingrid Bergman"},
 		},
 		{
@@ -53,12 +55,12 @@ func Map(c *gin.Context) {
 	}
 
 	// 要初始化
-	res := Response{}
+	// res := Response{}
 
-	res.Msg = "success"
-	res.Code = http.StatusOK
-	res.Countries = countryCapitalMap
-	res.Movies = movies
+	// res.Msg = "success"
+	// res.Code = http.StatusOK
+	// res.Countries = countryCapitalMap
+	// res.Movies = movies
 
 	// data, err := json.Marshal(res)
 	// if err != nil {
@@ -66,5 +68,19 @@ func Map(c *gin.Context) {
 	// }
 	// fmt.Println(data)
 
-	c.JSON(http.StatusOK, res)
+	var query struct {
+		Page     string `json:"page"`
+		PageSize string `json:"pageSize"`
+		Name     string `json:"name"`
+	}
+	query.Page = c.DefaultQuery("page", "1")
+	query.PageSize = c.DefaultQuery("pageSize", "10")
+	query.Name = c.Query("name")
+
+	c.JSON(http.StatusOK, gin.H{
+		"msg":    "success",
+		"code":   200,
+		"movies": movies,
+		"query":  query,
+	})
 }

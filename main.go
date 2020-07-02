@@ -17,11 +17,11 @@ import (
 func main() {
 	router := gin.Default()
 
-	// 简单的路由组: v1
-	v1 := router.Group("/v1")
+	// 简单的路由组: api
+	api := router.Group("/api")
 	{
-		v1.GET("/index", api.Index)
-		v1.GET("/user", api.Users)
+		api.GET("/index", api.Index)
+		api.GET("/user", api.Users)
 	}
 	v2 := router.Group("/test")
 	{
@@ -54,5 +54,8 @@ func main() {
 	// }
 	// log.Println("Server exiting")
 
-	router.Run() // listen and serve on 0.0.0.0:8080
+	// By default it serves on :8080 unless a
+	// PORT environment variable was defined.
+	// router.Run(":3000") for a hard coded port
+	router.Run()
 }

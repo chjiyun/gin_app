@@ -13,7 +13,7 @@ func Index(c *gin.Context) {
 		Result string
 		Number string
 	}
-	x := 12345
+	x := 1234567890
 	msg.Result = "test Float"
 	msg.Number = fmt.Sprintf("x=%d", x)
 	c.JSON(http.StatusOK, msg)

@@ -18,10 +18,10 @@ func main() {
 	router := gin.Default()
 
 	// 简单的路由组: api
-	api := router.Group("/api")
+	v1 := router.Group("/api")
 	{
-		api.GET("/index", api.Index)
-		api.GET("/user", api.Users)
+		v1.GET("/index", api.Index)
+		v1.GET("/user", api.Users)
 	}
 	v2 := router.Group("/test")
 	{

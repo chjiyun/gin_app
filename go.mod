@@ -24,7 +24,7 @@ require (
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
-	golang.org/x/sys v0.0.0-20200819091447-39769834ee22 // indirect
+	golang.org/x/sys v0.0.0-20200819141100-7c7a22168250 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect

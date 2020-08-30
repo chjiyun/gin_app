@@ -22,9 +22,10 @@ require (
 	github.com/oxequa/realize v2.0.2+incompatible // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
-	github.com/sirupsen/logrus v1.4.2 // indirect
-	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c // indirect
-	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 // indirect
+	github.com/sirupsen/logrus v1.6.0 // indirect
+	github.com/stretchr/objx v0.3.0 // indirect
+	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
+	golang.org/x/sys v0.0.0-20200828194041-157a740278f4 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect

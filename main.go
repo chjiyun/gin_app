@@ -22,11 +22,14 @@ func main() {
 	{
 		v1.GET("/index", api.Index)
 		v1.GET("/user", api.Users)
+		v1.GET("/img", api.GetImg)
 	}
 	v2 := router.Group("/test")
 	{
-		v2.GET("/index", test.DataType)
+		v2.GET("/index", test.For)
 		v2.GET("/map", test.Map)
+		v2.GET("/arr", test.Arr)
+		v2.GET("/json", test.Json)
 	}
 
 	// srv := &http.Server{

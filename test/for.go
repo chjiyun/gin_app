@@ -2,11 +2,13 @@ package test
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
+
 // DataType 测试数据类型
-func DataType(c *gin.Context) {
+func For(c *gin.Context) {
 	x := "hello"
 	// for _, x := range x {
 	// 	n := x + 'A' - 'a'
@@ -14,7 +16,7 @@ func DataType(c *gin.Context) {
 	// }
 
 	// for i, r := range "Hello, 世界" {
-  //   fmt.Printf("%d\t%q\t%d\n", i, r, r)
+	//   fmt.Printf("%d\t%q\t%d\n", i, r, r)
 	// }
 
 	// i := 0;
@@ -29,16 +31,16 @@ func DataType(c *gin.Context) {
 	// 	fmt.Println()
 	// }
 
-	OuterLoop:
-    for i := 0; i < 2; i++ {
-			for j := 0; j < 5; j++ {
-				switch j {
-					case 2, 3:
-						fmt.Println(i, j)
-						break OuterLoop
-				}
+OuterLoop:
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 5; j++ {
+			switch j {
+			case 2, 3:
+				fmt.Println(i, j)
+				break OuterLoop
 			}
 		}
-	
+	}
+
 	c.JSON(http.StatusOK, x)
 }

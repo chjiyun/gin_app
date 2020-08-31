@@ -30,6 +30,7 @@ func main() {
 		v2.GET("/map", test.Map)
 		v2.GET("/arr", test.Arr)
 		v2.GET("/json", test.Json)
+		v2.GET("/str", test.String)
 	}
 
 	// srv := &http.Server{

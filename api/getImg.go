@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -24,10 +25,10 @@ type ImgInfo struct {
 
 // GetImg 获取远程图片并返回
 func GetImg(c *gin.Context) {
-	x := "hello"
+	// x := "hello"
 	res, err := http.Get("https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN")
 	if err != nil {
-		fmt.Println("err1:", err)
+		fmt.Println("info err:", err)
 		return
 	}
 	defer res.Body.Close()
@@ -55,7 +56,7 @@ func GetImg(c *gin.Context) {
 	// 方法二：解析为json对象
 	bingRes := BingRes{}
 	json.NewDecoder(res.Body).Decode(&bingRes)
-	fmt.Println("bingRes:", bingRes)
+	// fmt.Println("bingRes:", bingRes)
 	str := bingRes.Images[0].URL
 	// 最高效的字符串拼接方式
 	var build strings.Builder
@@ -66,11 +67,19 @@ func GetImg(c *gin.Context) {
 
 	res1, err := http.Get(imgURL)
 	if err != nil {
-		fmt.Println("err2:", err)
+		fmt.Println("img err:", err)
 		return
 	}
 	defer res1.Body.Close()
-	fmt.Println(res1.Body)
 
-	c.JSON(http.StatusOK, x)
+	// ioutil.ReadAll会将全部的数据加载到内存
+	// buf, err := ioutil.ReadAll(res1.Body)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// // c.File(imageName)
+	// c.Writer.WriteString(string(buf))
+
+	// 使用固定的32K缓冲区，因此无论源数据多大，都只会占用32K内存空间
+	io.Copy(c.Writer, res1.Body)
 }

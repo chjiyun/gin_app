@@ -1,10 +1,13 @@
 package api
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -56,14 +59,16 @@ func GetImg(c *gin.Context) {
 	// 方法二：解析为json对象
 	bingRes := BingRes{}
 	json.NewDecoder(res.Body).Decode(&bingRes)
-	// fmt.Println("bingRes:", bingRes)
+	// 打印返回信息
+	fmt.Println("bingRes:", bingRes)
+
 	str := bingRes.Images[0].URL
 	// 最高效的字符串拼接方式
 	var build strings.Builder
 	build.WriteString("https://cn.bing.com")
 	build.WriteString(str)
 	imgURL := build.String()
-	fmt.Println(imgURL)
+	fmt.Println("imgURL:", imgURL)
 
 	res1, err := http.Get(imgURL)
 	if err != nil {
@@ -82,4 +87,32 @@ func GetImg(c *gin.Context) {
 
 	// 使用固定的32K缓冲区，因此无论源数据多大，都只会占用32K内存空间
 	io.Copy(c.Writer, res1.Body)
+
+	filename := "./files" + bingRes.Images[0].Hsh + ".jpg"
+	c.File(filename)
+
+	var f *os.File
+	var err1 error
+	if checkFileIsExist(filename) { //如果文件存在
+		// f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
+		fmt.Println("文件存在")
+	} else {
+		f, err1 = os.Create(filename) //创建文件
+	}
+	defer f.Close()
+	if err1 != nil {
+		panic(err1)
+	}
+	w := bufio.NewWriter(f) //创建新的 Writer 对象
+	buf, _ := ioutil.ReadAll(res1.Body)
+	n, _ := w.WriteString(buf)
+	fmt.Printf("写入 %d 个字节n", n)
+	w.Flush()
+}
+
+func checkFileIsExist(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }

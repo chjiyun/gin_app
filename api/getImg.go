@@ -2,6 +2,7 @@ package api
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -77,25 +78,24 @@ func GetImg(c *gin.Context) {
 	}
 	defer res1.Body.Close()
 
-	// ioutil.ReadAll会将全部的数据加载到内存
-	// buf, err := ioutil.ReadAll(res1.Body)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// // c.File(imageName)
-	// c.Writer.WriteString(string(buf))
+	// Body 是 ReadCloser,只能读一次,不能 Seek ,只能把 Body 读出来, 保存到 buffer里面
+	imgByte, err1 := ioutil.ReadAll(res1.Body)
+	if err1 != nil {
+		fmt.Println(err1)
+		return
+	}
+	res1.Body = ioutil.NopCloser(bytes.NewReader(imgByte))
 
 	// 使用固定的32K缓冲区，因此无论源数据多大，都只会占用32K内存空间
 	io.Copy(c.Writer, res1.Body)
 
-	filename := "./files" + bingRes.Images[0].Hsh + ".jpg"
-	c.File(filename)
+	filename := "./files/" + bingRes.Images[0].Hsh + ".jpg"
 
 	var f *os.File
-	var err1 error
 	if checkFileIsExist(filename) { //如果文件存在
 		// f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
 		fmt.Println("文件存在")
+		return
 	} else {
 		f, err1 = os.Create(filename) //创建文件
 	}
@@ -103,11 +103,19 @@ func GetImg(c *gin.Context) {
 	if err1 != nil {
 		panic(err1)
 	}
-	w := bufio.NewWriter(f) //创建新的 Writer 对象
-	buf, _ := ioutil.ReadAll(res1.Body)
-	n, _ := w.WriteString(buf)
-	fmt.Printf("写入 %d 个字节n", n)
-	w.Flush()
+	writer := bufio.NewWriter(f) //创建新的 Writer 对象
+
+	// bytes, err1 := ioutil.ReadAll(res1.Body) // stream to byte
+	// var buf bytes.Buffer
+	// buf.ReadFrom(res1.Body)
+	// bytes := buf.Bytes() // stream to byte
+	if err1 != nil {
+		fmt.Println(err1)
+	}
+	n, _ := writer.Write(imgByte)
+	fmt.Printf("写入 %d 个字节\n", n)
+	writer.Flush()
+
 }
 
 func checkFileIsExist(filename string) bool {

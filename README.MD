@@ -16,6 +16,19 @@ Gin 是一个用 Go (Golang) 编写的 HTTP web 框架。 它是一个类似于 
 go env -w GOPROXY=https://goproxy.cn,direct
 ```
 
+## 打包
+
+```cmd
+# Windows下编译 Linux平台的64位可执行程序：
+SET CGO_ENABLED=0
+SET GOOS=linux
+SET GOARCH=amd64
+go build -o .\build\ .\main.go
+# Mac下编译Linux, Windows平台的64位可执行程序：
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
+```
+
 ## 特性
 
 Gin v1 稳定的特性:

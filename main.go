@@ -31,6 +31,7 @@ func main() {
 		v2.GET("/arr", test.Arr)
 		v2.GET("/json", test.Json)
 		v2.GET("/str", test.String)
+		v2.GET("/int", test.Int)
 	}
 
 	// srv := &http.Server{

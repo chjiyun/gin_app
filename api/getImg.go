@@ -69,7 +69,6 @@ func GetImg(c *gin.Context) {
 	build.WriteString("https://cn.bing.com")
 	build.WriteString(str)
 	imgURL := build.String()
-	fmt.Println("imgURL:", imgURL)
 
 	res1, err := http.Get(imgURL)
 	if err != nil {

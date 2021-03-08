@@ -23,6 +23,11 @@ func main() {
 		v1.GET("/index", api.Index)
 		v1.GET("/user", api.Users)
 		v1.GET("/img", api.GetImg)
+
+		file := v1.Group("/file")
+		file.GET("/:id", api.Download)
+		file.POST("/upload", api.Upload)
+		file.POST("/word", api.ExtractWord)
 	}
 	v2 := router.Group("/test")
 	{

@@ -2,18 +2,40 @@
 
 Go Web FrameWork Test
 
-[中文文档](https://gin-gonic.com/zh-cn/docs/)
+[Gin中文文档](https://gin-gonic.com/zh-cn/docs/)
 
-## Gin 是什么？
-
-Gin 是一个用 Go (Golang) 编写的 HTTP web 框架。 它是一个类似于 martini 但拥有更好性能的 API 框架, 由于 httprouter，速度提高了近 40 倍。如果你需要极好的性能，使用 Gin 吧。
 
 ## 环境配置
-
-1. 设置环境变量 GOPATH，可自定义文件夹
-2. 设置module代理：
+1. 安装golang，[官网地址](https://golang.google.cn/)
+2. 设置环境变量 GOPATH，可自定义文件夹
+3. 设置module代理：
 ```
 go env -w GOPROXY=https://goproxy.cn,direct
+```
+4. 初始化air
+```
+# install for macOS, Linux, Windows
+# binary will be $(go env GOPATH)/bin/air
+curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+# 配置文件：./.air.toml
+```
+5. 安装依赖
+```
+go mod download
+```
+
+
+## 启动
+
+### 原生方式
+```
+go run ./main.go
+```
+
+### air插件
+根目录直接运行如下命令
+```
+air
 ```
 
 ## 打包
@@ -45,6 +67,11 @@ nohup ./main 1>gin_app.log 2>error.log &
 * 2>&1表示错误信息输出到标准输出,即输出同1>后面的位置,当然也可以直接指定新文件名(如 err.log).
 * 最后的& 表示程序后台运行
 
+
+
+## Gin 是什么？
+
+Gin 是一个用 Go (Golang) 编写的 HTTP web 框架。 它是一个类似于 martini 但拥有更好性能的 API 框架, 由于 httprouter，速度提高了近 40 倍。如果你需要极好的性能，使用 Gin 吧。
 
 ## 特性
 

@@ -91,7 +91,7 @@ func GetImg(c *gin.Context) {
 	filename := "./files/" + bingRes.Images[0].Hsh + ".jpg"
 
 	var f *os.File
-	if checkFileIsExist(filename) { //如果文件存在
+	if CheckFileIsExist(filename) { //如果文件存在
 		// f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
 		fmt.Println("文件存在")
 		return
@@ -117,7 +117,8 @@ func GetImg(c *gin.Context) {
 
 }
 
-func checkFileIsExist(filename string) bool {
+// CheckFileIsExist 检查文件是否存在
+func CheckFileIsExist(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return false
 	}

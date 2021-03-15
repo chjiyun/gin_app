@@ -18,7 +18,8 @@ func Upload(c *gin.Context) {
 	file, _ := c.FormFile("file")
 
 	filename := filepath.Join("files", file.Filename)
-	// filetype := filepath.Ext(file.Filename)
+	filetype := filepath.Ext(file.Filename)
+	filetype = string([]rune(filetype)[1:])
 	// Upload the file to specific dst.
 	err := c.SaveUploadedFile(file, filename)
 	if err != nil {
@@ -28,7 +29,7 @@ func Upload(c *gin.Context) {
 	path, _ := os.Getwd()
 	path = filepath.Join(path, filename)
 
-	c.JSON(http.StatusOK, util.ResponseMsg{Code: 200, Msg: "success", Data: gin.H{"filepath": path}})
+	c.JSON(http.StatusOK, util.ResponseMsg{Code: 200, Msg: "success", Data: gin.H{"filepath": path, "filetype": filetype}})
 }
 
 // Download 下载文件

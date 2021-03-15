@@ -1,4 +1,4 @@
-package util
+package schedule
 
 import (
 	"fmt"
@@ -7,21 +7,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-// json返回体
-type ResponseMsg struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
-}
-
-type GinSchedule struct {
-	Cron      string
-	Immediate bool
-	Disable   bool
-	Task      func() interface{}
-}
-
-func initSchedule() {
+func getBingImg() {
 	// 新建一个定时任务对象
 	// 根据cron表达式进行时间调度，cron可以精确到秒，大部分表达式格式也是从秒开始。
 	//crontab := cron.New()  默认从分开始进行时间调度

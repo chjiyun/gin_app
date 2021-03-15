@@ -5,12 +5,6 @@ import (
 	"gin_app/api"
 	"gin_app/test"
 
-	// "log"
-	// "net/http"
-	// "os"
-	// "os/signal"
-	// "time"
-
 	"github.com/gin-gonic/gin"
 )
 

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -88,7 +89,7 @@ func GetImg(c *gin.Context) {
 	// 使用固定的32K缓冲区，因此无论源数据多大，都只会占用32K内存空间
 	io.Copy(c.Writer, res1.Body)
 
-	filename := "./files/" + bingRes.Images[0].Hsh + ".jpg"
+	filename := filepath.Join("files", bingRes.Images[0].Hsh+".jpg")
 
 	var f *os.File
 	if CheckFileIsExist(filename) { //如果文件存在

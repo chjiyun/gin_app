@@ -2,6 +2,7 @@ package main
 
 import (
 	// "context"
+
 	"gin_app/api"
 	"gin_app/test"
 
@@ -57,6 +58,8 @@ func main() {
 	// 	log.Fatal("Server Shutdown:", err)
 	// }
 	// log.Println("Server exiting")
+
+	// util.InitSchedule()
 
 	// By default it serves on :8080 unless a
 	// PORT environment variable was defined.

@@ -2,15 +2,21 @@ package schedule
 
 import (
 	"fmt"
-	"gin_app/util"
 	"time"
 )
 
-func GetBingImg() util.GinSchedule {
-	task := util.GinSchedule{
+type GinSchedule struct {
+	Cron      string `json:"cron"`
+	Immediate bool   `json:"immediate"`
+	Disable   bool   `json:"disable"`
+	Task      func()
+}
+
+// 定时获取必应的壁纸
+func GetBingImg() GinSchedule {
+	task := GinSchedule{
 		Cron:      "*/5 * * * * ?",
 		Immediate: true,
-		// Disable: true,
 	}
 	task.Task = func() {
 		fmt.Println("hello world", time.Now())

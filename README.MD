@@ -64,7 +64,12 @@ go build -o .\build\ .\main.go
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
 
-# 打包完成后，将二进制文件放到linux服务器，赋可执行权限:
+# xshell将文件上传到服务器
+# -v, --verbose:输出传输过程中的提示信息
+# -y, --overwrite:存在同名文件则替换
+rz -y -v
+
+# 赋可执行权限:
 chmod 773 main
 # 可直接运行：
 ./main

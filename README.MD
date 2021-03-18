@@ -46,6 +46,7 @@ SET CGO_ENABLED=0
 SET GOOS=linux
 SET GOARCH=amd64
 go build -o .\build\ .\main.go
+
 # Mac下编译Linux, Windows平台的64位可执行程序：
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go

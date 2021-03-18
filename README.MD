@@ -47,7 +47,7 @@ air
 SET CGO_ENABLED=0
 SET GOOS=linux
 SET GOARCH=amd64
-go build -o -x .\build\ .\main.go
+go build -o .\build\ .\main.go
 ```
 
 2. powershell

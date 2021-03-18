@@ -81,7 +81,7 @@ chmod 773 main
 # 如果已经运行先杀进程 
 lsof -i:3000
 kill pid
-nohup ./main 1>gin_app.log 2>error.log &
+nohup ./main 1>gin_app.log 2>error.log & echo $! > pid.txt
 ```
 
 * 其中数字1代表标准输出,2代表错误信息输出,还有未使用的标准输入即数字0.

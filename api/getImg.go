@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"gin_app/util"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -92,7 +93,7 @@ func GetImg(c *gin.Context) {
 	filename := filepath.Join("files", bingRes.Images[0].Hsh+".jpg")
 
 	var f *os.File
-	if CheckFileIsExist(filename) { //如果文件存在
+	if util.CheckFileIsExist(filename) { //如果文件存在
 		// f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
 		fmt.Println("文件存在")
 		return
@@ -105,10 +106,6 @@ func GetImg(c *gin.Context) {
 	}
 	writer := bufio.NewWriter(f) //创建新的 Writer 对象
 
-	// bytes, err1 := ioutil.ReadAll(res1.Body) // stream to byte
-	// var buf bytes.Buffer
-	// buf.ReadFrom(res1.Body)
-	// bytes := buf.Bytes() // stream to byte
 	if err1 != nil {
 		fmt.Println(err1)
 	}
@@ -116,12 +113,4 @@ func GetImg(c *gin.Context) {
 	fmt.Printf("写入 %d 个字节\n", n)
 	writer.Flush()
 
-}
-
-// CheckFileIsExist 检查文件是否存在
-func CheckFileIsExist(filename string) bool {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return false
-	}
-	return true
 }

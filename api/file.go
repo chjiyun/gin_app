@@ -37,7 +37,7 @@ func Download(c *gin.Context) {
 	id := c.Param("id")
 	path := filepath.Join("files", id)
 	fmt.Println(path)
-	if !CheckFileIsExist(path) {
+	if !util.CheckFileIsExist(path) {
 		c.String(http.StatusOK, "file not found")
 		return
 	}

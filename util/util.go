@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"os"
 	"reflect"
 )
 
@@ -19,4 +20,12 @@ func Call(m map[string]interface{}, fnName string, params ...interface{}) (resul
 	}
 	result = f.Call(in)
 	return result, nil
+}
+
+// CheckFileIsExist 检查文件是否存在
+func CheckFileIsExist(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }

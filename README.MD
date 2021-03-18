@@ -40,13 +40,26 @@ air
 
 ## 打包
 
+ Windows下编译 Linux平台的64位可执行程序：
+ 1. cmd
+
 ```cmd
-# Windows下编译 Linux平台的64位可执行程序：
 SET CGO_ENABLED=0
 SET GOOS=linux
 SET GOARCH=amd64
 go build -o -x .\build\ .\main.go
+```
 
+2. powershell
+
+```powershell
+$env:CGO_ENABLED=0
+$env:GOOS="linux"
+$env:GOARCH="amd64"
+go build -o .\build\ .\main.go
+```
+
+```
 # Mac下编译Linux, Windows平台的64位可执行程序：
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
@@ -60,6 +73,9 @@ chmod 773 main
 ## linux后台运行
 
 ```shell
+# 如果已经运行先杀进程 
+lsof -i:3000
+kill pid
 nohup ./main 1>gin_app.log 2>error.log &
 ```
 

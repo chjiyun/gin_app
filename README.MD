@@ -51,7 +51,7 @@ go build -o -x .\build\ .\main.go
 ```
 
 2. powershell
-
+注意：此方式打包后记得关闭当前shell窗口
 ```powershell
 $env:CGO_ENABLED=0
 $env:GOOS="linux"
@@ -69,9 +69,9 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
 # -y, --overwrite:存在同名文件则替换
 rz -y -v
 
-# 赋可执行权限:
+# 赋可执行权限
 chmod 773 main
-# 可直接运行：
+# 可直接运行（退出即程序终止）
 ./main
 ```
 

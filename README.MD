@@ -59,7 +59,7 @@ $env:GOARCH="amd64"
 go build -o .\build\ .\main.go
 ```
 
-```
+```shell
 # Mac下编译Linux, Windows平台的64位可执行程序：
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
@@ -68,18 +68,21 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
 # -v, --verbose:输出传输过程中的提示信息
 # -y, --overwrite:存在同名文件则替换
 rz -y -v
+```
 
+## linux后台运行
+
+```shell
 # 赋可执行权限
 chmod 773 main
 # 可直接运行（退出即程序终止）
 ./main
 ```
 
-## linux后台运行
-
+或者后台启动
 ```shell
 # 如果已经运行先杀进程 
-lsof -i:3000
+lsof -i:8000
 kill pid
 nohup ./main 1>gin_app.log 2>error.log & echo $! > pid.txt
 ```

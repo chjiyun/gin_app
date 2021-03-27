@@ -33,6 +33,7 @@ func main() {
 		v2.GET("/json", test.Json)
 		v2.GET("/str", test.String)
 		v2.GET("/int", test.Int)
+		v2.GET("/snowflake", test.Snowflake)
 	}
 
 	// srv := &http.Server{

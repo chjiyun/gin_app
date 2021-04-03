@@ -97,6 +97,23 @@ nohup ./main 1>info_2021_03_27.log 2>error.log & echo $! > pid.txt
 ./build.sh
 ```
 
+# linux安装go
+
+请前往golang [官网下载页面](https://golang.google.cn/dl/)，复制文件链接地址
+
+```shell
+# 下载压缩包
+wget https://golang.google.cn/dl/go1.16.3.linux-amd64.tar.gz
+# 解压
+tar -C /usr/local -xzf go1.16.3.linux-amd64.tar.gz
+# ~/.profile 文件末尾添加环境变量
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+# 生效
+source ~/.profile
+```
+
 ## Gin 是什么？
 
 Gin 是一个用 Go (Golang) 编写的 HTTP web 框架。 它是一个类似于 martini 但拥有更好性能的 API 框架, 由于 httprouter，速度提高了近 40 倍。如果你需要极好的性能，使用 Gin 吧。

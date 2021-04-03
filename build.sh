@@ -5,7 +5,7 @@ projectName=`basename $pwd`
 # 编译的分支
 branch="master"
 # 编译后的输出文件名称，赋值当前项目文件名
-targetFile=projectName
+targetFile="$projectName"
 # 编译的包名
 buildPkg="main.go"
 # 编译结果
@@ -18,6 +18,7 @@ today="$(date "+%Y_%m_%d")"
 logDir="/root/logs/${projectName}"
 info_log="${logDir}/info_${today}.log"
 error_log="${logDir}/error_${today}.log"
+
 
 echo "项目路径：${pwd}"
 
@@ -48,6 +49,20 @@ echo "build error $buildResult"
 exit
 fi
 
+if [ ! -d "$logDir" ]; then
+  mkdir "$logDir"
+fi
+
+if [ ! -f "$info_log" ]; then
+  touch "$info_log"
+fi
+
+if [ ! -f "$error_log" ]; then
+  touch "$error_log"
+fi
+
 nohup ${targetFile} 1>${info_log} 2>${error_log} & echo $! > $pidFile
 
-echo "deploy success"
+echo "------new pid: $(<$pidFile)"
+
+echo "deploy success..."

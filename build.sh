@@ -11,7 +11,7 @@ buildPkg="main.go"
 # 编译结果
 buildResult=""
 
-pidFile="./pid.txt"
+pidFile="pid.txt"
 
 today="$(date "+%Y_%m_%d")"
 # 日志存放路径
@@ -32,7 +32,8 @@ git checkout "$branch"
 git pull
 
 if [ -f $pidFile ]; then
-  pid=$(cat $pidFile)
+  # pid=$(cat $pidFile)
+  pid=$(<$pidFile)
   echo "Prepare to kill the process: ${pid}"
   kill -9 $pid
 fi

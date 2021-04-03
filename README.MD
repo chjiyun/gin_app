@@ -38,7 +38,7 @@ go run ./main.go
 air
 ```
 
-## 打包
+## 打包（交叉编译）
 
  Windows下编译 Linux平台的64位可执行程序：
  1. cmd
@@ -92,7 +92,10 @@ nohup ./main 1>info_2021_03_27.log 2>error.log & echo $! > pid.txt
 * 2>&1表示错误信息输出到标准输出,即输出同1>后面的位置,当然也可以直接指定新文件名(如 err.log).
 * 最后的& 表示程序后台运行
 
-
+## 一键部署
+```shell
+./build.sh
+```
 
 ## Gin 是什么？
 

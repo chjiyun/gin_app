@@ -94,6 +94,7 @@ nohup ./main 1>info_2021_03_27.log 2>error.log & echo $! > pid.txt
 
 ## 一键部署
 ```shell
+chmod 755 ./build.sh
 ./build.sh
 ```
 

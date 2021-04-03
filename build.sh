@@ -61,7 +61,7 @@ if [ ! -f "$error_log" ]; then
   touch "$error_log"
 fi
 
-nohup ${targetFile} 1>${info_log} 2>${error_log} & echo $! > $pidFile
+nohup "${targetFile}" 1>"${info_log}" 2>"${error_log}" & echo $! > "$pidFile"
 
 echo "------new pid: $(<$pidFile)"
 

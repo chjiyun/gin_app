@@ -1,18 +1,19 @@
 package test
 
 import (
-	"gin_app/util"
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yitter/idgenerator-go/idgen"
 )
 
 // 并发测试
 func Snowflake(c *gin.Context) {
-	node := util.SnowFlakeID()
+	// node := util.SnowFlakeID()
+
 	var wg sync.WaitGroup
 
-	ch := make(chan int64, 10000)
+	ch := make(chan uint64, 10000)
 	count := 10000
 	wg.Add(count)
 	defer close(ch)
@@ -20,23 +21,30 @@ func Snowflake(c *gin.Context) {
 	for i := 0; i < count; i++ {
 		go func() {
 			defer wg.Done()
-			id := node.Generate()
-			ch <- id.Int64()
+			id := idgen.NextId()
+			ch <- id
 		}()
 	}
 	wg.Wait()
 
-	var con = make(map[int64]int)
+	// var con = make(map[uint64]int)
+	// for i := 0; i < count; i++ {
+	// 	id := <-ch
+	// 	// 如果 map 中存在为 id 的 key, 说明生成的 snowflake ID 有重复
+	// 	_, ok := con[id]
+	// 	if ok {
+	// 		c.JSON(200, gin.H{"repeat id": id})
+	// 		return
+	// 	}
+	// 	// 将 id 作为 key 存入 map
+	// 	con[id] = i
+	// }
+
+	var arr = make([]uint64, count)
 	for i := 0; i < count; i++ {
 		id := <-ch
-		// 如果 map 中存在为 id 的 key, 说明生成的 snowflake ID 有重复
-		_, ok := con[id]
-		if ok {
-			c.JSON(200, gin.H{"repeat id": id})
-			return
-		}
-		// 将 id 作为 key 存入 map
-		con[id] = i
+		arr[i] = id
 	}
-	c.JSON(200, con)
+
+	c.JSON(200, arr)
 }

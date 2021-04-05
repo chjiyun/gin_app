@@ -8,6 +8,7 @@ import (
 	"gin_app/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yitter/idgenerator-go/idgen"
 )
 
 func main() {
@@ -62,6 +63,9 @@ func main() {
 	// log.Println("Server exiting")
 
 	util.InitSchedule()
+
+	var options = idgen.NewIdGeneratorOptions(1)
+	idgen.SetIdGenerator(options)
 
 	// By default it serves on :8080 unless a
 	// PORT environment variable was defined.

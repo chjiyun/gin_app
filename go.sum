@@ -97,6 +97,8 @@ github.com/ugorji/go/codec v1.2.4 h1:C5VurWRRCKjuENsbM6GYVw8W++WVW9rSxoACKIvxzz8
 github.com/ugorji/go/codec v1.2.4/go.mod h1:bWBu1+kIRWcF8uMklKaJrR6fTWQOwAlrIzX22pHwryA=
 github.com/yitter/idgenerator-go v1.2.0 h1:9CfsK221ZjRERDCTfB8BDz4m4p7lPLn29TuaZJnHh+s=
 github.com/yitter/idgenerator-go v1.2.0/go.mod h1:deK22wMXrJDoL1Dz3mEUAucinShpKXBva66fujgkUTQ=
+github.com/yitter/idgenerator-go v1.2.1 h1:htc30omwo8R6J5ojx2zfonFYGDiRKT4BKkfp1t2y6yQ=
+github.com/yitter/idgenerator-go v1.2.1/go.mod h1:L39fTCgADiyfyJbSMB2MrxLnrXaUi61FS/orKNN5f34=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 h1:/ZScEX8SfEmUGRHs0gxpqteO5nfNW6axyZbBdw9A12g=

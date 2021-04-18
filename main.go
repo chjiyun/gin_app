@@ -35,6 +35,7 @@ func main() {
 		v2.GET("/str", test.String)
 		v2.GET("/int", test.Int)
 		v2.GET("/snowflake", test.Snowflake)
+		v2.GET("/chan", test.Channel)
 	}
 
 	// srv := &http.Server{

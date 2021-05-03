@@ -2,8 +2,10 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
+	"time"
 )
 
 // Call 反射动态调用函数
@@ -39,3 +41,12 @@ func CheckFileIsExist(filename string) bool {
 // 	}
 // 	return node
 // }
+
+// TimeCost 函数耗时统计
+func TimeCost() func() {
+	start := time.Now()
+	return func() {
+		tc := time.Since(start)
+		fmt.Printf("time cost = %v\n", tc)
+	}
+}

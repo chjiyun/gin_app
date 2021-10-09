@@ -3,6 +3,7 @@ package main
 import (
 	// "context"
 
+	"fmt"
 	"gin_app/api"
 	"gin_app/test"
 	"gin_app/util"
@@ -63,10 +64,11 @@ func main() {
 	// }
 	// log.Println("Server exiting")
 
-	util.InitSchedule()
-
 	var options = idgen.NewIdGeneratorOptions(1)
 	idgen.SetIdGenerator(options)
+	fmt.Println("雪花算法生成器初始化完成>>>")
+
+	util.InitSchedule()
 
 	// By default it serves on :8080 unless a
 	// PORT environment variable was defined.

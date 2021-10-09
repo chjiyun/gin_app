@@ -24,6 +24,14 @@ curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh
 go mod download
 ```
 
+6. 依赖管理
+```
+# 升级依赖
+go get -u -d github.com/gin-gonic/gin
+# 补全清理依赖
+go mod tidy
+```
+
 
 ## 启动
 

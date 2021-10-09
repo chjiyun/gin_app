@@ -11,12 +11,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yitter/idgenerator-go/idgen"
 )
 
 // BingRes 接收接口响应
@@ -93,19 +91,18 @@ func GetImg(c *gin.Context) {
 	// 使用固定的32K缓冲区，因此无论源数据多大，都只会占用32K内存空间
 	io.Copy(c.Writer, res1.Body)
 
-	date := time.Now().Format("2006-01-02")
-	id := strconv.FormatUint(idgen.NextId(), 10)
-	filename := filepath.Join("files", date+"."+id+".jpg")
+	fileName := time.Now().Format("2006-01-02") + "." + bingRes.Images[0].Hsh[:16] + ".jpg"
+	sourcePath := filepath.Join("files", fileName)
 
 	var f *os.File
-	if util.CheckFileIsExist(filename) { //如果文件存在
-		// f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
-		fmt.Println("文件存在")
+	defer f.Close()
+	if util.CheckFileIsExist(sourcePath) { //如果文件存在
+		// f, err1 = os.OpenFile(sourcePath, os.O_APPEND, 0666) //打开文件
+		fmt.Println("文件已存在")
 		return
 	} else {
-		f, err1 = os.Create(filename) //创建文件
+		f, err1 = os.Create(sourcePath) //创建文件
 	}
-	defer f.Close()
 	if err1 != nil {
 		panic(err1)
 	}

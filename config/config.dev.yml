@@ -1,0 +1,6 @@
+# 本地 redis
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: yuanbao@2018
+  db: 0

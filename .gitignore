@@ -8,3 +8,4 @@ main
 files/
 pid.txt
 gin_app
+logs/

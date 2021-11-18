@@ -5,6 +5,7 @@ import (
 
 	"fmt"
 	"gin_app/api"
+	"gin_app/config"
 	"gin_app/test"
 	"gin_app/util"
 
@@ -13,6 +14,9 @@ import (
 )
 
 func main() {
+	// 初始化配置
+	config.Init()
+
 	router := gin.Default()
 
 	// 简单的路由组: api
@@ -73,5 +77,5 @@ func main() {
 	// By default it serves on :8080 unless a
 	// PORT environment variable was defined.
 	// router.Run(":8000") for a hard coded port
-	router.Run(":8000")
+	router.Run(":" + config.Cfg.Server.Port)
 }

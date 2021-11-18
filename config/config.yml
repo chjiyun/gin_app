@@ -1,0 +1,17 @@
+name: GIN_APP
+# 环境标识
+env: dev
+
+server: 
+  port: 8000
+
+# redis:
+#   host: 127.0.0.1
+#   port: 6379
+#   password: yuanbao@2018
+#   db: 0
+
+# 日志
+log:
+  filename: gin_app
+

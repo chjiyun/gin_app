@@ -8,6 +8,7 @@ import (
 	"gin_app/util"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -64,7 +65,8 @@ func GetImg(c *gin.Context) {
 	bingRes := BingRes{}
 	json.NewDecoder(res.Body).Decode(&bingRes)
 	// 打印返回信息
-	fmt.Println("bingRes:", bingRes)
+	log.Println("bingRes:", bingRes)
+	// fmt.Println("bingRes:", bingRes)
 
 	str := bingRes.Images[0].URL
 	// 最高效的字符串拼接方式

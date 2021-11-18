@@ -14,9 +14,9 @@ bin = "tmp/main"
 # Customize binary.  linux: APP_ENV=dev APP_USER=air ./tmp/main
 full_bin = "./tmp/main"
 # Watch these filename extensions.
-include_ext = ["go", "tpl", "tmpl", "html"]
+include_ext = ["go", "tpl", "tmpl", "html", "yml"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["assets", "tmp", "vendor"]
+exclude_dir = ["assets", "tmp", "vendor", "logs"]
 # Watch these directories if you specified.
 include_dir = []
 # Exclude files.

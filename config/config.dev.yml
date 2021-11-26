@@ -9,7 +9,4 @@ datasource:
     model: model
     dialect: mysql
     dsn: chjiyun:chjiyun@2020@tcp(101.133.159.158:3306)/egg_test?charset=utf8&parseTime=True&loc=Local
-  -
-    model: modelXC
-    dialect: mysql
-    dsn: hd_dev:Veily@2018@tcp(121.36.23.196:8221)/xc_dev_3?charset=utf8&parseTime=True&loc=Local
+

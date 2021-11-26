@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"gin_app/api"
 	"gin_app/config"
+	"gin_app/middleware"
+	"gin_app/service"
 	"gin_app/test"
 	"gin_app/util"
 
@@ -17,13 +19,14 @@ func main() {
 	// 初始化配置
 	config.Init()
 
-	router := gin.Default()
+	r := gin.Default()
+	r.Use(middleware.SetDB())
 
 	// 简单的路由组: api
-	v1 := router.Group("/api")
+	v1 := r.Group("/api")
 	{
 		v1.GET("/index", api.Index)
-		v1.GET("/user", api.Users)
+		v1.GET("/user", service.GetCompanies)
 		v1.GET("/img", api.GetImg)
 
 		file := v1.Group("/file")
@@ -31,7 +34,7 @@ func main() {
 		file.POST("/upload", api.Upload)
 		file.POST("/word", api.ExtractWord)
 	}
-	v2 := router.Group("/test")
+	v2 := r.Group("/test")
 	{
 		v2.GET("/index", test.For)
 		v2.GET("/map", test.Map)
@@ -45,7 +48,7 @@ func main() {
 
 	// srv := &http.Server{
 	// 	Addr:    ":8080",
-	// 	Handler: router,
+	// 	Handler: r,
 	// }
 
 	// go func() {
@@ -76,6 +79,6 @@ func main() {
 
 	// By default it serves on :8080 unless a
 	// PORT environment variable was defined.
-	// router.Run(":8000") for a hard coded port
-	router.Run(":" + config.Cfg.Server.Port)
+	// r.Run(":8000") for a hard coded port
+	r.Run(":" + config.Cfg.Server.Port)
 }

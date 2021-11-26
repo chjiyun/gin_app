@@ -50,3 +50,13 @@ func TimeCost() func() {
 		fmt.Printf("time cost = %v\n", tc)
 	}
 }
+
+// 给变量设置默认值
+func SetDefault(v, _default interface{}) {
+	v1 := reflect.ValueOf(v).Elem()
+	v2 := reflect.ValueOf(_default)
+	// 初始化完成的map 和 数组 不会被覆盖
+	if v1.IsZero() {
+		v1.Set(v2)
+	}
+}

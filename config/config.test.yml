@@ -1,0 +1,6 @@
+# redis配置
+redis:
+  addr: 127.0.0.1:6379
+  password: 123
+  db: 0
+

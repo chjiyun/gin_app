@@ -10,14 +10,20 @@ import (
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v2"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
+	"gorm.io/plugin/dbresolver"
 )
 
 type Config struct {
-	Name   string `yaml:"name"`
-	Env    string `yaml:"env"`
-	Server Server `yaml:"server"`
-	Redis  Redis  `yaml:"redis"`
-	Log    Log    `yaml:"log"`
+	Name       string       `yaml:"name"`
+	Env        string       `yaml:"env"`
+	Server     Server       `yaml:"server"`
+	Redis      Redis        `yaml:"redis"`
+	Datasource []Datasource `yaml:"datasource"`
+	Log        Log          `yaml:"log"`
 }
 type Server struct {
 	Port string `yaml:"port"`
@@ -27,8 +33,14 @@ type Redis struct {
 	Password string `yaml:"password"`
 	DB       int    `yaml:"db"`
 }
+type Datasource struct {
+	Model   string `yaml:"model"`
+	Dialect string `yaml:"dialect"`
+	Dsn     string `yaml:"dsn"`
+}
 type Log struct {
 	Filename string `yaml:"filename"`
+	Filepath string `yaml:"filepath"`
 }
 
 // 配置信息缓存
@@ -36,6 +48,9 @@ var Cfg Config
 
 // redis 实例
 var RedisDb *redis.Client
+
+// db实例指针
+var DB *gorm.DB
 
 // 初始化 config 配置
 func Init() {
@@ -53,7 +68,7 @@ func Init() {
 
 	// 原始 env名称
 	env := Cfg.Env
-	switch Cfg.Env {
+	switch env {
 	case "dev":
 		Cfg.Env = gin.DebugMode
 	case "test":
@@ -87,6 +102,8 @@ func Init() {
 	fmt.Println("merge Config:", Cfg)
 
 	redisInit()
+
+	dbInit()
 }
 
 // 解析并合并对应环境的 yml配置信息
@@ -96,6 +113,9 @@ func resloveYml() {
 
 // 初始化 redis
 func redisInit() {
+	if Cfg.Redis.Addr == "" {
+		return
+	}
 	// 定义一个 reids的 options 结构体
 	var options redis.Options
 	// 拷贝结构体
@@ -108,10 +128,48 @@ func redisInit() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("redis is connected on", options.Addr)
+	fmt.Printf("redis is connected to %s\n", options.Addr)
 }
 
 // 初始化 db
 func dbInit() {
-
+	length := len(Cfg.Datasource)
+	if length == 0 {
+		return
+	}
+	var err error
+	// 设置sql日志级别
+	logMode := logger.Warn
+	if Cfg.Env == gin.DebugMode {
+		logMode = logger.Info
+	}
+	DB, err = gorm.Open(mysql.New(mysql.Config{
+		DSN: Cfg.Datasource[0].Dsn,
+	}), &gorm.Config{
+		Logger: logger.Default.LogMode(logMode),
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("数据源：%s 已经连接\n", Cfg.Datasource[0].Model)
+	if length == 1 {
+		return
+	}
+	// init other db
+	var dr *dbresolver.DBResolver
+	for i, ds := range Cfg.Datasource[1:] {
+		dr_cfg := dbresolver.Config{
+			Sources: []gorm.Dialector{mysql.Open(ds.Dsn)},
+		}
+		if i == 0 {
+			dr = dbresolver.Register(dr_cfg)
+		} else {
+			dr.Register(dr_cfg)
+		}
+		fmt.Printf("数据源：%s 已经连接\n", ds.Model)
+	}
+	DB.Use(dr)
 }

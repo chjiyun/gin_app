@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"gin_app/config"
 	"os"
 	"path"
 	"time"
@@ -14,8 +15,8 @@ import (
 
 // 日志记录到文件
 func LoggerToFile() gin.HandlerFunc {
-	logFilePath := config.LOG_FILE_PATH
-	logFileName := config.LOG_FILE_NAME
+	logFilePath := config.Cfg.Log.Filepath
+	logFileName := config.Cfg.Log.Filename
 	// 日志文件
 	fileName := path.Join(logFilePath, logFileName)
 	// 写入文件

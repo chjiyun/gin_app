@@ -24,7 +24,7 @@ func Call(m map[string]interface{}, fnName string, params ...interface{}) (resul
 	return result, nil
 }
 
-// CheckFileIsExist 检查文件是否存在
+// CheckFileIsExist 检查文件或目录是否存在
 func CheckFileIsExist(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return false

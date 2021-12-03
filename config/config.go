@@ -18,6 +18,7 @@ import (
 )
 
 type Config struct {
+	Basedir    string
 	Name       string       `yaml:"name"`
 	Env        string       `yaml:"env"`
 	Server     Server       `yaml:"server"`
@@ -54,6 +55,9 @@ var DB *gorm.DB
 
 // 初始化 config 配置
 func Init() {
+	// 设置根目录
+	Cfg.Basedir, _ = filepath.Abs(".")
+
 	// 解析默认基础配置文件
 	filename := filepath.Join("config", "config.yml")
 	yml, err := ioutil.ReadFile(filename)

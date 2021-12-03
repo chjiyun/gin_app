@@ -25,11 +25,12 @@ func GetCompanies(c *gin.Context) {
 		log.Panicln(res.Error)
 	}
 
-	var list []model.Company
-	tx := db.Begin()
-	tx.Exec("use egg_test")
-	tx.Table("company as c").Limit(10).Offset(offset).Find(&list)
-	tx.Commit()
+	// 切换数据库
+	// var list []model.Company
+	// tx := db.Begin()
+	// tx.Exec("use egg_test")
+	// tx.Table("company as c").Limit(10).Offset(offset).Find(&list)
+	// tx.Commit()
 
-	c.JSON(200, gin.H{"xc_dev": companies, "egg_test": list})
+	c.JSON(200, gin.H{"xc_dev": companies})
 }

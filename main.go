@@ -19,8 +19,10 @@ func main() {
 	// 初始化配置
 	config.Init()
 
-	r := gin.Default()
-	r.Use(middleware.SetDB())
+	// r := gin.Default()
+	// r.Use(middleware.SetDB())
+	r := gin.New()
+	r.Use(middleware.LoggerToFile(), middleware.SetDB(), gin.Recovery())
 
 	// 简单的路由组: api
 	v1 := r.Group("/api")

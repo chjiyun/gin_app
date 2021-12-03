@@ -1,10 +1,12 @@
 package middleware
 
 import (
-	"fmt"
 	"gin_app/config"
+	"gin_app/util"
+	"io"
 	"os"
-	"path"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,19 +19,39 @@ import (
 func LoggerToFile() gin.HandlerFunc {
 	logFilePath := config.Cfg.Log.Filepath
 	logFileName := config.Cfg.Log.Filename
+	// 生成win下的日志文件夹，相对路径
+	if runtime.GOOS == "windows" && filepath.VolumeName(logFilePath) == "" {
+		logFilePath = filepath.Join(config.Cfg.Basedir, logFilePath)
+		// 文件夹不存在则创建
+		if !util.CheckFileIsExist(logFilePath) {
+			err := os.Mkdir(logFilePath, 0666)
+			if err != nil {
+				panic(err)
+			}
+		}
+		p := filepath.Join(logFilePath, logFileName+".log")
+		if !util.CheckFileIsExist(p) {
+			os.Create(p)
+		}
+	}
+
 	// 日志文件
-	fileName := path.Join(logFilePath, logFileName)
+	fileName := filepath.Join(logFilePath, logFileName)
 	// 写入文件
-	src, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	file, err := os.OpenFile(fileName+".log", os.O_WRONLY|os.O_SYNC|os.O_APPEND, os.ModeAppend)
 	if err != nil {
-		fmt.Println("err", err)
+		panic(err)
 	}
 	// 实例化
 	logger := logrus.New()
 	// 设置输出
-	logger.Out = src
+	if config.Cfg.Env == gin.DebugMode {
+		logger.Out = io.MultiWriter(file, os.Stdout)
+	} else {
+		logger.Out = file
+	}
 	// 设置日志级别
-	logger.SetLevel(logrus.DebugLevel)
+	logger.SetLevel(logrus.InfoLevel)
 	// 设置 rotatelogs
 	logWriter, err := rotatelogs.New(
 		// 分割后的文件名称

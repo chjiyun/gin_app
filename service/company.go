@@ -1,12 +1,14 @@
 package service
 
 import (
+	"gin_app/config"
 	"gin_app/model"
 	"gin_app/util"
 	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -31,6 +33,10 @@ func GetCompanies(c *gin.Context) {
 	// tx.Exec("use egg_test")
 	// tx.Table("company as c").Limit(10).Offset(offset).Find(&list)
 	// tx.Commit()
+
+	config.Log.WithFields(logrus.Fields{
+		"animal": "walrus",
+	}).Warn("A walrus appears")
 
 	c.JSON(200, gin.H{"xc_dev": companies})
 }

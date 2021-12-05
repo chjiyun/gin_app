@@ -9,6 +9,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -24,7 +25,7 @@ type Config struct {
 	Server     Server       `yaml:"server"`
 	Redis      Redis        `yaml:"redis"`
 	Datasource []Datasource `yaml:"datasource"`
-	Log        Log          `yaml:"log"`
+	Log        Logs         `yaml:"log"`
 }
 type Server struct {
 	Port string `yaml:"port"`
@@ -39,7 +40,7 @@ type Datasource struct {
 	Dialect string `yaml:"dialect"`
 	Dsn     string `yaml:"dsn"`
 }
-type Log struct {
+type Logs struct {
 	Filename string `yaml:"filename"`
 	Filepath string `yaml:"filepath"`
 }
@@ -52,6 +53,8 @@ var RedisDb *redis.Client
 
 // db实例指针
 var DB *gorm.DB
+
+var Log = logrus.New()
 
 // 初始化 config 配置
 func Init() {

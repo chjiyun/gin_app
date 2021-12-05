@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 func Users(c *gin.Context) {
@@ -18,6 +17,5 @@ func Users(c *gin.Context) {
 	msg.Message = "hey, Hello World!"
 	msg.Age = 27
 
-	logrus.Info(msg)
 	c.JSON(http.StatusOK, msg)
 }

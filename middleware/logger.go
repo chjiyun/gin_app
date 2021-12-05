@@ -38,20 +38,24 @@ func LoggerToFile() gin.HandlerFunc {
 	// 日志文件
 	fileName := filepath.Join(logFilePath, logFileName)
 	// 写入文件
-	file, err := os.OpenFile(fileName+".log", os.O_WRONLY|os.O_SYNC|os.O_APPEND, os.ModeAppend)
+	file, err := os.OpenFile(fileName+".log", os.O_RDWR|os.O_APPEND, os.ModeAppend)
 	if err != nil {
 		panic(err)
 	}
 	// 实例化
-	logger := logrus.New()
+	// logger := logrus.New()
 	// 设置输出
 	if config.Cfg.Env == gin.DebugMode {
-		logger.Out = io.MultiWriter(file, os.Stdout)
+		w := io.MultiWriter(file, os.Stdout)
+		config.Log.SetOutput(w)
+		gin.DefaultWriter = w
 	} else {
-		logger.Out = file
+		config.Log.SetOutput(file)
 	}
 	// 设置日志级别
-	logger.SetLevel(logrus.InfoLevel)
+	config.Log.SetLevel(logrus.DebugLevel)
+	// 输出行号
+	// config.Log.SetReportCaller(true)
 	// 设置 rotatelogs
 	logWriter, err := rotatelogs.New(
 		// 分割后的文件名称
@@ -63,6 +67,9 @@ func LoggerToFile() gin.HandlerFunc {
 		// 设置日志切割时间间隔(1天)
 		rotatelogs.WithRotationTime(24*time.Hour),
 	)
+	if err != nil {
+		panic(err)
+	}
 	writeMap := lfshook.WriterMap{
 		logrus.InfoLevel:  logWriter,
 		logrus.FatalLevel: logWriter,
@@ -75,7 +82,7 @@ func LoggerToFile() gin.HandlerFunc {
 		TimestampFormat: "2006-01-02 15:04:05",
 	})
 	// 新增 Hook
-	logger.AddHook(lfHook)
+	config.Log.AddHook(lfHook)
 	return func(c *gin.Context) {
 		// 开始时间
 		startTime := time.Now()
@@ -94,7 +101,7 @@ func LoggerToFile() gin.HandlerFunc {
 		// 请求IP
 		clientIP := c.ClientIP()
 		// 日志格式
-		logger.WithFields(logrus.Fields{
+		config.Log.WithFields(logrus.Fields{
 			"status_code":  statusCode,
 			"latency_time": latencyTime,
 			"client_ip":    clientIP,

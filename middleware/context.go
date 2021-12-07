@@ -8,13 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 初始化后的 *gorm.DB 放到 gin.context
-func SetDB() gin.HandlerFunc {
+// context传递
+func SetContext() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 设置超时 Context
 		timeoutContext, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		c.Set("DB", config.DB.WithContext(timeoutContext))
+		// Add a context to the log entry.
+		c.Set("Logger", config.Logger.WithContext(c))
 		c.Next()
 	}
 }

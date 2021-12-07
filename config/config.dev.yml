@@ -1,7 +1,7 @@
 # 本地 redis
 redis:
-  addr: 101.133.159.158:6379
-  password: "@@@chjiyun"
+  addr: 127.0.0.1:6379
+  password: yuanbao@2018
   db: 0
 
 datasource:

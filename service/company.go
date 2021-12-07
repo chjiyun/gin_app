@@ -1,10 +1,8 @@
 package service
 
 import (
-	"gin_app/config"
 	"gin_app/model"
 	"gin_app/util"
-	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +13,8 @@ import (
 // 查询企业
 func GetCompanies(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
+	log := c.Value("Logger").(*logrus.Entry)
+
 	var companies []model.Company
 	page, _ := strconv.Atoi(c.Query("page"))
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
@@ -34,7 +34,7 @@ func GetCompanies(c *gin.Context) {
 	// tx.Table("company as c").Limit(10).Offset(offset).Find(&list)
 	// tx.Commit()
 
-	config.Log.WithFields(logrus.Fields{
+	log.WithFields(logrus.Fields{
 		"animal": "walrus",
 	}).Warn("A walrus appears")
 

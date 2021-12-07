@@ -22,14 +22,15 @@ func main() {
 	// r := gin.Default()
 	// r.Use(middleware.SetDB())
 	r := gin.New()
-	r.Use(middleware.LoggerToFile(), middleware.SetDB(), gin.Recovery())
+	r.Use(middleware.LoggerToFile(), middleware.SetContext(), gin.Recovery())
 
 	// 简单的路由组: api
 	v1 := r.Group("/api")
 	{
 		v1.GET("/index", api.Index)
-		v1.GET("/user", service.GetCompanies)
+		v1.GET("/user", api.Users)
 		v1.GET("/img", api.GetImg)
+		v1.GET("/company", service.GetCompanies)
 
 		file := v1.Group("/file")
 		file.GET("/:id", api.Download)

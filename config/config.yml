@@ -13,6 +13,8 @@ server:
 
 # 日志
 log:
+  # 文件名（不含文件类型）
   filename: gin_app
-  filepath: /logs
+  # 支持绝对路径（默认路径 linux: /root/logs, win: [basedir]/logs ）
+  # filepath: /root/logs
 

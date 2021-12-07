@@ -2,13 +2,21 @@ package config
 
 import (
 	"fmt"
+	"gin_app/util"
+	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"runtime"
+	"time"
 
+	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"gorm.io/driver/mysql"
@@ -25,7 +33,7 @@ type Config struct {
 	Server     Server       `yaml:"server"`
 	Redis      Redis        `yaml:"redis"`
 	Datasource []Datasource `yaml:"datasource"`
-	Log        Logs         `yaml:"log"`
+	Log        Log          `yaml:"log"`
 }
 type Server struct {
 	Port string `yaml:"port"`
@@ -40,7 +48,7 @@ type Datasource struct {
 	Dialect string `yaml:"dialect"`
 	Dsn     string `yaml:"dsn"`
 }
-type Logs struct {
+type Log struct {
 	Filename string `yaml:"filename"`
 	Filepath string `yaml:"filepath"`
 }
@@ -54,12 +62,16 @@ var RedisDb *redis.Client
 // db实例指针
 var DB *gorm.DB
 
-var Log = logrus.New()
+// logrus实例指针
+var Logger = logrus.New()
 
 // 初始化 config 配置
 func Init() {
 	// 设置根目录
 	Cfg.Basedir, _ = filepath.Abs(".")
+	if Cfg.Name == "" {
+		Cfg.Name = filepath.Base(Cfg.Basedir)
+	}
 
 	// 解析默认基础配置文件
 	filename := filepath.Join("config", "config.yml")
@@ -102,14 +114,14 @@ func Init() {
 		// fmt.Println(extFile, extCfg)
 		// 合并配置
 		if err = mergo.Merge(&Cfg, extCfg); err != nil {
-			fmt.Println("配置文件合并异常", err)
+			panic(err)
 		}
 	}
 
-	fmt.Println("merge Config:", Cfg)
-
+	// fmt.Println("merge Config:", Cfg)
+	// 按顺序执行
+	LogInit()
 	redisInit()
-
 	dbInit()
 }
 
@@ -135,7 +147,7 @@ func redisInit() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("redis is connected to %s\n", options.Addr)
+	Logger.Printf("redis is connected to %s", options.Addr)
 }
 
 // 初始化 db
@@ -161,7 +173,7 @@ func dbInit() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("数据源：%s 已经连接\n", Cfg.Datasource[0].Model)
+	Logger.Printf("datasource: %s has been connected", Cfg.Datasource[0].Model)
 	if length == 1 {
 		return
 	}
@@ -176,7 +188,95 @@ func dbInit() {
 		} else {
 			dr.Register(dr_cfg)
 		}
-		fmt.Printf("数据源：%s 已经连接\n", ds.Model)
+		Logger.Printf("datasource: %s has been connected", ds.Model)
 	}
 	DB.Use(dr)
+}
+
+// logrus实例初始化
+func LogInit() {
+	logFilePath := Cfg.Log.Filepath
+	logFileName := Cfg.Log.Filename
+	if logFileName == "" {
+		logFileName = Cfg.Name
+	}
+
+	// 生成win环境项目下的日志文件夹
+	if runtime.GOOS == "windows" {
+		volume := filepath.VolumeName(logFilePath)
+		// /root/logs
+		if logFilePath != "" {
+			if volume == "" {
+				// path中没有盘符就在项目所在盘创建文件夹
+				filepath.Join(filepath.VolumeName(Cfg.Basedir), logFilePath)
+			}
+		} else {
+			// 没配置path就在项目根目录创建文件夹
+			logFilePath = filepath.Join(Cfg.Basedir, "logs")
+		}
+	} else {
+		if logFilePath == "" {
+			logFilePath = "/root/logs"
+		}
+	}
+	// log目录下再加同名项目文件夹
+	logFilePath = filepath.Join(logFilePath, Cfg.Name)
+	// 创建路径中缺失的文件夹
+	if !util.CheckFileIsExist(logFilePath) {
+		err := os.MkdirAll(logFilePath, 0666)
+		if err != nil {
+			panic(err)
+		}
+	}
+	baseLog := filepath.Join(logFilePath, logFileName+".log")
+
+	fileName := filepath.Join(logFilePath, logFileName)
+	// 写入文件（0660：其他用户的权限）
+	file, err := os.OpenFile(baseLog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+	if err != nil {
+		panic(err)
+	}
+	// 设置输出
+	if Cfg.Env == gin.DebugMode {
+		w := io.MultiWriter(os.Stdout, file)
+		Logger.Out = w
+		gin.DefaultWriter = w
+		gin.DefaultErrorWriter = io.MultiWriter(file, os.Stderr)
+	} else {
+		gin.DisableConsoleColor()
+		Logger.SetOutput(file)
+	}
+	// 设置日志级别
+	Logger.SetLevel(logrus.DebugLevel)
+	// 输出行号
+	// Logger.SetReportCaller(true)
+	// 设置 rotatelogs
+	logWriter, err := rotatelogs.New(
+		// 分割后的文件名称
+		fileName+".%Y%m%d.log",
+		// 生成软链，指向最新日志文件
+		rotatelogs.WithLinkName(fileName),
+		// 设置最大保存时间(7天)
+		rotatelogs.WithMaxAge(7*24*time.Hour),
+		// 设置日志切割时间间隔(1天)
+		rotatelogs.WithRotationTime(24*time.Hour),
+	)
+	if err != nil {
+		panic(err)
+	}
+	writeMap := lfshook.WriterMap{
+		logrus.InfoLevel:  logWriter,
+		logrus.FatalLevel: logWriter,
+		logrus.DebugLevel: logWriter,
+		logrus.WarnLevel:  logWriter,
+		logrus.ErrorLevel: logWriter,
+		logrus.PanicLevel: logWriter,
+	}
+	lfHook := lfshook.NewHook(writeMap, &nested.Formatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+		// PrettyPrint:     true,
+		HideKeys: true,
+	})
+	// 新增 Hook
+	Logger.AddHook(lfHook)
 }

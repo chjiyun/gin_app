@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"time"
+	"unicode"
 )
 
 // Call 反射动态调用函数
@@ -51,7 +52,7 @@ func TimeCost() func() {
 	}
 }
 
-// 给变量设置默认值
+// SetDefault 给变量设置默认值
 func SetDefault(v, _default interface{}) {
 	v1 := reflect.ValueOf(v).Elem()
 	v2 := reflect.ValueOf(_default)
@@ -59,4 +60,30 @@ func SetDefault(v, _default interface{}) {
 	if v1.IsZero() {
 		v1.Set(v2)
 	}
+}
+
+// UpperFirst 字符串首字母大写
+func UpperFirst(str string) string {
+	for i, v := range str {
+		return string(unicode.ToUpper(v)) + str[i+1:]
+	}
+	return ""
+}
+
+// LowerFirst 字符串首字母小写
+func LowerFirst(str string) string {
+	for i, v := range str {
+		return string(unicode.ToLower(v)) + str[i+1:]
+	}
+	return ""
+}
+
+// Basename 获取文件基础名，禁止含非1字节字符
+func Basename(str string) string {
+	for i := len(str) - 1; i > 0; i-- {
+		if str[i] == '.' {
+			return str[:i]
+		}
+	}
+	return ""
 }

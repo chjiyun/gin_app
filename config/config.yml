@@ -1,6 +1,8 @@
 name: gin_app
 # 环境标识
 env: dev
+# 路由组文件夹名（默认为 router）
+routerName: router
 
 server: 
   port: 8000

@@ -4,12 +4,13 @@ import (
 	// "context"
 
 	"fmt"
-	"gin_app/api"
 	"gin_app/config"
 	"gin_app/middleware"
-	"gin_app/service"
-	"gin_app/test"
+	"gin_app/router"
 	"gin_app/util"
+	"io/ioutil"
+	"reflect"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yitter/idgenerator-go/idgen"
@@ -25,29 +26,9 @@ func main() {
 	r.Use(middleware.LoggerToFile(), middleware.SetContext(), gin.Recovery())
 
 	// 简单的路由组: api
-	v1 := r.Group("/api")
-	{
-		v1.GET("/index", api.Index)
-		v1.GET("/user", api.Users)
-		v1.GET("/img", api.GetImg)
-		v1.GET("/company", service.GetCompanies)
 
-		file := v1.Group("/file")
-		file.GET("/:id", api.Download)
-		file.POST("/upload", api.Upload)
-		file.POST("/word", api.ExtractWord)
-	}
-	v2 := r.Group("/test")
-	{
-		v2.GET("/index", test.For)
-		v2.GET("/map", test.Map)
-		v2.GET("/arr", test.Arr)
-		v2.GET("/json", test.Json)
-		v2.GET("/str", test.String)
-		v2.GET("/int", test.Int)
-		v2.GET("/snowflake", test.Snowflake)
-		v2.GET("/chan", test.Channel)
-	}
+	router := r.Group("/api")
+	readRouters(router)
 
 	// srv := &http.Server{
 	// 	Addr:    ":8080",
@@ -84,4 +65,33 @@ func main() {
 	// PORT environment variable was defined.
 	// r.Run(":8000") for a hard coded port
 	r.Run(":" + config.Cfg.Server.Port)
+}
+
+// 读取router下的路由组
+func readRouters(g *gin.RouterGroup) {
+	var funcNames []string
+	fileInfo, _ := ioutil.ReadDir(config.Cfg.RouterName)
+	if len(fileInfo) == 0 {
+		return
+	}
+	for _, file := range fileInfo {
+		if file.IsDir() {
+			continue
+		}
+		name := file.Name()
+		// 匹配 .go结尾的文件
+		re := regexp.MustCompile(`^\w+\.go$`)
+		if re.MatchString(name) {
+			basename := util.Basename(name)
+			basename = util.UpperFirst(basename)
+			funcNames = append(funcNames, basename)
+		}
+	}
+	// 获取反射值
+	value := reflect.ValueOf(&router.Router{})
+	in := []reflect.Value{reflect.ValueOf(g)}
+	for _, name := range funcNames {
+		fn := value.MethodByName(name) //通过反射获取它对应的函数
+		fn.Call(in)
+	}
 }

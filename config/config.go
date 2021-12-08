@@ -30,6 +30,7 @@ type Config struct {
 	Basedir    string
 	Name       string       `yaml:"name"`
 	Env        string       `yaml:"env"`
+	RouterName string       `yaml:"routerName"`
 	Server     Server       `yaml:"server"`
 	Redis      Redis        `yaml:"redis"`
 	Datasource []Datasource `yaml:"datasource"`
@@ -67,12 +68,6 @@ var Logger = logrus.New()
 
 // 初始化 config 配置
 func Init() {
-	// 设置根目录
-	Cfg.Basedir, _ = filepath.Abs(".")
-	if Cfg.Name == "" {
-		Cfg.Name = filepath.Base(Cfg.Basedir)
-	}
-
 	// 解析默认基础配置文件
 	filename := filepath.Join("config", "config.yml")
 	yml, err := ioutil.ReadFile(filename)
@@ -84,6 +79,14 @@ func Init() {
 		panic(err1)
 	}
 	// fmt.Println(filename, Cfg)
+	// 设置一些默认值
+	Cfg.Basedir, _ = filepath.Abs(".")
+	if Cfg.Name == "" {
+		Cfg.Name = filepath.Base(Cfg.Basedir)
+	}
+	if Cfg.RouterName == "" {
+		Cfg.RouterName = "router"
+	}
 
 	// 原始 env名称
 	env := Cfg.Env

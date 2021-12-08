@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"gin_app/util"
+	"gin_app/app/util"
 	"io"
 	"io/ioutil"
 	"log"

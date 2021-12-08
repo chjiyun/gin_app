@@ -2,7 +2,7 @@ package util
 
 import (
 	"fmt"
-	"gin_app/schedule"
+	"gin_app/app/schedule"
 
 	"github.com/robfig/cron/v3"
 )

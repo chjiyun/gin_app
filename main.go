@@ -4,10 +4,10 @@ import (
 	// "context"
 
 	"fmt"
+	"gin_app/app/middleware"
+	"gin_app/app/router"
+	"gin_app/app/util"
 	"gin_app/config"
-	"gin_app/middleware"
-	"gin_app/router"
-	"gin_app/util"
 	"io/ioutil"
 	"reflect"
 	"regexp"
@@ -70,7 +70,7 @@ func main() {
 // 读取router下的路由组
 func readRouters(g *gin.RouterGroup) {
 	var funcNames []string
-	fileInfo, _ := ioutil.ReadDir(config.Cfg.RouterName)
+	fileInfo, _ := ioutil.ReadDir("app/router")
 	if len(fileInfo) == 0 {
 		return
 	}

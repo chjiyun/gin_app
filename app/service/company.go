@@ -1,8 +1,8 @@
 package service
 
 import (
-	"gin_app/model"
-	"gin_app/util"
+	"gin_app/app/model"
+	"gin_app/app/util"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

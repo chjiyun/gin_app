@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"gin_app/util"
+	"gin_app/app/util"
 	"net/http"
 	"os"
 	"path/filepath"

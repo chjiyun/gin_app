@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"gin_app/util"
+	"gin_app/app/util"
 	"io"
 	"io/ioutil"
 	"os"
@@ -30,7 +30,6 @@ type Config struct {
 	Basedir    string
 	Name       string       `yaml:"name"`
 	Env        string       `yaml:"env"`
-	RouterName string       `yaml:"routerName"`
 	Server     Server       `yaml:"server"`
 	Redis      Redis        `yaml:"redis"`
 	Datasource []Datasource `yaml:"datasource"`
@@ -83,9 +82,6 @@ func Init() {
 	Cfg.Basedir, _ = filepath.Abs(".")
 	if Cfg.Name == "" {
 		Cfg.Name = filepath.Base(Cfg.Basedir)
-	}
-	if Cfg.RouterName == "" {
-		Cfg.RouterName = "router"
 	}
 
 	// 原始 env名称

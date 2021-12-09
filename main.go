@@ -92,6 +92,9 @@ func readRouters(g *gin.RouterGroup) {
 	in := []reflect.Value{reflect.ValueOf(g)}
 	for _, name := range funcNames {
 		fn := value.MethodByName(name) //通过反射获取它对应的函数
+		if fn.IsNil() {
+			continue
+		}
 		fn.Call(in)
 	}
 }

@@ -1,4 +1,4 @@
-package api
+package service
 
 import (
 	"fmt"
@@ -20,5 +20,7 @@ func Index(c *gin.Context) {
 	res.Msg = fmt.Sprintf("x=%d", x)
 	res.Code = 200
 	res.Date = time.Now().Format("2006-01-02")
-	c.JSON(http.StatusOK, res)
+	fmt.Println(res)
+
+	c.String(http.StatusOK, "hello world...")
 }

@@ -20,7 +20,7 @@ func GetBingImg() GinSchedule {
 		Immediate: true,
 	}
 	task.Task = func() {
-		_, err := http.Get("http://127.0.0.1:8000/api/img?schedule=1")
+		_, err := http.Get("http://127.0.0.1:8000/api/bing/getImg?schedule=1")
 		if err != nil {
 			fmt.Println("img err:", err)
 			return

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gin_app/app/middleware"
 	"gin_app/app/router"
+	"gin_app/app/service"
 	"gin_app/app/util"
 	"gin_app/config"
 	"io/ioutil"
@@ -21,12 +22,12 @@ func main() {
 	config.Init()
 
 	// r := gin.Default()
-	// r.Use(middleware.SetDB())
 	r := gin.New()
 	r.Use(middleware.LoggerToFile(), middleware.SetContext(), gin.Recovery())
 
 	// 简单的路由组: api
 
+	r.GET("/", service.Index)
 	router := r.Group("/api")
 	readRouters(router)
 

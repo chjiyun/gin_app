@@ -16,7 +16,7 @@ func SetContext() gin.HandlerFunc {
 		defer cancel()
 		c.Set("DB", config.DB.WithContext(timeoutContext))
 		// Add a context to the log entry.
-		c.Set("Logger", config.Logger.WithContext(c))
+		c.Set("Logger", config.Logger.WithContext(context.Background()))
 		c.Next()
 	}
 }

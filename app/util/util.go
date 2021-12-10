@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
+	"strings"
 	"time"
 	"unicode"
 )
@@ -86,4 +88,53 @@ func Basename(str string) string {
 		}
 	}
 	return ""
+}
+
+// WriteString 拼接字符串
+func WriteString(str ...string) string {
+	if len(str) == 0 {
+		return str[0]
+	}
+	var b strings.Builder
+	for _, s := range str {
+		b.WriteString(s)
+	}
+	return b.String()
+}
+
+// 读取目录下的特定后缀文件基础名，首字母大写（ex: app.go -> App）；
+// fileExt为空 返回文件名
+func GetFileBasename(dirname string, fileExt []string) []string {
+	var names []string
+	fileInfo, _ := os.ReadDir(dirname)
+	if len(fileInfo) == 0 {
+		return names
+	}
+	var str string
+	switch len(fileExt) {
+	case 0:
+		for _, f := range fileInfo {
+			names = append(names, f.Name())
+		}
+		return names
+	case 1:
+		str = fileExt[0]
+	default:
+		str = strings.Join(fileExt, "|")
+	}
+	str = WriteString(`^\w+\.(`, str, ")$")
+	re := regexp.MustCompile(str)
+	for _, file := range fileInfo {
+		if file.IsDir() {
+			continue
+		}
+		name := file.Name()
+		// 匹配 .go结尾的文件
+		if re.MatchString(name) {
+			basename := Basename(name)
+			basename = UpperFirst(basename)
+			names = append(names, basename)
+		}
+	}
+	return names
 }

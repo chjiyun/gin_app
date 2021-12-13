@@ -92,7 +92,7 @@ func Basename(str string) string {
 
 // WriteString 拼接字符串
 func WriteString(str ...string) string {
-	if len(str) == 0 {
+	if len(str) == 1 {
 		return str[0]
 	}
 	var b strings.Builder

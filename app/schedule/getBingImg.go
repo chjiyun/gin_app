@@ -1,7 +1,6 @@
 package schedule
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -20,7 +19,7 @@ type GinSchedule struct {
 }
 
 // 定时获取必应的壁纸
-func (s *Schedule) GetBingImg(c *context.Context) GinSchedule {
+func (s *Schedule) GetBingImg() GinSchedule {
 	task := GinSchedule{
 		Cron:      "0 5 0 * * ?",
 		Immediate: true,

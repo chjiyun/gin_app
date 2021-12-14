@@ -30,7 +30,7 @@ func ReadRouters(g *gin.RouterGroup) {
 
 // InitSchedule 初始化定时任务配置，自动添加文件下所有任务到队列
 func InitSchedule() {
-	names := util.GetFileBasename("schedule", []string{"go"})
+	names := util.GetFileBasename("app/schedule", []string{"go"})
 	if len(names) == 0 {
 		return
 	}

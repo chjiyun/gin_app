@@ -1,7 +1,7 @@
-package util
+package common
 
 // json返回体
-type ResponseMsg struct {
+type Result struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
 	Data interface{} `json:"data"`

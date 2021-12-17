@@ -168,6 +168,7 @@ func dbInit() {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
+		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
 		panic(err)

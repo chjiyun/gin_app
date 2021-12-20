@@ -80,12 +80,18 @@ func Upload(c *gin.Context) {
 func Download(c *gin.Context) {
 	result := &common.Result{}
 	id := c.Param("id")
+	uid := util.Basename(id)
 	db := c.Value("DB").(*gorm.DB)
 	var file model.File
 
-	res := db.First(&file, "uid", id)
+	res := db.First(&file, "uid", uid)
 	if res.Error != nil {
 		c.JSON(200, result.Fail("文件不存在", res.Error.Error()))
+		return
+	}
+	ext := filepath.Ext(id)
+	if len(ext) > 0 && file.Ext != ext[1:] {
+		c.JSON(200, result.Fail("参数错误", nil))
 		return
 	}
 	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)

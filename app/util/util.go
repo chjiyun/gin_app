@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -82,12 +83,17 @@ func LowerFirst(str string) string {
 
 // Basename 获取文件基础名，禁止含非1字节字符
 func Basename(str string) string {
-	for i := len(str) - 1; i > 0; i-- {
-		if str[i] == '.' {
-			return str[:i]
-		}
+	ext := filepath.Ext(str)
+	if len(ext) == 0 {
+		return str
 	}
-	return ""
+	return str[:len(str)-len(ext)]
+	// for i := len(str) - 1; i > 0; i-- {
+	// 	if str[i] == '.' {
+	// 		return str[:i]
+	// 	}
+	// }
+	// return ""
 }
 
 // WriteString 拼接字符串

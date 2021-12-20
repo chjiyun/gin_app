@@ -1,6 +1,7 @@
 package util
 
 import (
+	"path/filepath"
 	"testing"
 )
 
@@ -23,4 +24,15 @@ func TestGetFileBasename(t *testing.T) {
 		t.Skipf("result = %v, no files", result)
 	}
 	t.Logf("result = %v", result)
+}
+
+func TestBasename(t *testing.T) {
+	str := "D://go/workspace/ttt.jpg"
+	expect := "ttt"
+	name := filepath.Base(str)
+	result := Basename(name)
+
+	if result != expect {
+		t.Errorf("result = %s, expect = %s", result, expect)
+	}
 }

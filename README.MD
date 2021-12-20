@@ -32,6 +32,18 @@ go get -u -d github.com/gin-gonic/gin
 go mod tidy
 ```
 
+7. 单元测试
+
+`-v` 参数作用是无论用例是否通过都显示结果
+```
+# 运行所有测试文件
+go test -v
+# 运行该目录下含有Basename的测试函数
+go test -run Basename ./app/util -v
+# 运行该目录下全字匹配Basename的测试函数
+go test -run ^Basename$ ./app/util -v
+```
+
 
 ## 启动
 
@@ -122,6 +134,13 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 # 生效
 source ~/.profile
 ```
+
+# 注意
+若windows环境下使用logger后控制台出现这样的错误提示 "failed to rotate: failed to create new symlink ***.log ..."，
+请按照如下步骤解决：
+1. win + r 打开运行弹窗，输入secpol.msc
+2. 弹出一个本地安全策略窗口，依次找到安全设置>本地策略>用户权限分配，双击后右侧出现很多行策略，找到创建符号链接双击
+3. 新弹出的窗口中点击添加用户或组，把当前登录计算机的用户加进去，输用户名搜索即可，然后一路确定，还可能需要重启电脑
 
 ## Gin 是什么？
 

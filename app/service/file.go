@@ -5,6 +5,7 @@ import (
 	"gin_app/app/model"
 	"gin_app/app/util"
 	"gin_app/config"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -46,7 +47,8 @@ func Upload(c *gin.Context) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		c.JSON(200, result.Fail("服务器内部错误", err.Error()))
+		result.SetData(err.Error())
+		c.JSON(200, result.SetResult(common.ResultMap["serverError"], ""))
 		return
 	}
 
@@ -86,17 +88,17 @@ func Download(c *gin.Context) {
 
 	res := db.First(&file, "uid", uid)
 	if res.Error != nil {
-		c.JSON(200, result.Fail("文件不存在", res.Error.Error()))
+		c.JSON(http.StatusNotFound, result.SetResult(common.ResultMap["notFound"], ""))
 		return
 	}
 	ext := filepath.Ext(id)
 	if len(ext) > 0 && file.Ext != ext[1:] {
-		c.JSON(200, result.Fail("参数错误", nil))
+		c.JSON(http.StatusNotFound, result.SetResult(common.ResultMap["notFound"], ""))
 		return
 	}
 	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
 	if !util.CheckFileIsExist(sourcePath) {
-		c.JSON(200, result.Fail("文件不存在", nil))
+		c.JSON(http.StatusNotFound, result.SetResult(common.ResultMap["notFound"], ""))
 		return
 	}
 	c.File(sourcePath)

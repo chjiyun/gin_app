@@ -1,11 +1,13 @@
 package util
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -137,4 +139,39 @@ func GetFileBasename(dirname string, fileExt []string) []string {
 		}
 	}
 	return names
+}
+
+// ToString 各种类型转string
+// 整数转换为10进制的字符串
+func ToString(v interface{}) string {
+	t := reflect.TypeOf(v)
+	var s string
+	switch t.Kind() {
+	case reflect.Int, reflect.Int64, reflect.Int16, reflect.Int8:
+		s = strconv.FormatInt(v.(int64), 10)
+	case reflect.Uint, reflect.Uint64, reflect.Uint16, reflect.Uint8:
+		s = strconv.FormatUint(v.(uint64), 10)
+	case reflect.Bool:
+		s = strconv.FormatBool(v.(bool))
+	case reflect.Float32, reflect.Float64:
+		// 默认以(-ddd.dddd, no exponent)格式转化浮点数
+		s = strconv.FormatFloat(v.(float64), 'f', -1, 64)
+	case reflect.Map, reflect.Struct, reflect.Slice:
+		s = ToJson(v)
+	default:
+		fmt.Printf("type %s is not support, use fmt.Sprintf instead", t.Kind())
+	}
+	return s
+}
+
+func ParseInt() {
+}
+
+// ToJson 转成json字符串
+func ToJson(m interface{}) string {
+	data, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
 }

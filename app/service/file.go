@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nguyenthenguyen/docx"
 	uuid "github.com/satori/go.uuid"
+	"github.com/yitter/idgenerator-go/idgen"
 	"gorm.io/gorm"
 )
 
@@ -39,9 +39,10 @@ func Upload(c *gin.Context) {
 		}
 	}
 	uid := uuid.NewV4().String()
-	localFilename := uid + ext
+	snowId := idgen.NextId()
+	localName := util.ToString(snowId) + ext
 	year, month, _ := time.Now().Date()
-	relativePath := filepath.Join("files", strconv.Itoa(year), strconv.Itoa(int(month)), localFilename)
+	relativePath := filepath.Join("files", util.ToString(year), util.ToString(int(month)), localName)
 	sourcepath := filepath.Join(config.Cfg.Basedir, relativePath)
 	// 文件所在文件夹目录
 	dirname := filepath.Dir(sourcepath)
@@ -60,13 +61,14 @@ func Upload(c *gin.Context) {
 	}
 
 	file := model.File{
-		Name:     f.Filename,
-		Uid:      uid,
-		Ext:      ext[1:],
-		Type:     filetype,
-		MimeType: mimetype,
-		Path:     relativePath,
-		Size:     uint(f.Size),
+		Name:      f.Filename,
+		LocalName: localName,
+		Uid:       uid,
+		Ext:       ext[1:],
+		Type:      filetype,
+		MimeType:  mimetype,
+		Path:      relativePath,
+		Size:      uint(f.Size),
 	}
 	res := db.Create(&file)
 	if res.Error != nil {

@@ -147,14 +147,28 @@ func ToString(v interface{}) string {
 	t := reflect.TypeOf(v)
 	var s string
 	switch t.Kind() {
-	case reflect.Int, reflect.Int64, reflect.Int16, reflect.Int8:
-		s = strconv.FormatInt(v.(int64), 10)
-	case reflect.Uint, reflect.Uint64, reflect.Uint16, reflect.Uint8:
+	case reflect.Int:
+		s = strconv.FormatInt(int64(v.(int)), 10)
+	case reflect.Int64:
+		s = strconv.FormatInt(int64(v.(int64)), 10)
+	case reflect.Int16:
+		s = strconv.FormatInt(int64(v.(int16)), 10)
+	case reflect.Int8:
+		s = strconv.FormatInt(int64(v.(int8)), 10)
+	case reflect.Uint:
+		s = strconv.FormatUint(uint64(v.(uint)), 10)
+	case reflect.Uint64:
 		s = strconv.FormatUint(v.(uint64), 10)
+	case reflect.Uint16:
+		s = strconv.FormatUint(uint64(v.(uint16)), 10)
+	case reflect.Uint8:
+		s = strconv.FormatUint(uint64(v.(uint8)), 10)
 	case reflect.Bool:
 		s = strconv.FormatBool(v.(bool))
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float32:
 		// 默认以(-ddd.dddd, no exponent)格式转化浮点数
+		s = strconv.FormatFloat(float64(v.(float32)), 'f', -1, 64)
+	case reflect.Float64:
 		s = strconv.FormatFloat(v.(float64), 'f', -1, 64)
 	case reflect.Map, reflect.Struct, reflect.Slice:
 		s = ToJson(v)

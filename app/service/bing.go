@@ -135,6 +135,7 @@ func GetImg(c *gin.Context) {
 	bing = model.Bing{
 		FileId: result.Data.ID,
 		Url:    imgURL,
+		Hsh:    bingRes.Images[0].Hsh,
 		Desc:   bingRes.Images[0].Copyright,
 	}
 	db.Create(&bing)

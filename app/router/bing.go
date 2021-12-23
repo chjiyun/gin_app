@@ -10,5 +10,6 @@ func (r *Router) Bing(g *gin.RouterGroup) {
 	rg := g.Group("/bing")
 	{
 		rg.GET("/getImg", service.GetImg)
+		rg.GET("/getAllBing", service.GetAllBing)
 	}
 }

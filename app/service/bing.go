@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -159,4 +160,25 @@ func GetImg(c *gin.Context) {
 	// fmt.Printf("写入 %d 个字节\n", n)
 	// writer.Flush()
 
+}
+
+// GetAllBing 搜索符合条件的记录
+func GetAllBing(c *gin.Context) {
+	db := c.Value("DB").(*gorm.DB)
+
+	page, _ := strconv.Atoi(c.Query("page"))
+	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
+
+	var bing []model.Bing
+	var count int64
+	db.Model(&model.Bing{}).Count(&count)
+	if page > 0 && pageSize > 0 {
+		db.Limit(pageSize).Offset((page - 1) * pageSize).Find(&bing)
+	} else {
+		db.Find(&bing)
+	}
+	c.JSON(200, gin.H{
+		"count": count,
+		"data":  bing,
+	})
 }

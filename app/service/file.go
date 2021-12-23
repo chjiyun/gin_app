@@ -76,7 +76,7 @@ func Upload(c *gin.Context) {
 		return
 	}
 	c.JSON(200, result.Success("", gin.H{
-		"uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
+		"id": file.ID, "uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
 	}))
 }
 

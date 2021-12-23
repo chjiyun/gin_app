@@ -1,9 +1,12 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"reflect"
 	"regexp"
@@ -188,4 +191,46 @@ func ToJson(m interface{}) string {
 		panic(err)
 	}
 	return string(data)
+}
+
+// SendFormData 以multipart/form-data格式发送文件,
+// fileField: file字段名，data: form键值对
+func SendFormData(url string, fileField string, data map[string]interface{}) (*http.Response, error) {
+	filename, ok := data["filename"].(string)
+	if !ok || len(filename) == 0 {
+		return nil, errors.New("filename is not exist")
+	}
+	fileByte, ok := data[fileField].(*[]byte)
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("%s []byte pointer is not exist", fileField))
+	}
+	buf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(buf)
+	for key, value := range data {
+		if key == fileField || key == "filename" {
+			continue
+		}
+		bodyWriter.WriteField(key, value.(string))
+	}
+	fileWriter, err := bodyWriter.CreateFormFile(fileField, filename)
+	if err != nil {
+		return nil, err
+	}
+	_, err = fileWriter.Write(*fileByte)
+	// os.File 是 io.reader的实现
+	// _, err = io.Copy(fileWriter, data[fileField].(*os.File))
+	if err != nil {
+		return nil, err
+	}
+	// 完成所有内容设置后，一定要关闭 Writer，否则，请求体会缺少结束边界
+	err = bodyWriter.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.Post(url, bodyWriter.FormDataContentType(), buf)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

@@ -1,21 +1,19 @@
 package service
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"gin_app/app/model"
 	"gin_app/app/util"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // BingRes 接收接口响应
@@ -30,10 +28,17 @@ type ImgInfo struct {
 	Copyright string `json:"copyright"`
 	Hsh       string
 }
+type uploadResult struct {
+	Code int
+	Msg  string
+	Data model.File
+}
 
 // GetImg 获取远程图片并返回
 func GetImg(c *gin.Context) {
-	// x := "hello"
+	log := c.Value("Logger").(*logrus.Entry)
+	isSchedule := c.Query("schedule")
+
 	res, err := http.Get("https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN")
 	if err != nil {
 		fmt.Println("info err:", err)
@@ -65,16 +70,9 @@ func GetImg(c *gin.Context) {
 	bingRes := BingRes{}
 	json.NewDecoder(res.Body).Decode(&bingRes)
 	// 打印返回信息
-	log.Println("bingRes:", bingRes)
-	// fmt.Println("bingRes:", bingRes)
+	fmt.Println("bingRes:", bingRes)
 
-	str := bingRes.Images[0].URL
-	// 最高效的字符串拼接方式
-	var build strings.Builder
-	build.WriteString("https://cn.bing.com")
-	build.WriteString(str)
-	imgURL := build.String()
-
+	imgURL := util.WriteString("https://cn.bing.com", bingRes.Images[0].URL)
 	res1, err := http.Get(imgURL)
 	if err != nil {
 		fmt.Println("img err:", err)
@@ -88,33 +86,77 @@ func GetImg(c *gin.Context) {
 		fmt.Println(err1)
 		return
 	}
-	res1.Body = ioutil.NopCloser(bytes.NewReader(imgByte))
+	// res1.Body = ioutil.NopCloser(bytes.NewReader(imgByte))
+	imgReader := bytes.NewReader(imgByte)
 
 	// 使用固定的32K缓冲区，因此无论源数据多大，都只会占用32K内存空间
-	io.Copy(c.Writer, res1.Body)
+	io.Copy(c.Writer, imgReader)
+
+	if isSchedule != "1" {
+		return
+	}
+
+	db := c.Value("DB").(*gorm.DB)
+	// 判断当天壁纸是否已下载
+	var bing model.Bing
+	res2 := db.Where("created_at >= ?", time.Now().Format("2006-01-02")).Limit(1).Find(&bing)
+	if res2.Error != nil {
+		log.Errorln(res2.Error)
+		return
+	}
+	if res2.RowsAffected > 0 {
+		return
+	}
 
 	fileName := time.Now().Format("2006-01-02") + "." + bingRes.Images[0].Hsh[:16] + ".jpg"
-	sourcePath := filepath.Join("files", fileName)
+	// sourcePath := filepath.Join("files", fileName)
 
-	var f *os.File
-	defer f.Close()
-	if util.CheckFileIsExist(sourcePath) { //如果文件存在
-		// f, err1 = os.OpenFile(sourcePath, os.O_APPEND, 0666) //打开文件
-		fmt.Println("文件已存在")
+	fd := map[string]interface{}{
+		"file":     &imgByte,
+		"filename": fileName,
+	}
+	fileRes, err := util.SendFormData("http://127.0.0.1:8000/api/file/upload", "file", fd)
+	if err != nil {
+		log.Errorf("error in SendFormData: %v", err)
 		return
-	} else {
-		f, err1 = os.Create(sourcePath) //创建文件
 	}
-	if err1 != nil {
-		panic(err1)
+	defer fileRes.Body.Close()
+	result := uploadResult{}
+	err = json.NewDecoder(fileRes.Body).Decode(&result)
+	if err != nil {
+		log.Errorln(err)
+		return
 	}
-	writer := bufio.NewWriter(f) //创建新的 Writer 对象
+	if result.Code != 200 {
+		log.Errorf("file upload failed: %v", result)
+		return
+	}
+	bing = model.Bing{
+		FileId: result.Data.ID,
+		Url:    imgURL,
+		Desc:   bingRes.Images[0].Copyright,
+	}
+	db.Create(&bing)
 
-	if err1 != nil {
-		fmt.Println(err1)
-	}
-	n, _ := writer.Write(imgByte)
-	fmt.Printf("写入 %d 个字节\n", n)
-	writer.Flush()
+	// var f *os.File
+	// defer f.Close()
+	// if util.CheckFileIsExist(sourcePath) { //如果文件存在
+	// 	// f, err1 = os.OpenFile(sourcePath, os.O_APPEND, 0666) //打开文件
+	// 	fmt.Println("文件已存在")
+	// 	return
+	// } else {
+	// 	f, err1 = os.Create(sourcePath) //创建文件
+	// }
+	// if err1 != nil {
+	// 	panic(err1)
+	// }
+	// writer := bufio.NewWriter(f) //创建新的 Writer 对象
+
+	// if err1 != nil {
+	// 	fmt.Println(err1)
+	// }
+	// n, _ := writer.Write(imgByte)
+	// fmt.Printf("写入 %d 个字节\n", n)
+	// writer.Flush()
 
 }

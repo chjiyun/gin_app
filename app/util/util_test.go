@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"path/filepath"
 	"testing"
 )
@@ -71,5 +72,16 @@ func TestToString(t *testing.T) {
 	}
 	if result2 != expect2 {
 		t.Errorf("result2 = %s, v= %v", result2, v2)
+	}
+}
+
+func TestHandleData(t *testing.T) {
+	expect := "this is a error"
+	err := errors.New(expect)
+	HandleData(&err)
+	result := err.Error()
+
+	if result != expect {
+		t.Errorf("result = %v, expect = %v", result, expect)
 	}
 }

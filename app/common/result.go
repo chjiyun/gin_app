@@ -1,6 +1,8 @@
 // 接口response 定义与配置
 package common
 
+import "gin_app/app/util"
+
 type message struct {
 	code int
 	msg  string
@@ -76,6 +78,7 @@ func (r *Result) Fail(msg string, data interface{}) *Result {
 	}
 	r.Code = res.code
 	r.Msg = msg
+	util.HandleData(&data)
 	r.Data = data
 	return r
 }
@@ -88,6 +91,7 @@ func (r *Result) FailDefault() *Result {
 }
 
 func (r *Result) SetData(data interface{}) {
+	util.HandleData(&data)
 	r.Data = data
 }
 

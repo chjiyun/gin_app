@@ -234,3 +234,17 @@ func SendFormData(url string, fileField string, data map[string]interface{}) (*h
 	}
 	return res, nil
 }
+
+// handleData data传指针，处理error错误
+func HandleData(data interface{}) string {
+	// 获取指针指向的值
+	i := reflect.Indirect(reflect.ValueOf(data)).Interface()
+	switch i.(type) {
+	case error:
+		// v := reflect.ValueOf(i.(error).Error())
+		return i.(error).Error()
+	default:
+		// 原路返回
+		return ""
+	}
+}

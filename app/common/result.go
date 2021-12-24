@@ -78,8 +78,7 @@ func (r *Result) Fail(msg string, data interface{}) *Result {
 	}
 	r.Code = res.code
 	r.Msg = msg
-	util.HandleData(&data)
-	r.Data = data
+	r.Data = util.HandleData(&data)
 	return r
 }
 
@@ -91,8 +90,7 @@ func (r *Result) FailDefault() *Result {
 }
 
 func (r *Result) SetData(data interface{}) {
-	util.HandleData(&data)
-	r.Data = data
+	r.Data = util.HandleData(&data)
 }
 
 // SetResult 自定义code msg

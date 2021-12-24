@@ -236,15 +236,19 @@ func SendFormData(url string, fileField string, data map[string]interface{}) (*h
 }
 
 // handleData data传指针，处理error错误
-func HandleData(data interface{}) string {
+func HandleData(data interface{}) interface{} {
 	// 获取指针指向的值
-	i := reflect.Indirect(reflect.ValueOf(data)).Interface()
-	switch i.(type) {
+	ptrVal := reflect.Indirect(reflect.ValueOf(data)).Interface()
+	switch ptrVal.(type) {
 	case error:
-		// v := reflect.ValueOf(i.(error).Error())
-		return i.(error).Error()
+		return ptrVal.(error).Error()
 	default:
 		// 原路返回
-		return ""
+		return ptrVal
 	}
+}
+
+// Type get variable type in reflect
+func Type(data interface{}) string {
+	return reflect.TypeOf(data).Kind().String()
 }

@@ -77,11 +77,38 @@ func TestToString(t *testing.T) {
 
 func TestHandleData(t *testing.T) {
 	expect := "this is a error"
-	err := errors.New(expect)
-	HandleData(&err)
-	result := err.Error()
+	input := errors.New(expect)
+	result := HandleData(&input)
+
+	input1 := []int{0, 1, 2, 3}
+	result1 := HandleData(&input1)
+
+	if v, ok := result.(string); !ok || ok && v != expect {
+		t.Errorf("result = %v, expect = %v", result, expect)
+	}
+
+	if _, ok := result1.([]int); !ok {
+		t.Errorf("result = %v, expect = %v", result, expect)
+	}
+}
+
+func TestType(t *testing.T) {
+	data := map[int]int{0: 1, 1: 2}
+	result := Type(data)
+	expect := "map"
+
+	data1 := []int{222, 33}
+	result1 := Type(&data1)
+	expect1 := "ptr"
+
+	t.Log(result)
+	t.Log(result1)
 
 	if result != expect {
+		t.Errorf("result = %v, expect = %v", result, expect)
+	}
+
+	if result1 != expect1 {
 		t.Errorf("result = %v, expect = %v", result, expect)
 	}
 }

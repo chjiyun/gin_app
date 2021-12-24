@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gin_app/app/model"
 	"gin_app/app/util"
+	"gin_app/config"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -116,7 +117,8 @@ func GetImg(c *gin.Context) {
 		"file":     &imgByte,
 		"filename": fileName,
 	}
-	fileRes, err := util.SendFormData("http://127.0.0.1:8000/api/file/upload", "file", fd)
+	uploadUrl := util.WriteString("http://127.0.0.1:", config.Cfg.Server.Port, "/api/file/upload")
+	fileRes, err := util.SendFormData(uploadUrl, "file", fd)
 	if err != nil {
 		log.Errorf("error in SendFormData: %v", err)
 		return

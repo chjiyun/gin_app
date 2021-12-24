@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/nguyenthenguyen/docx"
 	uuid "github.com/satori/go.uuid"
@@ -30,13 +31,18 @@ func Upload(c *gin.Context) {
 	}
 
 	ext := filepath.Ext(f.Filename)
-	mimetype := f.Header["Content-Type"][0]
+	// mimetype := f.Header["Content-Type"][0]
+	mfile, _ := f.Open()
+	mime, err := mimetype.DetectReader(mfile)
+	if err != nil {
+		c.JSON(200, result.Fail("MIME type detect failed", err.Error()))
+		return
+	}
+	mtype := mime.String()
 	var filetype string
-	if len(mimetype) > 0 {
-		i := strings.Index(mimetype, "/")
-		if i > 0 {
-			filetype = mimetype[:i]
-		}
+
+	if i := strings.Index(mtype, "/"); i > 0 {
+		filetype = mtype[:i]
 	}
 	uid := uuid.NewV4().String()
 	snowId := idgen.NextId()
@@ -66,7 +72,7 @@ func Upload(c *gin.Context) {
 		Uid:       uid,
 		Ext:       ext[1:],
 		Type:      filetype,
-		MimeType:  mimetype,
+		MimeType:  mtype,
 		Path:      relativePath,
 		Size:      uint(f.Size),
 	}

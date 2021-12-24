@@ -27,7 +27,7 @@ func Upload(c *gin.Context) {
 
 	f, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(200, result.Fail("上传失败", err.Error()))
+		c.JSON(200, result.Fail("上传失败", err))
 		return
 	}
 
@@ -36,7 +36,7 @@ func Upload(c *gin.Context) {
 	mfile, _ := f.Open()
 	mime, err := mimetype.DetectReader(mfile)
 	if err != nil {
-		c.JSON(200, result.Fail("MIME type detect failed", err.Error()))
+		c.JSON(200, result.Fail("MIME type detect failed", err))
 		return
 	}
 	mtype := mime.String()
@@ -55,7 +55,7 @@ func Upload(c *gin.Context) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		result.SetData(err.Error())
+		result.SetData(err)
 		c.JSON(200, result.SetResult(common.ResultMap["serverError"], ""))
 		return
 	}
@@ -63,7 +63,7 @@ func Upload(c *gin.Context) {
 	// Upload the file to specific dst.
 	err = c.SaveUploadedFile(f, sourcepath)
 	if err != nil {
-		c.JSON(200, result.Fail("上传失败", err.Error()))
+		c.JSON(200, result.Fail("上传失败", err))
 		return
 	}
 
@@ -79,7 +79,7 @@ func Upload(c *gin.Context) {
 	}
 	res := db.Create(&file)
 	if res.Error != nil {
-		c.JSON(200, result.Fail("上传失败", res.Error.Error()))
+		c.JSON(200, result.Fail("上传失败", res.Error))
 		return
 	}
 	c.JSON(200, result.Success("", gin.H{

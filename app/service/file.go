@@ -5,6 +5,7 @@ import (
 	"gin_app/app/model"
 	"gin_app/app/util"
 	"gin_app/config"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -110,6 +111,20 @@ func Download(c *gin.Context) {
 		return
 	}
 	c.File(sourcePath)
+}
+
+// DownloadFromUrl 下载 url返回的数据，可下载第三方媒体文件
+func DownloadFromUrl(c *gin.Context) {
+	result := &common.Result{}
+	url := c.Query("url")
+
+	res, err := http.Get(url)
+	if err != nil {
+		c.JSON(200, result.Fail("", err))
+		return
+	}
+	defer res.Body.Close()
+	io.Copy(c.Writer, res.Body)
 }
 
 // ExtractWord 提取 word文档

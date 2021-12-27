@@ -93,22 +93,42 @@ func TestHandleData(t *testing.T) {
 }
 
 func TestType(t *testing.T) {
-	data := map[int]int{0: 1, 1: 2}
-	result := Type(data)
-	expect := "map"
-
-	data1 := []int{222, 33}
-	result1 := Type(&data1)
-	expect1 := "ptr"
-
-	t.Log(result)
-	t.Log(result1)
-
-	if result != expect {
-		t.Errorf("result = %v, expect = %v", result, expect)
+	data := make(map[string]interface{}, 10)
+	data["map"] = map[string]int{
+		"one":   1,
+		"two":   2,
+		"three": 3,
 	}
-
-	if result1 != expect1 {
-		t.Errorf("result = %v, expect = %v", result, expect)
+	data["slice"] = []int{1, 2, 3}
+	data["struct"] = struct {
+		code int
+		msg  string
+	}{
+		code: 200,
+		msg:  "haha",
 	}
+	ch := make(chan interface{}, 3)
+	for i := 0; i < 3; i++ {
+		ch <- i
+	}
+	data["chan"] = ch
+	data["func"] = func() { return }
+	var iface = func() interface{} {
+		return 0
+	}()
+	data["interface"] = iface
+	data["bool"] = false
+	var variable int64 = 123456789
+	data["ptr"] = &variable
+	data["float64"] = 12.1314
+	var i64 int64 = 1024
+	data["int64"] = i64
+	var ui64 uint64 = 2048
+	data["uint64"] = ui64
+	data["nil"] = nil
+
+	for key, value := range data {
+		t.Logf("key = %s, type = %v", key, TypeOf(value))
+	}
+	t.Skip("常见变量类型如上")
 }

@@ -40,16 +40,6 @@ func CheckFileIsExist(name string) bool {
 	return true
 }
 
-// SnowFlakeID 产生一个 snowflake node
-// func SnowFlakeID() *snowflake.Node {
-// 	// Create a new Node with a Node number of 1
-// 	node, err := snowflake.NewNode(1)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return node
-// }
-
 // TimeCost 函数耗时统计
 func TimeCost() func() {
 	start := time.Now()
@@ -181,7 +171,10 @@ func ToString(v interface{}) string {
 	return s
 }
 
-func ParseInt() {
+// ParseInt 字符串数字转整型
+func ParseInt(s string, base int, bitSize int) {
+	// v, err := strconv.Atoi(s)
+
 }
 
 // ToJson 转成json字符串
@@ -248,7 +241,10 @@ func HandleData(data interface{}) interface{} {
 	}
 }
 
-// Type get variable type in reflect
-func Type(data interface{}) string {
+// TypeOf 获取变量类型
+func TypeOf(data interface{}) string {
+	if data == nil {
+		return "nil"
+	}
 	return reflect.TypeOf(data).Kind().String()
 }

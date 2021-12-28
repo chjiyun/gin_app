@@ -132,3 +132,15 @@ func TestType(t *testing.T) {
 	}
 	t.Skip("常见变量类型如上")
 }
+
+func TestSnakeString(t *testing.T) {
+	data := "SnakeStringYY"
+
+	result := SnakeString(data)
+	expect := "snake_string_y_y"
+	t.Log(result)
+
+	if result != expect {
+		t.Errorf("result = %v, expect = %v", result, expect)
+	}
+}

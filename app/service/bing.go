@@ -171,14 +171,22 @@ func GetAllBing(c *gin.Context) {
 
 	page, _ := strconv.Atoi(c.Query("page"))
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
+	startTime := c.Query("start_time")
 
 	var bing []model.Bing
 	var count int64
-	db.Model(&model.Bing{}).Count(&count)
+	tx := db
+
+	tx.Model(&model.Bing{}).Count(&count)
+	tx = tx.Omit("url", "hsh", "updated_at")
+
+	if startTime != "" {
+		tx = tx.Where("created_at > ?", startTime)
+	}
 	if page > 0 && pageSize > 0 {
-		db.Limit(pageSize).Offset((page - 1) * pageSize).Find(&bing)
+		tx.Limit(pageSize).Offset((page - 1) * pageSize).Find(&bing)
 	} else {
-		db.Find(&bing)
+		tx.Find(&bing)
 	}
 	c.JSON(200, gin.H{
 		"count": count,

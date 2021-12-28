@@ -248,3 +248,21 @@ func TypeOf(data interface{}) string {
 	}
 	return reflect.TypeOf(data).Kind().String()
 }
+
+// SnakeString 驼峰转蛇形名
+// XxYy to xx_yy , XxYY to xx_y_y
+func SnakeString(s string) string {
+	length := len(s)
+	data := make([]byte, 0, len(s)*2)
+	for i := 0; i < length; i++ {
+		d := s[i]
+		// or通过ASCII码进行大小写的转化
+		// 65-90（A-Z），97-122（a-z）
+		//判断如果字母为大写的A-Z就在前面拼接一个_
+		if i > 0 && d >= 'A' && d <= 'Z' {
+			data = append(data, '_')
+		}
+		data = append(data, d)
+	}
+	return strings.ToLower(string(data[:]))
+}

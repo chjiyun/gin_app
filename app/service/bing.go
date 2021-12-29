@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -172,6 +173,7 @@ func GetAllBing(c *gin.Context) {
 	page, _ := strconv.Atoi(c.Query("page"))
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
 	startTime := c.Query("start_time")
+	endTime := c.Query("end_time")
 
 	var bing []model.Bing
 	var count int64
@@ -181,7 +183,10 @@ func GetAllBing(c *gin.Context) {
 	tx = tx.Omit("url", "hsh", "updated_at")
 
 	if startTime != "" {
-		tx = tx.Where("created_at > ?", startTime)
+		tx = tx.Where("created_at >= ?", startTime)
+	}
+	if endTime != "" {
+		tx = tx.Where("created_at < ?", endTime)
 	}
 	if page > 0 && pageSize > 0 {
 		tx.Limit(pageSize).Offset((page - 1) * pageSize).Find(&bing)
@@ -192,4 +197,38 @@ func GetAllBing(c *gin.Context) {
 		"count": count,
 		"data":  bing,
 	})
+}
+
+// GetBingZip 压缩下载bing图片
+func GetBingZip(c *gin.Context) {
+	db := c.Value("DB").(*gorm.DB)
+	startTime := c.Query("start_time")
+	endTime := c.Query("end_time")
+
+	tx := db
+	var bing []model.Bing
+	var file []model.File
+
+	if startTime != "" {
+		tx = tx.Where("created_at >= ?", startTime)
+	}
+	if endTime != "" {
+		tx = tx.Where("created_at < ?", endTime)
+	}
+	tx.Preload("File", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, path, name")
+	}).Select("`bing`.id, `bing`.file_id").Find(&bing)
+
+	// tx.Joins("File").Select("`bing`.id, `bing`.file_id").Find(&bing)
+
+	fmt.Println(file)
+
+	// c.JSON(200, bing)
+
+	basedir := config.Cfg.Basedir
+	zipName := "bing"
+	util.Zip(&c.Writer, filepath.Join(basedir, "files"))
+	c.Header("Content-Type", "application/zip")
+	disposition := util.WriteString("attachment;filename=\"", zipName, "\"")
+	c.Header("Content-Disposition", disposition)
 }

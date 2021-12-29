@@ -1,19 +1,24 @@
 package util
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Call 反射动态调用函数
@@ -265,4 +270,51 @@ func SnakeString(s string) string {
 		data = append(data, d)
 	}
 	return strings.ToLower(string(data[:]))
+}
+
+// Zip 压缩指定文件或目录并下载
+func Zip(rw *gin.ResponseWriter, src string) error {
+	zipWriter := zip.NewWriter(*rw)
+	defer zipWriter.Close()
+
+	// 遍历路径信息
+	err := filepath.Walk(src, func(path string, info os.FileInfo, _ error) error {
+		isdir := info.IsDir()
+		// 如果是源路径，提前进行下一个遍历
+		if path == src && isdir {
+			return nil
+		}
+		// 获取：文件头信息
+		header, _ := zip.FileInfoHeader(info)
+		header.Name = strings.TrimPrefix(path, src+`\`)
+
+		// 判断：文件是不是文件夹
+		if isdir {
+			header.Name += `/`
+		} else {
+			// 设置：zip的文件压缩算法
+			header.Method = zip.Deflate
+		}
+
+		// 创建：压缩包头部信息
+		writer, err := zipWriter.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+		if !isdir {
+			file, _ := os.Open(path)
+			defer file.Close()
+			io.Copy(writer, file)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 打包文件并下载
+func zipFiles(rw *gin.ResponseWriter, filenames []string) {
+
 }

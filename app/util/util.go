@@ -314,7 +314,29 @@ func Zip(rw *gin.ResponseWriter, src string) error {
 	return nil
 }
 
-// 打包文件并下载
-func zipFiles(rw *gin.ResponseWriter, filenames []string) {
+// 打包文件并下载，files: 文件绝对路径
+func zipFiles(rw *gin.ResponseWriter, files []string) {
+	zipWriter := zip.NewWriter(*rw)
+	defer zipWriter.Close()
 
+	for _, name := range files {
+		f, err := os.Open(name)
+		if err != nil {
+			continue
+		}
+		defer f.Close()
+		info, err := f.Stat()
+		if err != nil {
+			continue
+		}
+		header, _ := zip.FileInfoHeader(info)
+		//使用上面的FileInforHeader() 就可以把文件保存的路径替换成我们自己想要的了，如下面
+		// header.Name = strings.Replace(name, oldform, newform, -1)
+		header.Method = zip.Deflate
+		writer, err := zipWriter.CreateHeader(header)
+		if err != nil {
+			continue
+		}
+		io.Copy(writer, f)
+	}
 }

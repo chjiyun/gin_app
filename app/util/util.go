@@ -276,9 +276,16 @@ func SnakeString(s string) string {
 func Zip(rw *gin.ResponseWriter, src string) error {
 	zipWriter := zip.NewWriter(*rw)
 	defer zipWriter.Close()
+	prefix := src + `\`
+	// 打开src，判断是否是单文件
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	srcIsDir := srcInfo.IsDir()
 
 	// 遍历路径信息
-	err := filepath.Walk(src, func(path string, info os.FileInfo, _ error) error {
+	err = filepath.Walk(src, func(path string, info os.FileInfo, _ error) error {
 		isdir := info.IsDir()
 		// 如果是源路径，提前进行下一个遍历
 		if path == src && isdir {
@@ -286,9 +293,11 @@ func Zip(rw *gin.ResponseWriter, src string) error {
 		}
 		// 获取：文件头信息
 		header, _ := zip.FileInfoHeader(info)
-		header.Name = strings.TrimPrefix(path, src+`\`)
+		// 压缩包里的文件路径（单文件可以不设置name）
+		if srcIsDir {
+			header.Name = strings.TrimPrefix(path, prefix)
+		}
 
-		// 判断：文件是不是文件夹
 		if isdir {
 			header.Name += `/`
 		} else {
@@ -314,12 +323,13 @@ func Zip(rw *gin.ResponseWriter, src string) error {
 	return nil
 }
 
-// 打包文件并下载，files: 文件绝对路径
-func zipFiles(rw *gin.ResponseWriter, files []string) {
+// ZipFiles 打包文件并下载，files: 文件绝对路径
+// dst: 打包后的文件路径
+func ZipFiles(rw *gin.ResponseWriter, files []string, dst []string) {
 	zipWriter := zip.NewWriter(*rw)
 	defer zipWriter.Close()
 
-	for _, name := range files {
+	for i, name := range files {
 		f, err := os.Open(name)
 		if err != nil {
 			continue
@@ -331,7 +341,10 @@ func zipFiles(rw *gin.ResponseWriter, files []string) {
 		}
 		header, _ := zip.FileInfoHeader(info)
 		//使用上面的FileInforHeader() 就可以把文件保存的路径替换成我们自己想要的了，如下面
-		// header.Name = strings.Replace(name, oldform, newform, -1)
+		if dst[i] == "" {
+			continue
+		}
+		header.Name = dst[i]
 		header.Method = zip.Deflate
 		writer, err := zipWriter.CreateHeader(header)
 		if err != nil {

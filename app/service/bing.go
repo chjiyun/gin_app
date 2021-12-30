@@ -207,7 +207,7 @@ func GetBingZip(c *gin.Context) {
 
 	tx := db
 	var bing []model.Bing
-	var file []model.File
+	// var file []model.File
 
 	if startTime != "" {
 		tx = tx.Where("created_at >= ?", startTime)
@@ -221,14 +221,23 @@ func GetBingZip(c *gin.Context) {
 
 	// tx.Joins("File").Select("`bing`.id, `bing`.file_id").Find(&bing)
 
-	fmt.Println(file)
+	// fmt.Println(file)
 
-	// c.JSON(200, bing)
-
-	basedir := config.Cfg.Basedir
-	zipName := "bing"
-	util.Zip(&c.Writer, filepath.Join(basedir, "files"))
+	filenames := make([]string, 0, len(bing))
+	dst := make([]string, 0, len(bing))
+	zipName := "bing_wallpaper.zip"
+	for _, f := range bing {
+		if f.File.Path != "" {
+			path := filepath.Join(config.Cfg.Basedir, f.File.Path)
+			dstpath := filepath.Join("bing_wallpaper", f.File.Name)
+			filenames = append(filenames, path)
+			dst = append(dst, dstpath)
+		}
+	}
+	// header 在写入writer前设置
 	c.Header("Content-Type", "application/zip")
-	disposition := util.WriteString("attachment;filename=\"", zipName, "\"")
-	c.Header("Content-Disposition", disposition)
+	c.Header("Content-Disposition", "attachment; filename="+zipName)
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	util.ZipFiles(&c.Writer, filenames, dst)
 }

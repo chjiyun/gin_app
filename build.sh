@@ -26,21 +26,22 @@ if [ -f $pidFile ]; then
   kill -9 $pid
 fi
 
-echo "项目路径：${pwd}"
+echo "项目路径: ${pwd}"
 echo "start clean log file"
 
 if [ ! -d "$logDir" ]; then
   mkdir "$logDir"
 fi
 
-# 找到半年前的日志文件
+# 半年前的日期
 m=$(date -d "-6 months" "+%s")
 
-echo "半年前的日期：$(date -d @${m} "+%Y-%m-%d")"
+echo "半年前的日期: $(date -d @${m} "+%Y-%m-%d")"
 
 index=1
 f=`ls ${logDir} -1 -c`
 
+# 清理旧日志文件
 for name in $f
 do
   # echo "日志${index}：$name"
@@ -76,22 +77,23 @@ buildResult=`go build -o "${targetFile}" "$buildPkg"`
 
 if [ -z "$buildResult" ]; then
   chmod 773 ${targetFile}
-  echo "build success, filename：${targetFile}"
+  echo "build success, filename: ${targetFile}"
 else
   echo "build error $buildResult"
   exit
 fi
 
 
-if [ ! -f "$info_log" ]; then
-  touch "$info_log"
-fi
+# if [ ! -f "$info_log" ]; then
+#   touch "$info_log"
+# fi
 
-if [ ! -f "$error_log" ]; then
-  touch "$error_log"
-fi
+# if [ ! -f "$error_log" ]; then
+#   touch "$error_log"
+# fi
 
-nohup "./${targetFile}" 1>"${info_log}" 2>"${error_log}" & echo $! > "$pidFile"
+# nohup "./${targetFile}" 1>"${info_log}" 2>"${error_log}" & echo $! > "$pidFile"
+nohup "./${targetFile}" 1>/dev/null 2>&1 & echo $! > "$pidFile"
 
 echo "------new pid: $(<$pidFile)"
 

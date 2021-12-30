@@ -161,6 +161,18 @@ func dbInit() {
 	if Cfg.Env == gin.DebugMode {
 		logMode = logger.Info
 	}
+	for _, ds := range Cfg.Datasource {
+		if ds.Dsn == "" {
+			continue
+		}
+		key, err := ioutil.ReadFile("hashkey.txt")
+		if err != nil {
+			panic(err)
+		}
+		ds.Dsn = util.Decrypt(ds.Dsn, key)
+	}
+	fmt.Println(Cfg.Datasource)
+
 	DB, err = gorm.Open(mysql.New(mysql.Config{
 		DSN: Cfg.Datasource[0].Dsn,
 	}), &gorm.Config{

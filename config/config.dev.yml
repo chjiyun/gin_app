@@ -8,5 +8,5 @@ datasource:
   -
     model: model
     dialect: mysql
-    dsn: chjiyun:chjiyun@2020@tcp(101.133.159.158:3306)/egg_test?charset=utf8&parseTime=True&loc=Local
+    dsn: U2FsdGVkX18tNHz1t2DfMNtRS7mVKjYb2YXvNPQbm0YVGKjOkgwcmkOMxM9dJ76yuEQ1kRMNf4d582o42IJRcWrySCt8WlMNXGOtUZF5mugtnbj/6IyvWf9FNXFGG5cRkVmCFA2HAGZPbMVrOf0S4Q==
 

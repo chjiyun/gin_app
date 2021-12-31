@@ -1,9 +1,11 @@
+// 加解密工具包
 package util
 
 import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/des"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -22,8 +24,7 @@ func Encrypt(src string, key []byte) string {
 
 // des解密, key长度必须大于16位
 func Decrypt(src string, key []byte) string {
-	data := []byte(src)
-	// data, _ := hex.DecodeString(src)
+	data, _ := hex.DecodeString(src)
 	block, err := des.NewCipher(key[:8])
 	if err != nil {
 		panic(err)

@@ -44,6 +44,15 @@ go test -run Basename ./app/util -v
 go test -run ^Basename$ ./app/util -v
 ```
 
+8. 数据源dsn配置加密
+
+本地开发环境配置文件（config.dev.yml）不想暴露真实连接，可用对称加密（des）保护敏感数据，key 可用[哈希算法工具](http://www.jsons.cn/allencrypt/)生成一个长度大于16位的文本，然后git忽略跟踪这个文件
+```bash
+# 加密dsn连接信息，“src=”后填原文，密钥取自 hashkey.txt
+go test -run ^TestEncrypt$ .\app\util -v -args "src=*"
+# 解密dsn文本，“src=”后填加密文本
+go test -run ^TestDecrypt$ .\app\util -v -args "src=*"
+```
 
 ## 启动
 

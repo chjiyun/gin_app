@@ -53,6 +53,8 @@ go test -run ^Basename$ ./app/util -v
 go test -run ^TestEncrypt$ .\app\util -v -args "src=*"
 # 解密dsn文本，“src=”后填加密文本
 go test -run ^TestDecrypt$ .\app\util -v -args "src=*"
+# 使用下面的测试函数生成一个sha1散列信息
+go test -run ^TestSha1$ .\app\util -v -args "src=*"
 ```
 
 ## 启动

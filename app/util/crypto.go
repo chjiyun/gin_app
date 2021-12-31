@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/des"
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 )
@@ -49,4 +50,13 @@ func PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
 	return origData[:(length - unpadding)]
+}
+
+// Sha1 散列函数之sha1
+func Sha1(s string) string {
+	h := sha1.New()
+	h.Write([]byte(s))
+	// 最终的散列值的字符切片，参数可以用来对现有的字符切片追加额外的字节切片
+	out := h.Sum(nil)
+	return fmt.Sprintf("%x", out)
 }

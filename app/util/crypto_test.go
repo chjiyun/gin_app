@@ -44,3 +44,17 @@ func TestDecrypt(t *testing.T) {
 
 	t.Skipf("original txt: %s", result)
 }
+
+func TestSha1(t *testing.T) {
+	var data string
+	src := os.Args[len(os.Args)-1]
+	prefix := "src="
+	if strings.HasPrefix(src, prefix) {
+		data = strings.TrimPrefix(src, prefix)
+	} else {
+		data = "i am chjiyun"
+	}
+	result := Sha1(data)
+
+	t.Skipf("result = %s, src = %s", result, data)
+}

@@ -179,8 +179,11 @@ func GetAllBing(c *gin.Context) {
 	var count int64
 	tx := db
 
-	tx.Model(&model.Bing{}).Count(&count)
-	tx = tx.Omit("url", "hsh", "updated_at")
+	tx.Joins("left join file on `file`.id = `bing`.file_id and `file`.is_del = 0").Model(&model.Bing{}).Count(&count)
+
+	tx = tx.Preload("File", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, uid, ext, name, size")
+	}).Omit("url", "hsh", "updated_at")
 
 	if startTime != "" {
 		tx = tx.Where("created_at >= ?", startTime)
@@ -189,10 +192,10 @@ func GetAllBing(c *gin.Context) {
 		tx = tx.Where("created_at < ?", endTime)
 	}
 	if page > 0 && pageSize > 0 {
-		tx.Limit(pageSize).Offset((page - 1) * pageSize).Find(&bing)
-	} else {
-		tx.Find(&bing)
+		tx = tx.Limit(pageSize).Offset((page - 1) * pageSize)
 	}
+	tx.Order("created_at desc").Find(&bing)
+
 	c.JSON(200, gin.H{
 		"count": count,
 		"data":  bing,

@@ -1,7 +1,9 @@
 // 接口response 定义与配置
 package common
 
-import "gin_app/app/util"
+import (
+	"reflect"
+)
 
 type message struct {
 	code int
@@ -78,7 +80,13 @@ func (r *Result) Fail(msg string, data interface{}) *Result {
 	}
 	r.Code = res.code
 	r.Msg = msg
-	r.Data = util.HandleData(&data)
+	var data1 interface{}
+	handleData(&data, &data1)
+	if data1 != nil {
+		r.Data = data1
+		return r
+	}
+	r.Data = data
 	return r
 }
 
@@ -90,7 +98,13 @@ func (r *Result) FailDefault() *Result {
 }
 
 func (r *Result) SetData(data interface{}) {
-	r.Data = util.HandleData(&data)
+	var data1 interface{}
+	handleData(&data, &data1)
+	if data1 != nil {
+		r.Data = data1
+		return
+	}
+	r.Data = data
 }
 
 // SetResult 自定义code msg
@@ -101,4 +115,17 @@ func (r *Result) SetResult(res message, msg string) *Result {
 		r.Msg = msg
 	}
 	return r
+}
+
+// handleData 处理data
+func handleData(data, d interface{}) {
+	// 取出指针的值
+	dataVal := reflect.ValueOf(data).Elem().Interface()
+	dVal := reflect.ValueOf(d).Elem()
+	switch dataVal.(type) {
+	case error:
+		dVal.Set(reflect.ValueOf(dataVal.(error).Error()))
+	default:
+		return
+	}
 }

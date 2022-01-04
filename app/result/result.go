@@ -1,24 +1,20 @@
 // 接口response 定义与配置
-package common
+package result
 
 import (
 	"reflect"
 )
 
+type Result struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
 type message struct {
 	code int
 	msg  string
 }
 
-// const (
-// 	Success = iota+1
-// 	ParameterError
-// 	IllegalVisit
-// 	Fail
-// 	UnLogin
-// 	InValidFile
-// 	NotFound
-// )
 var ResultMap = map[string]message{
 	"success": {
 		code: 200,
@@ -52,6 +48,15 @@ var ResultMap = map[string]message{
 		code: 208,
 		msg:  "服务内部错误",
 	},
+}
+
+// New return a new Result instance
+func New() *Result {
+	r := &Result{}
+	res := ResultMap["success"]
+	r.Code = res.code
+	r.Msg = res.msg
+	return r
 }
 
 // Success 成功时的返回体，返回的 Result指针是 r的副本
@@ -117,7 +122,7 @@ func (r *Result) SetResult(res message, msg string) *Result {
 	return r
 }
 
-// handleData 处理data
+// handleData 处理data特殊类型
 func handleData(data, d interface{}) {
 	// 取出指针的值
 	dataVal := reflect.ValueOf(data).Elem().Interface()

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"gin_app/app/common"
 	"gin_app/app/model"
+	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
 	"io"
@@ -22,12 +22,12 @@ import (
 
 // Upload 接收上传的文件
 func Upload(c *gin.Context) {
-	result := &common.Result{}
+	r := result.New()
 	db := c.Value("DB").(*gorm.DB)
 
 	f, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(200, result.Fail("上传失败", err))
+		c.JSON(200, r.Fail("上传失败", err))
 		return
 	}
 
@@ -36,7 +36,7 @@ func Upload(c *gin.Context) {
 	mfile, _ := f.Open()
 	mime, err := mimetype.DetectReader(mfile)
 	if err != nil {
-		c.JSON(200, result.Fail("MIME type detect failed", err))
+		c.JSON(200, r.Fail("MIME type detect failed", err))
 		return
 	}
 	mtype := mime.String()
@@ -55,15 +55,15 @@ func Upload(c *gin.Context) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		result.SetData(err)
-		c.JSON(200, result.SetResult(common.ResultMap["serverError"], ""))
+		r.SetData(err)
+		c.JSON(200, r.SetResult(result.ResultMap["serverError"], ""))
 		return
 	}
 
 	// Upload the file to specific dst.
 	err = c.SaveUploadedFile(f, sourcepath)
 	if err != nil {
-		c.JSON(200, result.Fail("上传失败", err))
+		c.JSON(200, r.Fail("上传失败", err))
 		return
 	}
 
@@ -79,17 +79,18 @@ func Upload(c *gin.Context) {
 	}
 	res := db.Create(&file)
 	if res.Error != nil {
-		c.JSON(200, result.Fail("上传失败", res.Error))
+		c.JSON(200, r.Fail("上传失败", res.Error))
 		return
 	}
-	c.JSON(200, result.Success("", gin.H{
+	r.SetData(gin.H{
 		"id": file.ID, "uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
-	}))
+	})
+	c.JSON(200, r)
 }
 
 // Download 下载文件
 func Download(c *gin.Context) {
-	result := &common.Result{}
+	r := result.New()
 	id := c.Param("id")
 	uid := util.Basename(id)
 	db := c.Value("DB").(*gorm.DB)
@@ -97,17 +98,17 @@ func Download(c *gin.Context) {
 
 	res := db.First(&file, "uid", uid)
 	if res.Error != nil {
-		c.JSON(http.StatusNotFound, result.SetResult(common.ResultMap["notFound"], ""))
+		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
 		return
 	}
 	ext := filepath.Ext(id)
 	if len(ext) > 0 && file.Ext != ext[1:] {
-		c.JSON(http.StatusNotFound, result.SetResult(common.ResultMap["notFound"], ""))
+		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
 		return
 	}
 	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
 	if !util.CheckFileIsExist(sourcePath) {
-		c.JSON(http.StatusNotFound, result.SetResult(common.ResultMap["notFound"], ""))
+		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
 		return
 	}
 	c.File(sourcePath)
@@ -115,12 +116,12 @@ func Download(c *gin.Context) {
 
 // DownloadFromUrl 下载 url返回的数据，可下载第三方媒体文件
 func DownloadFromUrl(c *gin.Context) {
-	result := &common.Result{}
+	r := result.New()
 	url := c.Query("url")
 
 	res, err := http.Get(url)
 	if err != nil {
-		c.JSON(200, result.Fail("", err))
+		c.JSON(200, r.Fail("", err))
 		return
 	}
 	defer res.Body.Close()

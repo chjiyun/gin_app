@@ -4,6 +4,8 @@ pwd=`pwd`
 projectName=`basename $pwd`
 # 编译的分支
 branch="master"
+# 当前git分支名
+localBranch=`git rev-parse --abbrev-ref HEAD`
 # 编译后的输出文件名称，赋值当前项目文件名
 targetFile="$projectName"
 # 编译的包名
@@ -18,6 +20,8 @@ today=$(date "+%Y_%m_%d")
 logDir="/root/logs/${projectName}"
 info_log="${logDir}/info.${today}.log"
 error_log="${logDir}/error.${today}.log"
+
+echo "当前分支: ${localBranch}"
 
 if [ -f $pidFile ]; then
   # pid=$(cat $pidFile)
@@ -62,15 +66,15 @@ done
 
 echo "complete the clean"
 
-if [ -n "$1" ]; then
-  branch="$1"
-  echo "Switch branch to ${branch}"
-else
-  echo "Building Branch: ${branch}"
-fi
+# if [ -n "$1" ]; then
+#   branch="$1"
+#   echo "Switch branch to ${branch}"
+# else
+#   echo "Building Branch: ${branch}"
+# fi
 
-git checkout "$branch"
-git pull
+# git checkout "$branch"
+# git pull
 
 
 buildResult=`go build -o "${targetFile}" "$buildPkg"`

@@ -20,7 +20,7 @@ func Encrypt(src string, key []byte) string {
 	blockMode := cipher.NewCBCEncrypter(block, key[8:16])
 	out := make([]byte, len(data))
 	blockMode.CryptBlocks(out, data)
-	return fmt.Sprintf("%X", out)
+	return fmt.Sprintf("%x", out)
 }
 
 // des解密, key长度必须大于16位

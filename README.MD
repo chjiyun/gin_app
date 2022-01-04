@@ -125,6 +125,9 @@ nohup ./main 1>info_2021_03_27.log 2>error.log & echo $! > pid.txt
 * 最后的& 表示程序后台运行
 
 ## 一键部署
+
+如果不想自定义启动可用如下命令实现一键部署：
+
 ```shell
 chmod 755 ./build.sh
 ./build.sh

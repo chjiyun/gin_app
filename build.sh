@@ -78,7 +78,7 @@ echo "complete the clean"
 # git pull
 
 
-flags="-X '$path.app_version=v1.0' -X '$path.go_version=$(go version)' -X '$path.build_time=$(date "+%Y.%m.%d %H:%M:%S")' -X '$path.build_user=$(id -u -n)' -X '$path.commit_id=$(git rev-parse --short HEAD)'"
+flags="-X '${path}.app_version=v1.0' -X '${path}.go_version=$(go version)' -X '${path}.build_time=$(date "+%Y.%m.%d %H:%M:%S")' -X '${path}.build_user=$(id -u -n)' -X '${path}.commit_id=$(git rev-parse --short HEAD)'"
 buildResult=`go build -ldflags "$flags" -o "${targetFile}" "$buildPkg"`
 echo "$flags"
 

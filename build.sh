@@ -20,7 +20,7 @@ today=$(date "+%Y_%m_%d")
 logDir="/root/logs/${appName}"
 info_log="${logDir}/info.${today}.log"
 error_log="${logDir}/error.${today}.log"
-path=targetFile
+path="$targetFile"
 
 echo "当前分支: ${localBranch}"
 
@@ -78,13 +78,13 @@ echo "complete the clean"
 # git pull
 
 
-flags="-X '${path}.version=v1.0' -X '${path}.go_version=$(go version)' -X '${path}.build_time=$(date "+%Y.%m.%d %H:%M:%S")' -X '${path}.build_user=$(id -u -n)' -X '${path}.commit_id=$(git rev-parse --short HEAD)'"
+flags="-X '$path.version=v1.0' -X '$path.go_version=$(go version)' -X '$path.build_time=$(date "+%Y.%m.%d %H:%M:%S")' -X '$path.build_user=$(id -u -n)' -X '$path.commit_id=$(git rev-parse --short HEAD)'"
 buildResult=`go build -ldflags "$flags" -o "${targetFile}" "$buildPkg"`
 echo "$flags"
 
-if [ -z "$buildResult" ]; then
+# 编译成功无输出
+if [ -z "$buildResult" ]; then 
   chmod 773 ${targetFile}
-  echo "result: $buildResult"
   echo "build success, filename: ${targetFile}"
 else
   echo "build error $buildResult"

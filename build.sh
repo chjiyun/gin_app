@@ -20,6 +20,7 @@ today=$(date "+%Y_%m_%d")
 logDir="/root/logs/${appName}"
 info_log="${logDir}/info.${today}.log"
 error_log="${logDir}/error.${today}.log"
+path=targetFile
 
 echo "当前分支: ${localBranch}"
 
@@ -77,7 +78,7 @@ echo "complete the clean"
 # git pull
 
 
-flags="-X 'main.version=v1.0' -X 'main.go_version=$(go version)' -X 'main.build_time=$(date "+%Y.%m.%d %H:%M:%S")' -X 'main.build_user=$(id -u -n)' -X 'main.commit_id=$(git rev-parse --short HEAD)'"
+flags="-X '${path}.version=v1.0' -X '${path}.go_version=$(go version)' -X '${path}.build_time=$(date "+%Y.%m.%d %H:%M:%S")' -X '${path}.build_user=$(id -u -n)' -X '${path}.commit_id=$(git rev-parse --short HEAD)'"
 buildResult=`go build -ldflags "${flags}" -o "${targetFile}" "$buildPkg"`
 
 if [ -z "$buildResult" ]; then

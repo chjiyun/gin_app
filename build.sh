@@ -1,13 +1,13 @@
 #!/bin/bash
 
 pwd=`pwd`
-projectName=`basename $pwd`
+appName=`basename $pwd`
 # 编译的分支
 branch="master"
 # 当前git分支名
 localBranch=`git rev-parse --abbrev-ref HEAD`
 # 编译后的输出文件名称，赋值当前项目文件名
-targetFile="$projectName"
+targetFile="$appName"
 # 编译的包名
 buildPkg="main.go"
 # 编译结果
@@ -17,7 +17,7 @@ pidFile="pid.txt"
 
 today=$(date "+%Y_%m_%d")
 # 日志存放路径
-logDir="/root/logs/${projectName}"
+logDir="/root/logs/${appName}"
 info_log="${logDir}/info.${today}.log"
 error_log="${logDir}/error.${today}.log"
 

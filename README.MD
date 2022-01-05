@@ -59,14 +59,10 @@ go test -run ^TestSha1$ .\app\util -v -args "src=*"
 
 ## 启动
 
-### 原生方式
-```
+```shell
+# 原始方式
 go run ./main.go
-```
-
-### air插件
-根目录直接运行如下命令
-```
+# air启动，支持热重载
 air
 ```
 
@@ -102,7 +98,7 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
 rz -y -v
 ```
 
-## linux后台运行
+## 自定义部署
 
 ```shell
 # 赋可执行权限
@@ -129,7 +125,9 @@ nohup ./main 1>info_2021_03_27.log 2>error.log & echo $! > pid.txt
 如果不想自定义启动可用如下命令实现一键部署：
 
 ```shell
+# 运行前前拉取最新git代码
 chmod 755 ./build.sh
+# 会自动创建log、file目录，自动build
 ./build.sh
 ```
 

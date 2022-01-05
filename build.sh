@@ -20,7 +20,7 @@ today=$(date "+%Y_%m_%d")
 logDir="/root/logs/${appName}"
 info_log="${logDir}/info.${today}.log"
 error_log="${logDir}/error.${today}.log"
-path="${targetFile}"
+path="${targetFile}/version"
 
 echo "当前分支: ${localBranch}"
 
@@ -79,8 +79,8 @@ echo "complete the clean"
 
 
 flags="-X '${path}.AppVersion=v1.0' -X '${path}.GoVersion=$(go version | awk '{print $3 " " $4}')' -X '${path}.BuildTime=$(date "+%Y.%m.%d %H:%M:%S")' -X '${path}.BuildUser=$(id -u -n)' -X '${path}.CommitId=$(git rev-parse --short HEAD)'"
-buildResult=`go build -ldflags "$flags" -o "${targetFile}" "$buildPkg"`
 echo "$flags"
+buildResult=`go build -ldflags "$flags" -o "${targetFile}" "$buildPkg"`
 
 # 编译成功无输出
 if [ -z "$buildResult" ]; then 

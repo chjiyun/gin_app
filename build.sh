@@ -20,7 +20,7 @@ today=$(date "+%Y_%m_%d")
 logDir="/root/logs/${appName}"
 info_log="${logDir}/info.${today}.log"
 error_log="${logDir}/error.${today}.log"
-path="$targetFile"
+path="main"
 
 echo "当前分支: ${localBranch}"
 

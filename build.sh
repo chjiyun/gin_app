@@ -77,7 +77,8 @@ echo "complete the clean"
 # git pull
 
 
-buildResult=`go build -o "${targetFile}" "$buildPkg"`
+flags="-X 'main.version=v1.0' -X 'main.go_version=$(go version)' -X 'main.build_time=$(date "+%Y.%m.%d %H:%M:%S")' -X 'main.build_user=$(id -u -n)' -X 'main.commit_id=$(git rev-parse --short HEAD)'"
+buildResult=`go build -ldflags "${flags}" -o "${targetFile}" "$buildPkg"`
 
 if [ -z "$buildResult" ]; then
   chmod 773 ${targetFile}

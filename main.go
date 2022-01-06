@@ -1,19 +1,37 @@
 package main
 
 import (
-	// "context"
-
 	"fmt"
 	"gin_app/app"
 	"gin_app/app/middleware"
 	"gin_app/app/service"
 	"gin_app/config"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yitter/idgenerator-go/idgen"
 )
 
+var (
+	AppVersion = "Not provided"
+	GoVersion  = "Not provided"
+	BuildTime  = "Not provided"
+	BuildUser  = "Not provided"
+	CommitId   = "Not provided"
+)
+
 func main() {
+	// 编译时注入信息
+	args := os.Args
+	if len(args) == 2 && (args[1] == "-v" || args[1] == "version") {
+		fmt.Printf("App Version: %s\n", AppVersion)
+		fmt.Printf("Go Version: %s\n", GoVersion)
+		fmt.Printf("Build Time: %s\n", BuildTime)
+		fmt.Printf("Build User: %s\n", BuildUser)
+		fmt.Printf("Git Commit Id: %s\n", CommitId)
+		return
+	}
+
 	// 初始化配置
 	config.Init()
 

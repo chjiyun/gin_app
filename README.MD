@@ -131,6 +131,12 @@ chmod 755 ./build.sh
 ./build.sh
 ```
 
+## 查看编译时注入的版本信息
+```shell
+./gin_app -v
+./gin_app version
+```
+
 # linux安装go
 
 请前往golang [官网下载页面](https://golang.google.cn/dl/)，复制文件链接地址

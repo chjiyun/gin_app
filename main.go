@@ -24,11 +24,13 @@ func main() {
 	// 编译时注入信息
 	args := os.Args
 	if len(args) == 2 && (args[1] == "-v" || args[1] == "version") {
+		fmt.Println("-------------------")
 		fmt.Printf("App Version: %s\n", AppVersion)
 		fmt.Printf("Go Version: %s\n", GoVersion)
 		fmt.Printf("Build Time: %s\n", BuildTime)
 		fmt.Printf("Build User: %s\n", BuildUser)
 		fmt.Printf("Git Commit Id: %s\n", CommitId)
+		fmt.Println("-------------------")
 		return
 	}
 

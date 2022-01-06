@@ -131,6 +131,8 @@ chmod 755 ./build.sh
 ./build.sh
 ```
 
+若出现报错，显示pip命令不存在，则要安装相应的包，看这里[ubuntu下安装yq](https://www.jianshu.com/p/61d18e1685cd)
+
 ## 查看编译时注入的版本信息
 ```shell
 ./gin_app -v
@@ -155,13 +157,15 @@ source ~/.profile
 ```
 
 # 注意
+
 若windows环境下使用logger后控制台出现这样的错误提示 "failed to rotate: failed to create new symlink ***.log ..."，
 请按照如下步骤解决：
 1. win + r 打开运行弹窗，输入secpol.msc
 2. 弹出一个本地安全策略窗口，依次找到安全设置>本地策略>用户权限分配，双击后右侧出现很多行策略，找到创建符号链接双击
 3. 新弹出的窗口中点击添加用户或组，把当前登录计算机的用户加进去，输用户名搜索即可，然后一路确定，还可能需要重启电脑
 
-## Gin 是什么？
+
+# Gin 是什么？
 
 Gin 是一个用 Go (Golang) 编写的 HTTP web 框架。 它是一个类似于 martini 但拥有更好性能的 API 框架, 由于 httprouter，速度提高了近 40 倍。如果你需要极好的性能，使用 Gin 吧。
 

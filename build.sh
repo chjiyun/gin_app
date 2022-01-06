@@ -1,7 +1,9 @@
 #!/bin/bash
 
 pwd=`pwd`
-appName=`basename $pwd`
+# appName=`basename $pwd`
+# 从配置文件取name，默认是项目名
+appName=`cat ./config/config.yml | yq .name`
 # 编译的分支
 branch="master"
 # 当前git分支名

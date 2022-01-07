@@ -2,8 +2,8 @@
 
 pwd=`pwd`
 # appName=`basename $pwd`
-# 从配置文件取name，默认是项目名
-appName=`cat ./config/config.yml | yq .name`
+# 从配置文件取name，默认是项目名，-r 代表过滤掉字符串的双引号
+appName=`cat ./config/config.yml | yq -r .name`
 # 编译的分支
 branch="master"
 # 当前git分支名
@@ -24,7 +24,10 @@ info_log="${logDir}/info.${today}.log"
 error_log="${logDir}/error.${today}.log"
 path="main"
 
-echo "当前分支: ${localBranch}"
+echo "----------------------"
+echo "app name: ${appName}"
+echo "app dir: ${pwd}"
+echo "current branch: ${localBranch}"
 
 if [ -f $pidFile ]; then
   # pid=$(cat $pidFile)
@@ -33,7 +36,6 @@ if [ -f $pidFile ]; then
   kill -9 $pid
 fi
 
-echo "项目路径: ${pwd}"
 echo "start clean log file"
 
 if [ ! -d "$logDir" ]; then

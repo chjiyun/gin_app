@@ -30,6 +30,7 @@ type ImgInfo struct {
 	Urlbase   string `json:"urlbase"`
 	Copyright string `json:"copyright"`
 	Hsh       string
+	Enddate   string
 }
 type uploadResult struct {
 	Code int
@@ -75,7 +76,8 @@ func GetImg(c *gin.Context) {
 	// 打印返回信息
 	fmt.Println("bingRes:", bingRes)
 
-	imgURL := util.WriteString("https://cn.bing.com", bingRes.Images[0].URL)
+	imgInfo := bingRes.Images[0]
+	imgURL := util.WriteString("https://cn.bing.com", imgInfo.URL)
 	res1, err := http.Get(imgURL)
 	if err != nil {
 		fmt.Println("img err:", err)
@@ -111,7 +113,7 @@ func GetImg(c *gin.Context) {
 		return
 	}
 
-	fileName := time.Now().Format("2006-01-02") + "." + bingRes.Images[0].Hsh[:16] + ".jpg"
+	fileName := time.Now().Format("2006-01-02") + "." + imgInfo.Hsh[:16] + ".jpg"
 	// sourcePath := filepath.Join("files", fileName)
 
 	fd := map[string]interface{}{
@@ -135,11 +137,13 @@ func GetImg(c *gin.Context) {
 		log.Errorf("file upload failed: %v", result)
 		return
 	}
+	releaseAt, _ := time.Parse("20060102", imgInfo.Enddate)
 	bing = model.Bing{
-		FileId: result.Data.ID,
-		Url:    imgURL,
-		Hsh:    bingRes.Images[0].Hsh,
-		Desc:   bingRes.Images[0].Copyright,
+		FileId:    result.Data.ID,
+		Url:       imgURL,
+		Hsh:       imgInfo.Hsh,
+		Desc:      imgInfo.Copyright,
+		ReleaseAt: releaseAt,
 	}
 	db.Create(&bing)
 

@@ -83,7 +83,6 @@ echo "complete the clean"
 
 
 flags="-X '${path}.AppVersion=v1.0' -X '${path}.GoVersion=$(go version | awk '{print $3 " " $4}')' -X '${path}.BuildTime=$(date "+%Y.%m.%d %H:%M:%S")' -X '${path}.BuildUser=$(id -u -n)' -X '${path}.CommitId=$(git rev-parse --short HEAD)'"
-echo "$flags"
 buildResult=`go build -ldflags "$flags" -o "${targetFile}" "$buildPkg"`
 
 # 编译成功无输出
@@ -110,3 +109,7 @@ nohup "./${targetFile}" 1>/dev/null 2>&1 & echo $! > "$pidFile"
 echo "------new pid: $(<$pidFile)"
 
 echo "deploy success..."
+
+echo "wait..."
+sleep 1
+"./${targetFile}" -v

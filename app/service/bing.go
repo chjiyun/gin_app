@@ -40,8 +40,11 @@ type uploadResult struct {
 
 // GetImg 获取远程图片并返回
 func GetImg(c *gin.Context) {
-	log := c.Value("Logger").(*logrus.Entry)
 	isSchedule := c.Query("schedule")
+	log := c.Value("Logger").(*logrus.Entry)
+	db := c.Value("DB").(*gorm.DB)
+	var bing model.Bing
+	var file model.File
 
 	res, err := http.Get("https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN")
 	if err != nil {
@@ -75,8 +78,28 @@ func GetImg(c *gin.Context) {
 	json.NewDecoder(res.Body).Decode(&bingRes)
 	// 打印返回信息
 	fmt.Println("bingRes:", bingRes)
-
 	imgInfo := bingRes.Images[0]
+
+	// 非定时任务请求时 检查本地文件是否已下载
+	res2 := db.Where("created_at >= ?", time.Now().Format("2006-01-02")).Limit(1).Find(&bing)
+	if res2.Error != nil {
+		log.Errorln(res2.Error)
+		return
+	}
+	if res2.RowsAffected > 0 && config.Cfg.Env != gin.DebugMode {
+		if isSchedule != "1" {
+			fileRes := db.First(&file, "id", bing.FileId)
+			if fileRes.Error != nil {
+				log.Errorln(fileRes.Error)
+				return
+			}
+			sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
+			c.File(sourcePath)
+		}
+		return
+	}
+
+	// 获取图片
 	imgURL := util.WriteString("https://cn.bing.com", imgInfo.URL)
 	res1, err := http.Get(imgURL)
 	if err != nil {
@@ -98,18 +121,6 @@ func GetImg(c *gin.Context) {
 	io.Copy(c.Writer, imgReader)
 
 	if isSchedule != "1" {
-		return
-	}
-
-	db := c.Value("DB").(*gorm.DB)
-	// 判断当天壁纸是否已下载
-	var bing model.Bing
-	res2 := db.Where("created_at >= ?", time.Now().Format("2006-01-02")).Limit(1).Find(&bing)
-	if res2.Error != nil {
-		log.Errorln(res2.Error)
-		return
-	}
-	if res2.RowsAffected > 0 {
 		return
 	}
 

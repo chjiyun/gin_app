@@ -127,6 +127,8 @@ nohup ./main 1>info_2021_03_27.log 2>error.log & echo $! > pid.txt
 ```shell
 # 运行前前拉取最新git代码
 chmod 755 ./build.sh
+# 如果git diff显示filemode已改变，则用下面的命令忽视文件mode监控
+git config --add core.filemode false
 # 会自动创建log、file目录，自动build
 ./build.sh
 ```

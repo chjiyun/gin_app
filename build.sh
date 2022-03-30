@@ -39,7 +39,8 @@ fi
 echo "start clean log file"
 
 if [ ! -d "$logDir" ]; then
-  mkdir "$logDir"
+# 创建多级目录
+  mkdir -p "$logDir"
 fi
 
 # 半年前的日期

@@ -16,7 +16,6 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/nguyenthenguyen/docx"
-	uuid "github.com/satori/go.uuid"
 	"github.com/yitter/idgenerator-go/idgen"
 	"gorm.io/gorm"
 )
@@ -46,9 +45,8 @@ func Upload(c *gin.Context) {
 	if i := strings.Index(mtype, "/"); i > 0 {
 		filetype = mtype[:i]
 	}
-	uid := uuid.NewV4().String()
-	snowId := idgen.NextId()
-	localName := util.ToString(snowId) + ext
+	uid := idgen.NextId()
+	localName := util.ToString(uid) + ext
 	year, month, _ := time.Now().Date()
 	relativePath := filepath.Join("files", util.ToString(year), util.ToString(int(month)), localName)
 	sourcepath := filepath.Join(config.Cfg.Basedir, relativePath)

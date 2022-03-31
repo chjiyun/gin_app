@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
@@ -93,16 +94,18 @@ func Download(c *gin.Context) {
 	r := result.New()
 	id := c.Param("id")
 	uid := util.Basename(id)
-	db := c.Value("DB").(*gorm.DB)
-	var file model.File
-
-	res := db.First(&file, "uid", uid)
-	if res.Error != nil {
+	ext := filepath.Ext(id)
+	if ext == "" {
 		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
 		return
 	}
-	ext := filepath.Ext(id)
-	if len(ext) > 0 && file.Ext != ext[1:] {
+	db := c.Value("DB").(*gorm.DB)
+	var file model.File
+	ext = ext[1:]
+
+	res := db.Where("uid = ? AND ext = ?", uid, ext).First(&file)
+	fmt.Println(file, res.Error)
+	if res.Error != nil {
 		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
 		return
 	}
@@ -143,3 +146,30 @@ func ExtractWord(c *gin.Context) {
 	r.Close()
 	c.JSON(200, text)
 }
+
+// func CleanFile1(c *gin.Context) {
+// 	db := c.Value("DB").(*gorm.DB)
+// 	var files []model.File
+// 	var files1 []model.File1
+
+// 	db.Find(&files)
+// 	for _, file := range files {
+// 		var file1 model.File1
+// 		err := copier.Copy(&file1, &file)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 			continue
+// 		}
+// 		basename := util.Basename(file.LocalName)
+// 		uid, err := strconv.ParseUint(basename, 10, 64)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 			continue
+// 		}
+// 		file1.Uid = uid
+// 		files1 = append(files1, file1)
+// 	}
+// 	db.CreateInBatches(files1, 10)
+
+// 	c.JSON(200, files1)
+// }

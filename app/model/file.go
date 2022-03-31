@@ -3,7 +3,7 @@ package model
 // 文件model
 type File struct {
 	BaseModel
-	Uid       string `gorm:"size:36;not null;comment:唯一id" json:"uid"`
+	Uid       uint64 `gorm:"not null;comment:雪花id" json:"uid"`
 	Ext       string `gorm:"size:20;comment:文件后缀" json:"ext"`
 	Type      string `gorm:"size:20;comment:文件类型: image,video,audio,txt" json:"type"`
 	MimeType  string `gorm:"size:100" json:"mimeType"`

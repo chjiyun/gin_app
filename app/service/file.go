@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
@@ -34,6 +33,7 @@ func Upload(c *gin.Context) {
 	ext := filepath.Ext(f.Filename)
 	// mimetype := f.Header["Content-Type"][0]
 	mfile, _ := f.Open()
+	defer mfile.Close()
 	mime, err := mimetype.DetectReader(mfile)
 	if err != nil {
 		c.JSON(200, r.Fail("MIME type detect failed", err))
@@ -54,8 +54,8 @@ func Upload(c *gin.Context) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		r.SetData(err)
-		c.JSON(200, r.SetResult(result.ResultMap["serverError"], ""))
+		r.SetResult(result.ResultMap["serverError"], "").SetError(err)
+		c.JSON(200, r)
 		return
 	}
 
@@ -78,7 +78,7 @@ func Upload(c *gin.Context) {
 	}
 	res := db.Create(&file)
 	if res.Error != nil {
-		c.JSON(200, r.Fail("上传失败", res.Error))
+		c.JSON(200, r.Fail("", res.Error))
 		return
 	}
 	r.SetData(gin.H{
@@ -102,9 +102,9 @@ func Download(c *gin.Context) {
 	ext = ext[1:]
 
 	res := db.Where("uid = ? AND ext = ?", uid, ext).First(&file)
-	fmt.Println(file, res.Error)
 	if res.Error != nil {
-		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
+		r.SetResult(result.ResultMap["notFound"], "").SetError(res.Error)
+		c.JSON(http.StatusNotFound, r)
 		return
 	}
 	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
@@ -145,29 +145,16 @@ func ExtractWord(c *gin.Context) {
 	c.JSON(200, text)
 }
 
-// func CleanFile1(c *gin.Context) {
-// 	db := c.Value("DB").(*gorm.DB)
-// 	var files []model.File
-// 	var files1 []model.File1
+// convertToWebp 图片转换成webp格式
+func ConvertToWebp(c *gin.Context) {
+	db := c.Value("DB").(*gorm.DB)
+	var files []model.File
 
-// 	db.Find(&files)
-// 	for _, file := range files {
-// 		var file1 model.File1
-// 		err := copier.Copy(&file1, &file)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			continue
-// 		}
-// 		basename := util.Basename(file.LocalName)
-// 		uid, err := strconv.ParseUint(basename, 10, 64)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			continue
-// 		}
-// 		file1.Uid = uid
-// 		files1 = append(files1, file1)
-// 	}
-// 	db.CreateInBatches(files1, 10)
+	db.Find(&files)
 
-// 	c.JSON(200, files1)
-// }
+	for _, img := range files {
+
+	}
+
+	c.JSON(200, files)
+}

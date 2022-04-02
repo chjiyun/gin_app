@@ -13,5 +13,6 @@ func (r *Router) File(g *gin.RouterGroup) {
 		rg.POST("/upload", service.Upload)
 		rg.GET("/downloadFromUrl", service.DownloadFromUrl)
 		rg.POST("/word", service.ExtractWord)
+		rg.GET("/towebp", service.ConvertToWebp)
 	}
 }

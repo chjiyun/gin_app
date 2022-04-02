@@ -6,9 +6,10 @@ import (
 )
 
 type Result struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
+	Code  int         `json:"code"`
+	Msg   string      `json:"msg"`
+	Data  interface{} `json:"data"`
+	Error error       `josn:"error"`
 }
 type message struct {
 	code int
@@ -78,20 +79,15 @@ func (r *Result) SuccessDefault() *Result {
 	return r
 }
 
-func (r *Result) Fail(msg string, data interface{}) *Result {
+// Fail 失败时的输出
+func (r *Result) Fail(msg string, err error) *Result {
 	res := ResultMap["fail"]
 	if msg == "" {
 		msg = res.msg
 	}
 	r.Code = res.code
 	r.Msg = msg
-	var data1 interface{}
-	handleData(&data, &data1)
-	if data1 != nil {
-		r.Data = data1
-		return r
-	}
-	r.Data = data
+	r.Error = err
 	return r
 }
 
@@ -103,12 +99,6 @@ func (r *Result) FailDefault() *Result {
 }
 
 func (r *Result) SetData(data interface{}) {
-	var data1 interface{}
-	handleData(&data, &data1)
-	if data1 != nil {
-		r.Data = data1
-		return
-	}
 	r.Data = data
 }
 
@@ -120,6 +110,11 @@ func (r *Result) SetResult(res message, msg string) *Result {
 		r.Msg = msg
 	}
 	return r
+}
+
+// SetError 错误输出
+func (r *Result) SetError(err error) {
+	r.Error = err
 }
 
 // handleData 处理data特殊类型

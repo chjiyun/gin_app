@@ -9,7 +9,7 @@ type Result struct {
 	Code  int         `json:"code"`
 	Msg   string      `json:"msg"`
 	Data  interface{} `json:"data"`
-	Error error       `josn:"error"`
+	Error error       `json:"error"`
 }
 type message struct {
 	code int

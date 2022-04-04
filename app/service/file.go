@@ -1,10 +1,14 @@
 package service
 
 import (
+	"fmt"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 	"os"
@@ -22,7 +26,7 @@ import (
 // Upload 接收上传的文件
 func Upload(c *gin.Context) {
 	r := result.New()
-	db := c.Value("DB").(*gorm.DB)
+	// db := c.Value("DB").(*gorm.DB)
 
 	f, err := c.FormFile("file")
 	if err != nil {
@@ -76,11 +80,22 @@ func Upload(c *gin.Context) {
 		Path:      relativePath,
 		Size:      uint(f.Size),
 	}
-	res := db.Create(&file)
-	if res.Error != nil {
-		c.JSON(200, r.Fail("", res.Error))
+	// res := db.Create(&file)
+	// if res.Error != nil {
+	// 	c.JSON(200, r.Fail("", res.Error))
+	// 	return
+	// }
+	fmt.Println(file)
+
+	// 关键：重置offset
+	mfile.Seek(0, 0)
+	width, height, err := getImageXY(mfile)
+	if err != nil {
+		c.JSON(200, r.Fail("文件解码失败", err))
 		return
 	}
+	fmt.Println(width, height)
+
 	r.SetData(gin.H{
 		"id": file.ID, "uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
 	})
@@ -145,16 +160,28 @@ func ExtractWord(c *gin.Context) {
 	c.JSON(200, text)
 }
 
+// getImageXY 获取图片宽高 px
+func getImageXY(file io.Reader) (int, int, error) {
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return 0, 0, err
+	}
+	b := img.Bounds()
+	width := b.Max.X
+	height := b.Max.Y
+	return width, height, nil
+}
+
 // convertToWebp 图片转换成webp格式
 func ConvertToWebp(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
 	var files []model.File
 
-	db.Find(&files)
+	db.Where("ext = ? or ext = ? or ext = ?", "jpg", "jpeg", "png").Find(&files)
 
-	for _, img := range files {
-
-	}
+	// for _, img := range files {
+	// 	fmt.Println(img.Name)
+	// }
 
 	c.JSON(200, files)
 }

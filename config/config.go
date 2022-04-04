@@ -212,26 +212,16 @@ func LogInit() {
 		logFileName = Cfg.Name
 	}
 
-	// 生成win环境项目下的日志文件夹
-	if runtime.GOOS == "windows" {
-		volume := filepath.VolumeName(logFilePath)
-		// /root/logs
-		if logFilePath != "" {
-			if volume == "" {
-				// path中没有盘符就在项目所在盘创建文件夹
-				filepath.Join(filepath.VolumeName(Cfg.Basedir), logFilePath)
-			}
-		} else {
+	if logFilePath == "" {
+		switch runtime.GOOS {
+		case "darwin", "windows":
 			// 没配置path就在项目根目录创建文件夹
 			logFilePath = filepath.Join(Cfg.Basedir, "logs")
-		}
-	} else {
-		if logFilePath == "" {
-			logFilePath = "/root/logs"
+		default:
+			// log目录下再加同名项目文件夹
+			logFilePath = filepath.Join("/root/logs", Cfg.Name)
 		}
 	}
-	// log目录下再加同名项目文件夹
-	logFilePath = filepath.Join(logFilePath, Cfg.Name)
 	// 创建路径中缺失的文件夹
 	if !util.CheckFileIsExist(logFilePath) {
 		err := os.MkdirAll(logFilePath, 0666)

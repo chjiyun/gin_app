@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/antonfisher/nested-logrus-formatter v1.3.1 // indirect
+	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f // indirect
 	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-playground/validator/v10 v10.9.0 // indirect

@@ -16,12 +16,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/discord/lilliput"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/nguyenthenguyen/docx"
 	"github.com/yitter/idgenerator-go/idgen"
 	"gorm.io/gorm"
 )
+
+var EncodeOptions = map[string]map[int]int{
+	".jpeg": {lilliput.JpegQuality: 85},
+	".png":  {lilliput.PngCompression: 7},
+	".webp": {lilliput.WebpQuality: 85},
+}
 
 // Upload 接收上传的文件
 func Upload(c *gin.Context) {
@@ -172,6 +179,81 @@ func getImageXY(file io.Reader) (int, int, error) {
 	return width, height, nil
 }
 
+func toWebp(inputFilename string, outputFilename string, outputWidth int, outputHeight int) error {
+	inputBuf, err := os.ReadFile(inputFilename)
+	if err != nil {
+		return err
+	}
+	decoder, err := lilliput.NewDecoder(inputBuf)
+	// mostly just for the magic bytes of the file to match known image formats
+	if err != nil {
+		return err
+	}
+	defer decoder.Close()
+	header, err := decoder.Header()
+	// this error is much more comprehensive and reflects
+	if err != nil {
+		return err
+	}
+	// print some basic info about the image
+	fmt.Printf("file type: %s\n", decoder.Description())
+	fmt.Printf("%dpx x %dpx\n", header.Width(), header.Height())
+
+	// get ready to resize image,
+	// using 8192x8192 maximum resize buffer size
+	ops := lilliput.NewImageOps(8192)
+	defer ops.Close()
+
+	// create a buffer to store the output image, 10MB in this case
+	outputImg := make([]byte, 10*1024*1024)
+
+	// use user supplied filename to guess output type if provided
+	// otherwise don't transcode (use existing type)
+	outputType := filepath.Ext(outputFilename)
+	if outputFilename == "" {
+		outputType = "." + strings.ToLower(decoder.Description())
+	}
+	if outputWidth == 0 {
+		outputWidth = header.Width()
+	}
+	if outputHeight == 0 {
+		outputHeight = header.Height()
+	}
+
+	resizeMethod := lilliput.ImageOpsFit
+	// if stretch {
+	// 	resizeMethod = lilliput.ImageOpsResize
+	// }
+	if outputWidth == header.Width() && outputHeight == header.Height() {
+		resizeMethod = lilliput.ImageOpsNoResize
+	}
+
+	opts := &lilliput.ImageOptions{
+		FileType:             outputType,
+		Width:                outputWidth,
+		Height:               outputHeight,
+		ResizeMethod:         resizeMethod,
+		NormalizeOrientation: true,
+		EncodeOptions:        EncodeOptions[outputType],
+	}
+	// resize and transcode image
+	outputImg, err = ops.Transform(decoder, opts, outputImg)
+	if err != nil {
+		return err
+	}
+	if outputFilename == "" {
+		outputFilename = filepath.Base(inputFilename) + outputType
+	}
+	if _, err := os.Stat(outputFilename); !os.IsNotExist(err) {
+		return err
+	}
+	err = os.WriteFile(outputFilename, outputImg, 0400)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // convertToWebp 图片转换成webp格式
 func ConvertToWebp(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
@@ -182,6 +264,7 @@ func ConvertToWebp(c *gin.Context) {
 	// for _, img := range files {
 	// 	fmt.Println(img.Name)
 	// }
+	toWebp("")
 
 	c.JSON(200, files)
 }

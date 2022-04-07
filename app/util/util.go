@@ -80,8 +80,19 @@ func LowerFirst(str string) string {
 	return ""
 }
 
-// Basename 获取文件基础名，禁止含非1字节字符
+// Basename 获取文件基础名，含目录，禁止含非1字节字符
 func Basename(filename string) string {
+	for i := len(filename) - 1; i > 0; i-- {
+		if filename[i] == '.' {
+			return filename[:i]
+		}
+	}
+	return filename
+}
+
+// BaseFilename 获取文件名的基础名，不含目录
+func BaseFilename(filename string) string {
+	filename = filepath.Base(filename)
 	for i := len(filename) - 1; i > 0; i-- {
 		if filename[i] == '.' {
 			return filename[:i]

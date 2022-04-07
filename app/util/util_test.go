@@ -32,7 +32,9 @@ func TestBasename(t *testing.T) {
 	expect := "ttt"
 	name := filepath.Base(str)
 	result := Basename(name)
-
+	t.Logf("filepath.Base: %s", name)
+	t.Logf("Basename: %s", Basename(str))
+	t.Logf("filepath.Dir: %s", filepath.Dir(str))
 	if result != expect {
 		t.Errorf("result = %s, expect = %s", result, expect)
 	}

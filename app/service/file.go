@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"gin_app/app/model"
 	"gin_app/app/result"
@@ -20,6 +21,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/nguyenthenguyen/docx"
+	"github.com/sirupsen/logrus"
 	"github.com/yitter/idgenerator-go/idgen"
 	"gorm.io/gorm"
 )
@@ -179,7 +181,44 @@ func getImageXY(file io.Reader) (int, int, error) {
 	return width, height, nil
 }
 
-func toWebp(inputFilename string, outputFilename string, outputWidth int, outputHeight int) error {
+// toWebp 转webp格式
+func toWebp(c *gin.Context, file model.File) {
+	db := c.Value("DB").(*gorm.DB)
+	log := c.Value("Logger").(*logrus.Entry)
+
+	ext := ".webp"
+	uid := idgen.NextId()
+	localName := util.ToString(uid) + ext
+	outputFilename := filepath.Join("files", "thumb", localName)
+	err := transformImage(file.Path, outputFilename, 0, 0)
+	if err != nil {
+		log.Errorln("image transform failed", file.Path, err)
+		return
+	}
+	tInfo, err := os.Stat(outputFilename)
+	if err != nil {
+		log.Errorln("文件不存在", err)
+		return
+	}
+	name := util.Basename(file.Name) + ".thumb" + ext
+	thumb := model.Thumb{
+		Uid:       uid,
+		FileId:    file.ID,
+		Ext:       ext[1:],
+		Name:      name,
+		LocalName: localName,
+		Path:      outputFilename,
+		Size:      uint(tInfo.Size()),
+		Width:     0,
+		Height:    0,
+	}
+	res := db.Create(&thumb)
+	if res.Error != nil {
+		log.Errorln("thumb create error:", res.Error)
+	}
+}
+
+func transformImage(inputFilename string, outputFilename string, outputWidth int, outputHeight int) error {
 	inputBuf, err := os.ReadFile(inputFilename)
 	if err != nil {
 		return err
@@ -195,10 +234,6 @@ func toWebp(inputFilename string, outputFilename string, outputWidth int, output
 	if err != nil {
 		return err
 	}
-	// print some basic info about the image
-	fmt.Printf("file type: %s\n", decoder.Description())
-	fmt.Printf("%dpx x %dpx\n", header.Width(), header.Height())
-
 	// get ready to resize image,
 	// using 8192x8192 maximum resize buffer size
 	ops := lilliput.NewImageOps(8192)
@@ -211,7 +246,7 @@ func toWebp(inputFilename string, outputFilename string, outputWidth int, output
 	// otherwise don't transcode (use existing type)
 	outputType := filepath.Ext(outputFilename)
 	if outputFilename == "" {
-		outputType = "." + strings.ToLower(decoder.Description())
+		outputType = filepath.Ext(inputFilename)
 	}
 	if outputWidth == 0 {
 		outputWidth = header.Width()
@@ -242,10 +277,13 @@ func toWebp(inputFilename string, outputFilename string, outputWidth int, output
 		return err
 	}
 	if outputFilename == "" {
-		outputFilename = filepath.Base(inputFilename) + outputType
+		basename := util.Basename(inputFilename)
+		str := util.WriteString(basename, ".", util.ToString(outputWidth), "_", util.ToString(outputHeight), outputType)
+		outputFilename = str
 	}
 	if _, err := os.Stat(outputFilename); !os.IsNotExist(err) {
-		return err
+		str := fmt.Sprintf("%s 文件已存在", outputFilename)
+		return errors.New(str)
 	}
 	err = os.WriteFile(outputFilename, outputImg, 0400)
 	if err != nil {
@@ -257,14 +295,45 @@ func toWebp(inputFilename string, outputFilename string, outputWidth int, output
 // convertToWebp 图片转换成webp格式
 func ConvertToWebp(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
+	log := c.Value("Logger").(*logrus.Entry)
 	var files []model.File
 
 	db.Where("ext = ? or ext = ? or ext = ?", "jpg", "jpeg", "png").Find(&files)
 
-	// for _, img := range files {
-	// 	fmt.Println(img.Name)
-	// }
-	toWebp("")
+	for _, img := range files {
+		inputFilename := img.Path
+		ext := ".webp"
+		uid := idgen.NextId()
+		localName := util.ToString(uid) + ext
+		outputFilename := filepath.Join("files", "thumb", localName)
+		err := transformImage(inputFilename, outputFilename, 0, 0)
+		if err != nil {
+			log.Errorln("image transform failed", inputFilename, err)
+			continue
+		}
+		tInfo, err := os.Stat(outputFilename)
+		if err != nil {
+			log.Errorln("文件不存在", err)
+			continue
+		}
+		name := util.Basename(img.Name) + "thumb" + ext
+		thumb := model.Thumb{
+			Uid:       uid,
+			FileId:    img.ID,
+			Ext:       ext[1:],
+			Name:      name,
+			LocalName: localName,
+			Path:      outputFilename,
+			Size:      uint(tInfo.Size()),
+			Width:     0,
+			Height:    0,
+		}
+		res := db.Create(&thumb)
+		if res.Error != nil {
+			log.Errorln("thumb create error:", res.Error)
+			continue
+		}
+	}
 
 	c.JSON(200, files)
 }

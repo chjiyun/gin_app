@@ -141,7 +141,7 @@ func redisInit() {
 	if err != nil {
 		panic(err)
 	}
-	RedisDb := redis.NewClient(&options)
+	RedisDb = redis.NewClient(&options)
 	_, err = RedisDb.Ping(RedisDb.Context()).Result()
 	if err != nil {
 		panic(err)

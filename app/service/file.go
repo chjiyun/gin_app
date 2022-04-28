@@ -152,9 +152,9 @@ func ConvertToWebp(c *gin.Context) {
 
 	db.Find(&files)
 
-	for _, img := range files {
+	// for _, img := range files {
 
-	}
+	// }
 
 	c.JSON(200, files)
 }

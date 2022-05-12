@@ -17,5 +17,6 @@ func (r *Router) Test(g *gin.RouterGroup) {
 		rg.GET("/int", test.Int)
 		rg.GET("/snowflake", test.Snowflake)
 		rg.GET("/chan", test.Channel)
+		rg.GET("/bloom", test.BloomFilter)
 	}
 }

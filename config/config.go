@@ -141,6 +141,8 @@ func redisInit() {
 	if err != nil {
 		panic(err)
 	}
+	// options.PoolSize = 1000
+	// options.MinIdleConns = 100
 	RedisDb = redis.NewClient(&options)
 	_, err = RedisDb.Ping(RedisDb.Context()).Result()
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -35,7 +36,7 @@ var EncodeOptions = map[string]map[int]int{
 // Upload 接收上传的文件
 func Upload(c *gin.Context) {
 	r := result.New()
-	// db := c.Value("DB").(*gorm.DB)
+	db := c.Value("DB").(*gorm.DB)
 
 	f, err := c.FormFile("file")
 	if err != nil {
@@ -89,21 +90,28 @@ func Upload(c *gin.Context) {
 		Path:      relativePath,
 		Size:      uint(f.Size),
 	}
-	// res := db.Create(&file)
-	// if res.Error != nil {
-	// 	c.JSON(200, r.Fail("", res.Error))
-	// 	return
-	// }
-	fmt.Println(file)
+	res := db.Create(&file)
+	if res.Error != nil {
+		c.JSON(200, r.Fail("", res.Error))
+		return
+	}
 
 	// 关键：重置offset
 	mfile.Seek(0, 0)
-	width, height, err := getImageXY(mfile)
-	if err != nil {
-		c.JSON(200, r.Fail("文件解码失败", err))
-		return
+
+	imgSuffix := regexp.MustCompile(`jpg|jpeg|png$`)
+	if imgSuffix.MatchString(ext) {
+		width, height, err := getImageXY(mfile)
+		if err != nil {
+			c.JSON(200, r.Fail("文件解码失败", err))
+			return
+		}
+		err = toWebp(c, file, width, height)
+		if err != nil {
+			c.JSON(200, r.Fail("图片转webp失败", err))
+			return
+		}
 	}
-	fmt.Println(width, height)
 
 	r.SetData(gin.H{
 		"id": file.ID, "uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
@@ -182,7 +190,7 @@ func getImageXY(file io.Reader) (int, int, error) {
 }
 
 // toWebp 转webp格式
-func toWebp(c *gin.Context, file model.File) {
+func toWebp(c *gin.Context, file model.File, width int, height int) error {
 	db := c.Value("DB").(*gorm.DB)
 	log := c.Value("Logger").(*logrus.Entry)
 
@@ -190,15 +198,15 @@ func toWebp(c *gin.Context, file model.File) {
 	uid := idgen.NextId()
 	localName := util.ToString(uid) + ext
 	outputFilename := filepath.Join("files", "thumb", localName)
-	err := transformImage(file.Path, outputFilename, 0, 0)
+	err := transformImage(file.Path, outputFilename, width, height)
 	if err != nil {
 		log.Errorln("image transform failed", file.Path, err)
-		return
+		return err
 	}
 	tInfo, err := os.Stat(outputFilename)
 	if err != nil {
 		log.Errorln("文件不存在", err)
-		return
+		return err
 	}
 	name := util.Basename(file.Name) + ".thumb" + ext
 	thumb := model.Thumb{
@@ -209,13 +217,15 @@ func toWebp(c *gin.Context, file model.File) {
 		LocalName: localName,
 		Path:      outputFilename,
 		Size:      uint(tInfo.Size()),
-		Width:     0,
-		Height:    0,
+		Width:     uint(width),
+		Height:    uint(height),
 	}
 	res := db.Create(&thumb)
 	if res.Error != nil {
 		log.Errorln("thumb create error:", res.Error)
+		return res.Error
 	}
+	return nil
 }
 
 func transformImage(inputFilename string, outputFilename string, outputWidth int, outputHeight int) error {
@@ -240,7 +250,7 @@ func transformImage(inputFilename string, outputFilename string, outputWidth int
 	defer ops.Close()
 
 	// create a buffer to store the output image, 10MB in this case
-	outputImg := make([]byte, 10*1024*1024)
+	outputImg := make([]byte, 5*1024*1024)
 
 	// use user supplied filename to guess output type if provided
 	// otherwise don't transcode (use existing type)
@@ -300,40 +310,35 @@ func ConvertToWebp(c *gin.Context) {
 
 	db.Where("ext = ? or ext = ? or ext = ?", "jpg", "jpeg", "png").Find(&files)
 
-	for _, img := range files {
-		inputFilename := img.Path
-		ext := ".webp"
-		uid := idgen.NextId()
-		localName := util.ToString(uid) + ext
-		outputFilename := filepath.Join("files", "thumb", localName)
-		err := transformImage(inputFilename, outputFilename, 0, 0)
+	var errs []map[string]interface{}
+	for _, file := range files {
+		f, err := os.Open(file.Path)
 		if err != nil {
-			log.Errorln("image transform failed", inputFilename, err)
+			log.Errorln("文件打开失败", err)
+			errs = append(errs, gin.H{
+				"path":  file.Path,
+				"error": err.Error(),
+			})
 			continue
 		}
-		tInfo, err := os.Stat(outputFilename)
+		width, height, err := getImageXY(f)
 		if err != nil {
-			log.Errorln("文件不存在", err)
+			log.Errorln("文件解码失败", err)
+			errs = append(errs, gin.H{
+				"path":  file.Path,
+				"error": err.Error(),
+			})
 			continue
 		}
-		name := util.Basename(img.Name) + "thumb" + ext
-		thumb := model.Thumb{
-			Uid:       uid,
-			FileId:    img.ID,
-			Ext:       ext[1:],
-			Name:      name,
-			LocalName: localName,
-			Path:      outputFilename,
-			Size:      uint(tInfo.Size()),
-			Width:     0,
-			Height:    0,
-		}
-		res := db.Create(&thumb)
-		if res.Error != nil {
-			log.Errorln("thumb create error:", res.Error)
+		err = toWebp(c, file, width, height)
+		if err != nil {
+			errs = append(errs, gin.H{
+				"path":  file.Path,
+				"error": err.Error(),
+			})
 			continue
 		}
 	}
 
-	c.JSON(200, files)
+	c.JSON(200, errs)
 }

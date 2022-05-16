@@ -11,7 +11,6 @@ func (r *Router) File(g *gin.RouterGroup) {
 	{
 		rg.GET("/:id", service.Download)
 		rg.POST("/upload", service.Upload)
-		rg.GET("/thumb/:id", service.DownloadThumb)
 		rg.GET("/thumbInfo", service.ThumbInfo)
 		rg.GET("/downloadFromUrl", service.DownloadFromUrl)
 		rg.POST("/word", service.ExtractWord)

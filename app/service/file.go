@@ -122,16 +122,19 @@ func Upload(c *gin.Context) {
 // Download 下载文件
 func Download(c *gin.Context) {
 	r := result.New()
-	id := c.Param("id")
+	id := c.Param("id") // uid+ext
+	isThumb := c.Query("thumb")
+	format := c.Query("format")
 	uid := util.Basename(id)
 	ext := filepath.Ext(id)
+
 	if ext == "" {
 		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
 		return
 	}
 	db := c.Value("DB").(*gorm.DB)
-	var file model.File
 	ext = ext[1:]
+	var file model.File
 
 	res := db.Where("uid = ? AND ext = ?", uid, ext).First(&file)
 	if res.Error != nil {
@@ -139,35 +142,22 @@ func Download(c *gin.Context) {
 		c.JSON(http.StatusNotFound, r)
 		return
 	}
-	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
-	if !util.CheckFileIsExist(sourcePath) {
-		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
-		return
+	sourcePath := file.Path
+	// 返回thumb文件
+	if isThumb != "" {
+		var thumb model.Thumb
+		tx := db.Where("file_id = ?", file.ID)
+		if format != "" {
+			tx = tx.Where("ext = ?", format)
+		}
+		tx.Select("id", "path").First(&thumb)
+		if tx.Error != nil {
+			c.JSON(http.StatusNotFound, r.Fail("thumb not found", tx.Error))
+			return
+		}
+		sourcePath = thumb.Path
 	}
-	c.File(sourcePath)
-}
-
-// DownloadThumb 下载thumb文件
-func DownloadThumb(c *gin.Context) {
-	r := result.New()
-	id := c.Param("id")
-	uid := util.Basename(id)
-	ext := filepath.Ext(id)
-	if ext == "" {
-		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
-		return
-	}
-	db := c.Value("DB").(*gorm.DB)
-	var thumb model.Thumb
-	ext = ext[1:]
-
-	res := db.Where("uid = ? AND ext = ?", uid, ext).First(&thumb)
-	if res.Error != nil {
-		r.SetResult(result.ResultMap["notFound"], "").SetError(res.Error)
-		c.JSON(http.StatusNotFound, r)
-		return
-	}
-	sourcePath := filepath.Join(config.Cfg.Basedir, thumb.Path)
+	sourcePath = filepath.Join(config.Cfg.Basedir, sourcePath)
 	if !util.CheckFileIsExist(sourcePath) {
 		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
 		return
@@ -179,7 +169,7 @@ func DownloadThumb(c *gin.Context) {
 func ThumbInfo(c *gin.Context) {
 	r := result.New()
 	db := c.Value("DB").(*gorm.DB)
-	uid := c.Query("id")
+	uid := c.Query("uid")
 	var file model.File
 
 	// hasMany关系关联时表名要加s

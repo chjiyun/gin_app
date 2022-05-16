@@ -147,6 +147,51 @@ func Download(c *gin.Context) {
 	c.File(sourcePath)
 }
 
+// DownloadThumb 下载thumb文件
+func DownloadThumb(c *gin.Context) {
+	r := result.New()
+	id := c.Param("id")
+	uid := util.Basename(id)
+	ext := filepath.Ext(id)
+	if ext == "" {
+		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
+		return
+	}
+	db := c.Value("DB").(*gorm.DB)
+	var thumb model.Thumb
+	ext = ext[1:]
+
+	res := db.Where("uid = ? AND ext = ?", uid, ext).First(&thumb)
+	if res.Error != nil {
+		r.SetResult(result.ResultMap["notFound"], "").SetError(res.Error)
+		c.JSON(http.StatusNotFound, r)
+		return
+	}
+	sourcePath := filepath.Join(config.Cfg.Basedir, thumb.Path)
+	if !util.CheckFileIsExist(sourcePath) {
+		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
+		return
+	}
+	c.File(sourcePath)
+}
+
+// ThumbInfo 获取image thumb
+func ThumbInfo(c *gin.Context) {
+	r := result.New()
+	db := c.Value("DB").(*gorm.DB)
+	uid := c.Query("id")
+	var file model.File
+
+	// hasMany关系关联时表名要加s
+	tx := db.Preload("Thumbs").Where("uid = ?", uid).First(&file)
+	if tx.Error != nil {
+		c.JSON(200, r.Fail("record not found", tx.Error))
+		return
+	}
+	r.SetData(file)
+	c.JSON(200, r)
+}
+
 // DownloadFromUrl 下载 url返回的数据，可下载第三方媒体文件
 func DownloadFromUrl(c *gin.Context) {
 	r := result.New()

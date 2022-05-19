@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gin_app/app/model"
+	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
 	"io"
@@ -184,6 +185,7 @@ func GetImg(c *gin.Context) {
 
 // GetAllBing 搜索符合条件的记录
 func GetAllBing(c *gin.Context) {
+	r := result.New()
 	db := c.Value("DB").(*gorm.DB)
 
 	page, _ := strconv.Atoi(c.Query("page"))
@@ -193,11 +195,10 @@ func GetAllBing(c *gin.Context) {
 
 	var bing []model.Bing
 	var count int64
-	tx := db
 
-	tx.Joins("left join file on `file`.id = `bing`.file_id and `file`.is_del = 0").Model(&model.Bing{}).Count(&count)
+	db.Joins("left join file on `file`.id = `bing`.file_id and `file`.is_del = 0").Model(&model.Bing{}).Count(&count)
 
-	tx = tx.Preload("File", func(db *gorm.DB) *gorm.DB {
+	tx := db.Preload("File", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id, uid, ext, name, size")
 	}).Omit("url", "hsh", "updated_at")
 
@@ -212,10 +213,11 @@ func GetAllBing(c *gin.Context) {
 	}
 	tx.Order("created_at desc").Find(&bing)
 
-	c.JSON(200, gin.H{
+	r.SetData(gin.H{
 		"count": count,
-		"data":  bing,
+		"rows":  bing,
 	})
+	c.JSON(200, r)
 }
 
 // GetBingZip 压缩下载bing图片

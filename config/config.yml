@@ -4,6 +4,8 @@ env: dev
 
 server: 
   port: 8000
+  # 超时（ms）
+  timeout: 60000
 
 # redis:
 #   host: 127.0.0.1

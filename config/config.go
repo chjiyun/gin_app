@@ -36,7 +36,8 @@ type Config struct {
 	Log        Log          `yaml:"log"`
 }
 type Server struct {
-	Port string `yaml:"port"`
+	Port    string `yaml:"port"`
+	Timeout int    `yaml:"timeout"`
 }
 type Redis struct {
 	Addr     string `yaml:"addr"`

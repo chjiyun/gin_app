@@ -15,10 +15,8 @@ func LoggerToFile() gin.HandlerFunc {
 		startTime := time.Now()
 		// 处理请求
 		c.Next()
-		// 结束时间
-		endTime := time.Now()
 		// 执行时间
-		latencyTime := endTime.Sub(startTime)
+		latencyTime := time.Since(startTime)
 		// 请求方式
 		reqMethod := c.Request.Method
 		// 请求路由

@@ -39,7 +39,7 @@ func main() {
 
 	// r := gin.Default()
 	r := gin.New()
-	r.Use(middleware.LoggerToFile(), middleware.SetContext(), gin.Recovery())
+	r.Use(middleware.LoggerToFile(), middleware.SetTimeout(), middleware.SetContext(), gin.Recovery())
 
 	// 简单的路由组: api
 

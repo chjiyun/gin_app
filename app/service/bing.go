@@ -157,6 +157,7 @@ func GetImg(c *gin.Context) {
 		ReleaseAt: releaseAt,
 	}
 	db.Create(&bing)
+	db.Model(&result.Data).Update("desc", imgInfo.Copyright)
 
 	// var f *os.File
 	// defer f.Close()

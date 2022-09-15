@@ -14,10 +14,13 @@ go env -w GOPROXY=https://goproxy.cn,direct
 ```
 4. 初始化air
 ```
-# install for macOS, Linux, Windows
+# install for macOS, Linux
 # binary will be $(go env GOPATH)/bin/air
 curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
-# 配置文件：./.air.toml
+# install for windows
+go install github.com/cosmtrek/air@latest
+# You can initialize the .air.toml
+air init 
 ```
 5. 安装依赖
 ```

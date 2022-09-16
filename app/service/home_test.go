@@ -6,6 +6,11 @@ type Vector[T any] []T
 type NumSlice[T int | float64] []T
 type DataMap[K string, V any] map[K]V
 type Ch[T any] chan T
+type MyStruct[S int | string, P map[S]string] struct {
+	Name    string
+	Content S
+	Job     P
+}
 
 func TestIndex(t *testing.T) {
 	m := make(map[int]int, 3)
@@ -34,4 +39,5 @@ func TestGeneric(t *testing.T) {
 	num := <-ch
 	t.Logf("Ch: 类型=%T, val=%+v", num, num)
 	t.Logf("Ch: 类型=%T, val=%+v", ch, ch)
+
 }

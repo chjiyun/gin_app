@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gin_app/app/util"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -50,8 +49,9 @@ type Datasource struct {
 	Dsn     string `yaml:"dsn"`
 }
 type Log struct {
-	Filename string `yaml:"filename"`
-	Filepath string `yaml:"filepath"`
+	Filename      string `yaml:"filename"`
+	Filepath      string `yaml:"filepath"`
+	LongQueryTime int    `yaml:"long_query_time"`
 }
 
 type SqlWriter struct {
@@ -74,7 +74,7 @@ var Logger = logrus.New()
 func Init() {
 	// 解析默认基础配置文件
 	filename := filepath.Join("config", "config.yml")
-	yml, err := ioutil.ReadFile(filename)
+	yml, err := os.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
@@ -109,7 +109,7 @@ func Init() {
 
 	// 解析当前环境的配置文件
 	extFile := filepath.Join("config", "config."+env+".yml")
-	if extYml, err := ioutil.ReadFile(extFile); err == nil {
+	if extYml, err := os.ReadFile(extFile); err == nil {
 		var extCfg Config
 		err1 = yaml.Unmarshal(extYml, &extCfg)
 		if err1 != nil {
@@ -130,9 +130,9 @@ func Init() {
 }
 
 // 解析并合并对应环境的 yml配置信息
-func resloveYml() {
+// func resloveYml() {
 
-}
+// }
 
 // 初始化 redis
 func redisInit() {
@@ -171,7 +171,7 @@ func dbInit() {
 			if ds.Dsn == "" {
 				continue
 			}
-			key, err := ioutil.ReadFile("hashkey.txt")
+			key, err := os.ReadFile("hashkey.txt")
 			if err != nil {
 				panic(err)
 			}
@@ -180,7 +180,7 @@ func dbInit() {
 	}
 	// sql记录到日志
 	sqlLogger := logger.New(&SqlWriter{log: Logger}, logger.Config{
-		SlowThreshold:             300 * time.Millisecond,
+		SlowThreshold:             time.Duration(Cfg.Log.LongQueryTime) * time.Millisecond,
 		LogLevel:                  logMode,
 		IgnoreRecordNotFoundError: true,
 	})

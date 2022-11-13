@@ -54,6 +54,10 @@ type Log struct {
 	Filepath string `yaml:"filepath"`
 }
 
+type SqlWriter struct {
+	log *logrus.Logger
+}
+
 // 配置信息缓存
 var Cfg Config
 
@@ -174,11 +178,17 @@ func dbInit() {
 			Cfg.Datasource[i].Dsn = util.Decrypt(ds.Dsn, key)
 		}
 	}
+	// sql记录到日志
+	sqlLogger := logger.New(&SqlWriter{log: Logger}, logger.Config{
+		SlowThreshold:             300 * time.Millisecond,
+		LogLevel:                  logMode,
+		IgnoreRecordNotFoundError: true,
+	})
 
 	DB, err = gorm.Open(mysql.New(mysql.Config{
 		DSN: Cfg.Datasource[0].Dsn,
 	}), &gorm.Config{
-		Logger: logger.Default.LogMode(logMode),
+		Logger: sqlLogger,
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
@@ -290,7 +300,15 @@ func LogInit() {
 		TimestampFormat: "2006-01-02 15:04:05",
 		// PrettyPrint:     true,
 		HideKeys: true,
+		NoColors: true,
 	})
 	// 新增 Hook
 	Logger.AddHook(lfHook)
+}
+
+// 实现gorm/logger.Writer接口
+func (m *SqlWriter) Printf(format string, v ...interface{}) {
+	logstr := fmt.Sprintf(format, v...)
+	// 利用logrus记录日志
+	m.log.Info(logstr)
 }

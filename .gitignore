@@ -10,3 +10,5 @@ pid.txt
 gin_app
 logs/
 hashkey.txt
+.vscode/
+.github/

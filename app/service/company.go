@@ -34,9 +34,7 @@ func GetCompanies(c *gin.Context) {
 	// tx.Table("company as c").Limit(10).Offset(offset).Find(&list)
 	// tx.Commit()
 
-	log.WithFields(logrus.Fields{
-		"animal": "walrus",
-	}).Warn("A walrus appears")
+	log.Info("companies: ", companies)
 
 	c.JSON(200, gin.H{"xc_dev": companies})
 }

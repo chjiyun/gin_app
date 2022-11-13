@@ -69,7 +69,7 @@ go run ./main.go
 air
 ```
 
-## 打包（交叉编译）
+## 跨平台打包（交叉编译）
 
  Windows下编译 Linux平台的64位可执行程序：
  1. cmd
@@ -101,16 +101,9 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build main.go
 rz -y -v
 ```
 
-## 自定义部署
+## 手动部署
 
-```shell
-# 赋可执行权限
-chmod 773 main
-# 可直接运行（退出即程序终止）
-./main
-```
-
-或者后台启动
+后台启动
 ```shell
 # 如果已经运行先杀进程 
 lsof -i:8000
@@ -122,21 +115,29 @@ nohup ./main 1>info_2021_03_27.log 2>error.log & echo $! > pid.txt
 * 1>/dev/null 2>&1 &的意思是标准信息输出到空设备即不做任何处理,也不做任何显示,/dev/null也可以替换为文本文件名(如 out.log),此时标准信息就会输出到指定文件.
 * 2>&1表示错误信息输出到标准输出,即输出同1>后面的位置,当然也可以直接指定新文件名(如 err.log).
 * 最后的& 表示程序后台运行
+* echo 输出pid到文件
 
-## 一键部署
+## 一键部署（半自动）
 
 如果不想自定义启动可用如下命令实现一键部署：
 
 ```shell
 # 运行前前拉取最新git代码
 chmod 755 ./build.sh
-# 如果git diff显示filemode已改变，则用下面的命令忽视文件mode监控
-git config --add core.filemode false
 # 会自动创建log、file目录，自动build
 ./build.sh
 ```
 
 若出现报错，显示pip命令不存在，则要安装相应的包，看这里[ubuntu下安装yq](https://www.jianshu.com/p/61d18e1685cd)
+
+## 其他
+
+```
+# 如果git diff显示filemode已改变，则用下面的命令忽视文件mode监控
+git config --add core.filemode false
+# 不跟踪某文件的更改，比如 config 文件
+git update-index --skip-worktree file1
+```
 
 ## 查看编译时注入的版本信息
 ```shell

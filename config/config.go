@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gin_app/app/util"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -18,7 +17,7 @@ import (
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -50,8 +49,13 @@ type Datasource struct {
 	Dsn     string `yaml:"dsn"`
 }
 type Log struct {
-	Filename string `yaml:"filename"`
-	Filepath string `yaml:"filepath"`
+	Filename      string `yaml:"filename"`
+	Filepath      string `yaml:"filepath"`
+	LongQueryTime int    `yaml:"long_query_time"`
+}
+
+type SqlWriter struct {
+	log *logrus.Logger
 }
 
 // 配置信息缓存
@@ -70,7 +74,7 @@ var Logger = logrus.New()
 func Init() {
 	// 解析默认基础配置文件
 	filename := filepath.Join("config", "config.yml")
-	yml, err := ioutil.ReadFile(filename)
+	yml, err := os.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +109,7 @@ func Init() {
 
 	// 解析当前环境的配置文件
 	extFile := filepath.Join("config", "config."+env+".yml")
-	if extYml, err := ioutil.ReadFile(extFile); err == nil {
+	if extYml, err := os.ReadFile(extFile); err == nil {
 		var extCfg Config
 		err1 = yaml.Unmarshal(extYml, &extCfg)
 		if err1 != nil {
@@ -126,9 +130,9 @@ func Init() {
 }
 
 // 解析并合并对应环境的 yml配置信息
-func resloveYml() {
+// func resloveYml() {
 
-}
+// }
 
 // 初始化 redis
 func redisInit() {
@@ -167,18 +171,24 @@ func dbInit() {
 			if ds.Dsn == "" {
 				continue
 			}
-			key, err := ioutil.ReadFile("hashkey.txt")
+			key, err := os.ReadFile("hashkey.txt")
 			if err != nil {
 				panic(err)
 			}
 			Cfg.Datasource[i].Dsn = util.Decrypt(ds.Dsn, key)
 		}
 	}
+	// sql记录到日志
+	sqlLogger := logger.New(&SqlWriter{log: Logger}, logger.Config{
+		SlowThreshold:             time.Duration(Cfg.Log.LongQueryTime) * time.Millisecond,
+		LogLevel:                  logMode,
+		IgnoreRecordNotFoundError: true,
+	})
 
 	DB, err = gorm.Open(mysql.New(mysql.Config{
 		DSN: Cfg.Datasource[0].Dsn,
 	}), &gorm.Config{
-		Logger: logger.Default.LogMode(logMode),
+		Logger: sqlLogger,
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
@@ -280,7 +290,15 @@ func LogInit() {
 		TimestampFormat: "2006-01-02 15:04:05",
 		// PrettyPrint:     true,
 		HideKeys: true,
+		NoColors: true,
 	})
 	// 新增 Hook
 	Logger.AddHook(lfHook)
+}
+
+// 实现gorm/logger.Writer接口
+func (m *SqlWriter) Printf(format string, v ...interface{}) {
+	logstr := fmt.Sprintf(format, v...)
+	// 利用logrus记录日志
+	m.log.Info(logstr)
 }

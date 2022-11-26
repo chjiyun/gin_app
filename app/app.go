@@ -48,8 +48,8 @@ func InitSchedule() {
 		}
 		// 拿到定时任务配置结构体 GinSchedule
 		result := fn.Call(in)
-		job := result[0].Interface().(schedule.GinSchedule)
-		if job.Disable {
+		job, ok := result[0].Interface().(schedule.GinSchedule)
+		if !ok || job.Disable {
 			continue
 		}
 		crontab.AddFunc(job.Cron, job.Task)

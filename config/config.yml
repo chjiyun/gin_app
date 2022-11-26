@@ -19,4 +19,5 @@ log:
   filename: gin_app
   # 支持绝对路径（默认路径 linux: /root/logs, win: [basedir]/logs ）
   # filepath: /root/logs
-
+  # 慢查询阈值
+  long_query_time: 300

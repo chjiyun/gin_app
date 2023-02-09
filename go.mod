@@ -3,10 +3,10 @@ module gin_app
 go 1.18
 
 require (
-	github.com/antonfisher/nested-logrus-formatter v1.3.1 // indirect
-	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f // indirect
-	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
-	github.com/gin-gonic/gin v1.7.4
+	github.com/antonfisher/nested-logrus-formatter v1.3.1
+	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f
+	github.com/gabriel-vasile/mimetype v1.4.0
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/imdario/mergo v0.3.12
 	github.com/jinzhu/copier v0.3.2

@@ -3,9 +3,9 @@ module gin_app
 go 1.18
 
 require (
-	github.com/antonfisher/nested-logrus-formatter v1.3.1 // indirect
-	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f // indirect
-	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
+	github.com/antonfisher/nested-logrus-formatter v1.3.1
+	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f
+	github.com/gabriel-vasile/mimetype v1.4.0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/imdario/mergo v0.3.12
@@ -43,10 +43,10 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

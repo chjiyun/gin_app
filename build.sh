@@ -14,6 +14,7 @@ targetFile="$appName"
 buildPkg="main.go"
 # 编译结果
 buildResult=""
+port="8000"
 
 pidFile="pid.txt"
 
@@ -96,21 +97,22 @@ else
 fi
 
 
-# if [ ! -f "$info_log" ]; then
-#   touch "$info_log"
-# fi
-
-# if [ ! -f "$error_log" ]; then
-#   touch "$error_log"
-# fi
-
 # nohup "./${targetFile}" 1>"${info_log}" 2>"${error_log}" & echo $! > "$pidFile"
 nohup "./${targetFile}" 1>/dev/null 2>&1 & echo $! > "$pidFile"
 
 echo "------new pid: $(<$pidFile)"
 
-echo "deploy success..."
+echo "starting..."
+# 监听端口是否启动
+while :
+do
+    running=`lsof -i:$port | wc -l`
+    if [ $running -gt "0" ]; then
+        echo "server is running on $port"
+        break
+    fi
+    sleep 1
+done
 
-echo "wait..."
-sleep 1
+# 打印版本信息
 "./${targetFile}" -v

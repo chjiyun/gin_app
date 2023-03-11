@@ -39,10 +39,10 @@ func main() {
 
 	// r := gin.Default()
 	r := gin.New()
+	r.SetTrustedProxies(nil)
 	r.Use(middleware.LoggerToFile(), middleware.SetTimeout(), middleware.SetContext(), gin.Recovery())
 
 	// 简单的路由组: api
-
 	r.GET("/", service.Index)
 	router := r.Group("/api")
 	app.ReadRouters(router)

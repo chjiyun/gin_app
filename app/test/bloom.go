@@ -13,8 +13,7 @@ func BloomFilter(c *gin.Context) {
 	r := result.New()
 	qq := c.Query("qq")
 	if qq == "" {
-		r.Fail("qq missed", nil)
-		c.JSON(200, r)
+		c.JSON(200, r.Fail("qq missed"))
 		return
 	}
 
@@ -57,15 +56,14 @@ func BloomFilter(c *gin.Context) {
 
 	status, err := rdb.Do(ctx, "BF.EXISTS", "qq", qq).Int()
 	if err != nil {
-		r.SetError(err)
-		c.JSON(200, r)
+		c.JSON(200, r.Fail(""))
 		return
 	}
 
 	if status == 1 {
-		r.Success("此号码可能存在", status)
+		r.Success("此号码可能存在")
 	} else {
-		r.Success("此号码不存在", status)
+		r.Success("此号码不存在")
 	}
 	c.JSON(200, r)
 }

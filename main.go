@@ -39,8 +39,9 @@ func main() {
 
 	// r := gin.Default()
 	r := gin.New()
-	r.SetTrustedProxies(nil)
-	r.Use(middleware.LoggerToFile(), middleware.SetTimeout(), middleware.SetContext(), gin.Recovery())
+	_ = r.SetTrustedProxies(nil)
+
+	r.Use(middleware.LoggerToFile(), middleware.SetTimeout(), middleware.SetContext(), middleware.JWTAuth(), gin.Recovery())
 
 	// 简单的路由组: api
 	r.GET("/", service.Index)

@@ -33,6 +33,7 @@ type Config struct {
 	Redis      Redis        `yaml:"redis"`
 	Datasource []Datasource `yaml:"datasource"`
 	Log        Log          `yaml:"log"`
+	Jwt        JwtConfig    `yaml:"jwt"`
 }
 type Server struct {
 	Port    string `yaml:"port"`
@@ -52,6 +53,14 @@ type Log struct {
 	Filename      string `yaml:"filename"`
 	Filepath      string `yaml:"filepath"`
 	LongQueryTime int    `yaml:"long_query_time"`
+}
+
+type JwtConfig struct {
+	Issuer    string `json:"issuer"`
+	Audience  string `json:"audience"`
+	Expires   int    `json:"expires"`
+	SecretKey string `json:"secret_key"`
+	Whitelist string `json:"whitelist"`
 }
 
 type SqlWriter struct {

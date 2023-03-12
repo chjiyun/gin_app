@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
@@ -21,7 +22,10 @@ func JWTAuth() gin.HandlerFunc {
 		}
 
 		token, err := c.Cookie("token")
-		if err != nil {
+		if err != nil && errors.Is(err, http.ErrNoCookie) {
+			token = c.Query("token")
+		}
+		if token == "" {
 			r.SetResult(result.ResultMap["illegalVisit"], "token缺失")
 			c.JSON(http.StatusUnauthorized, r)
 			c.Abort()

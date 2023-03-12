@@ -7,6 +7,7 @@ import (
 	"gin_app/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 )
 
 func Login(c *gin.Context) {
@@ -18,6 +19,13 @@ func Login(c *gin.Context) {
 	fmt.Println(username, password)
 
 	r := result.New()
+
+	splitHost := strings.Split(c.Request.Host, ":")
+	if len(splitHost) < 1 {
+		c.JSON(http.StatusOK, r.Fail("host error"))
+		return
+	}
+
 	//校验密码
 	jwtConfig := config.Cfg.Jwt
 	jwtToken, err := authUtil.GenerateJwtToken(jwtConfig, 1)
@@ -25,7 +33,6 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, r.Fail("登录失败"))
 		return
 	}
-	fmt.Println(jwtToken)
 
 	//生成散列hash 并存到redis
 	token, err := authUtil.SaveMd5Token(jwtToken)
@@ -33,8 +40,8 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, r.Fail("登录失败"))
 		return
 	}
-	fmt.Println(token)
-	c.SetCookie("token", token, jwtConfig.Expires, "/", c.Request.Host, false, true)
+
+	c.SetCookie("token", token, jwtConfig.Expires, "/", splitHost[0], false, true)
 	r.SetData(gin.H{"token": token})
 
 	c.JSON(http.StatusOK, r)

@@ -50,8 +50,8 @@ func SaveMd5Token(jwtToken string) (string, error) {
 	//生成散列hash 并存到redis
 	hash := md5.Sum([]byte(jwtToken))
 	token := fmt.Sprintf("%x", hash)
-	expiration := time.Duration(config.Cfg.Jwt.Expires)
-	_, err := config.RedisDb.Set(context.Background(), "token", token, expiration).Result()
+	expiration := time.Duration(config.Cfg.Jwt.Expires) * time.Second
+	_, err := config.RedisDb.Set(context.Background(), token, jwtToken, expiration).Result()
 	if err != nil {
 		return "", err
 	}

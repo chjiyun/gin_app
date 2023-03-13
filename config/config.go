@@ -61,6 +61,7 @@ type JwtConfig struct {
 	Expires   int    `json:"expires"`
 	SecretKey string `json:"secret_key"`
 	Whitelist string `json:"whitelist"`
+	Refresh   int    `json:"refresh"`
 }
 
 type SqlWriter struct {

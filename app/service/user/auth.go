@@ -5,9 +5,10 @@ import (
 	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Login(c *gin.Context) {
@@ -27,6 +28,8 @@ func Login(c *gin.Context) {
 	}
 
 	//校验密码
+
+	// 生成jwtToken
 	jwtConfig := config.Cfg.Jwt
 	jwtToken, err := authUtil.GenerateJwtToken(jwtConfig, 1)
 	if err != nil {
@@ -34,7 +37,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	//生成散列hash 并存到redis
+	//生成散列hash token，并存到redis
 	token, err := authUtil.SaveMd5Token(jwtToken)
 	if err != nil {
 		c.JSON(http.StatusOK, r.Fail("登录失败"))

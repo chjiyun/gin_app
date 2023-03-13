@@ -3,8 +3,11 @@ package authUtil
 import (
 	"context"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"gin_app/config"
+	"github.com/gin-gonic/gin"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -76,4 +79,17 @@ func SaveMd5Token(jwtToken string) (string, error) {
 		return "", err
 	}
 	return token, nil
+}
+
+func GetSessionUserId(c *gin.Context) uint {
+	claims := c.Value("session").(*CustomerClaims)
+	return claims.UserId
+}
+
+func GetToken(c *gin.Context) string {
+	token, err := c.Cookie("token")
+	if err != nil && errors.Is(err, http.ErrNoCookie) {
+		token = c.Query("token")
+	}
+	return token
 }

@@ -6,10 +6,11 @@ import (
 	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 	"net/http"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,11 @@ type RegisterReq struct {
 	Password    string `json:"password"`
 }
 
+type ResetPasswordReq struct {
+	Password  string `json:"password"`
+	Password1 string `json:"password1"`
+}
+
 func Login(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
 	var params LoginReq
@@ -33,6 +39,10 @@ func Login(c *gin.Context) {
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
 		c.JSON(http.StatusOK, r.Fail(err.Error()))
+		return
+	}
+	if len(params.Username) < 4 || len(params.Password) < 8 {
+		c.JSON(http.StatusOK, r.Fail("用户名或密码长度不够"))
 		return
 	}
 
@@ -95,7 +105,7 @@ func Register(c *gin.Context) {
 	res := db.Where("username = ?", params.Username).First(&user)
 	if res.Error != nil {
 		r.Fail("")
-		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+		if res.RowsAffected > 0 {
 			r.Fail("用户名不能重复")
 		}
 		c.JSON(http.StatusOK, r)
@@ -104,7 +114,7 @@ func Register(c *gin.Context) {
 	res = db.Where("phone_number = ?", params.PhoneNumber).First(&user)
 	if res.Error != nil {
 		r.Fail("")
-		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+		if res.RowsAffected > 0 {
 			r.Fail("手机号不能重复")
 		}
 		c.JSON(http.StatusOK, r)
@@ -136,4 +146,44 @@ func Logout(c *gin.Context) {
 	token := authUtil.GetToken(c)
 	// 删除jwtToken
 	config.RedisDb.Del(c, token)
+}
+
+// ResetPassword 重置密码  管理员才有权限
+func ResetPassword(c *gin.Context) {
+	var params ResetPasswordReq
+	r := result.New()
+
+	err := c.ShouldBindJSON(&params)
+	if err != nil {
+		c.JSON(http.StatusOK, r.Fail(err.Error()))
+		return
+	}
+	if params.Password != params.Password1 {
+		c.JSON(http.StatusOK, r.Fail("密码不一致"))
+		return
+	}
+
+	db := c.Value("DB").(*gorm.DB)
+	var user model.User
+	userId := authUtil.GetSessionUserId(c)
+
+	tx := db.Where("id = ?", userId).First(&user)
+	if tx.RowsAffected == 0 {
+		c.JSON(http.StatusOK, r.Fail("该用户不存在"))
+		return
+	}
+
+	hashPwd, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusOK, r.Fail(err.Error()))
+		return
+	}
+	password := string(hashPwd)
+	tx = db.Model(&user).Where("id = ?", userId).Update("password", password)
+	if tx.Error != nil {
+		c.JSON(http.StatusOK, r.Fail("更新失败"))
+		return
+	}
+
+	c.JSON(http.StatusOK, r)
 }

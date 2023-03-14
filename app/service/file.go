@@ -103,12 +103,12 @@ func Upload(c *gin.Context) {
 	if imgSuffix.MatchString(ext) {
 		width, height, err := getImageXY(mfile)
 		if err != nil {
-			c.JSON(200, r.Fail("文件解码失败", err))
+			c.JSON(200, r.Fail("文件解码失败"))
 			return
 		}
 		err = toWebp(c, file, width, height)
 		if err != nil {
-			c.JSON(200, r.Fail("图片转webp失败", err))
+			c.JSON(200, r.Fail("图片转webp失败"))
 			return
 		}
 	}
@@ -152,7 +152,7 @@ func Download(c *gin.Context) {
 		}
 		tx.Select("id", "path").First(&thumb)
 		if tx.Error != nil {
-			c.JSON(http.StatusNotFound, r.Fail("thumb not found", tx.Error))
+			c.JSON(http.StatusNotFound, r.Fail("thumb not found"))
 			return
 		}
 		sourcePath = thumb.Path
@@ -175,7 +175,7 @@ func ThumbInfo(c *gin.Context) {
 	// hasMany关系关联时表名要加s
 	tx := db.Preload("Thumbs").Where("uid = ?", uid).First(&file)
 	if tx.Error != nil {
-		c.JSON(200, r.Fail("record not found", tx.Error))
+		c.JSON(200, r.Fail("record not found"))
 		return
 	}
 	r.SetData(file)

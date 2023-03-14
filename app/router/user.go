@@ -11,5 +11,6 @@ func (r *Router) User(g *gin.RouterGroup) {
 		rg.POST("/login", user.Login)
 		rg.POST("/register", user.Register)
 		rg.POST("/logout", user.Logout)
+		rg.POST("/resetPassword", user.ResetPassword)
 	}
 }

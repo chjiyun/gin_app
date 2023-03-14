@@ -7,6 +7,7 @@ import (
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -41,10 +42,6 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, r.Fail(err.Error()))
 		return
 	}
-	if len(params.Username) < 4 || len(params.Password) < 8 {
-		c.JSON(http.StatusOK, r.Fail("用户名或密码长度不够"))
-		return
-	}
 
 	splitHost := strings.Split(c.Request.Host, ":")
 	if len(splitHost) < 1 {
@@ -52,7 +49,7 @@ func Login(c *gin.Context) {
 		return
 	}
 	var user model.User
-	res := db.Select("id").Where("username = ?", params.Username).First(&user)
+	res := db.Where("username = ?", params.Username).First(&user)
 	if res.Error != nil {
 		r.Fail("")
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
@@ -99,24 +96,42 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusOK, r.Fail(err.Error()))
 		return
 	}
+	if len(params.Username) < 4 {
+		c.JSON(http.StatusOK, r.Fail("用户名不能少于4位字符"))
+		return
+	}
+	if len(params.Password) < 8 {
+		c.JSON(http.StatusOK, r.Fail("密码长度不能少于8位字符"))
+		return
+	}
+	if !regexp.MustCompile("^1[345789]\\d{9}$").MatchString(params.PhoneNumber) {
+		c.JSON(http.StatusOK, r.Fail("请输入合法的手机号"))
+		return
+	}
+
 	db := c.Value("DB").(*gorm.DB)
 	var user model.User
+	var count int64
 	// 验证用户是否合法
-	res := db.Where("username = ?", params.Username).First(&user)
+	res := db.Model(&user).Where("username = ?", params.Username).Count(&count)
 	if res.Error != nil {
 		r.Fail("")
-		if res.RowsAffected > 0 {
-			r.Fail("用户名不能重复")
-		}
 		c.JSON(http.StatusOK, r)
 		return
 	}
-	res = db.Where("phone_number = ?", params.PhoneNumber).First(&user)
+	if count > 0 {
+		r.Fail("用户名不能重复")
+		c.JSON(http.StatusOK, r)
+		return
+	}
+	res = db.Model(&user).Where("phone_number = ?", params.PhoneNumber).Count(&count)
 	if res.Error != nil {
 		r.Fail("")
-		if res.RowsAffected > 0 {
-			r.Fail("手机号不能重复")
-		}
+		c.JSON(http.StatusOK, r)
+		return
+	}
+	if count > 0 {
+		r.Fail("手机号不能重复")
 		c.JSON(http.StatusOK, r)
 		return
 	}
@@ -165,10 +180,11 @@ func ResetPassword(c *gin.Context) {
 
 	db := c.Value("DB").(*gorm.DB)
 	var user model.User
+	var count int64
 	userId := authUtil.GetSessionUserId(c)
 
-	tx := db.Where("id = ?", userId).First(&user)
-	if tx.RowsAffected == 0 {
+	db.Model(&user).Where("id = ?", userId).Count(&count)
+	if count == 0 {
 		c.JSON(http.StatusOK, r.Fail("该用户不存在"))
 		return
 	}
@@ -179,7 +195,7 @@ func ResetPassword(c *gin.Context) {
 		return
 	}
 	password := string(hashPwd)
-	tx = db.Model(&user).Where("id = ?", userId).Update("password", password)
+	tx := db.Model(&user).Where("id = ?", userId).Update("password", password)
 	if tx.Error != nil {
 		c.JSON(http.StatusOK, r.Fail("更新失败"))
 		return

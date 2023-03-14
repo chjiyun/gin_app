@@ -6,10 +6,9 @@ import (
 )
 
 type Result struct {
-	Code  int         `json:"code"`
-	Msg   string      `json:"msg"`
-	Data  interface{} `json:"data"`
-	Error error       `json:"error"`
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
 }
 type message struct {
 	code int
@@ -61,13 +60,9 @@ func New() *Result {
 }
 
 // Success 成功时的返回体，返回的 Result指针是 r的副本
-func (r *Result) Success(msg string, data interface{}) *Result {
+func (r *Result) Success(data interface{}) *Result {
 	res := ResultMap["success"]
-	if msg == "" {
-		msg = "success"
-	}
 	r.Code = res.code
-	r.Msg = msg
 	r.Data = data
 	return r
 }
@@ -80,14 +75,13 @@ func (r *Result) SuccessDefault() *Result {
 }
 
 // Fail 失败时的输出
-func (r *Result) Fail(msg string, err error) *Result {
+func (r *Result) Fail(msg string) *Result {
 	res := ResultMap["fail"]
 	if msg == "" {
 		msg = res.msg
 	}
 	r.Code = res.code
 	r.Msg = msg
-	r.Error = err
 	return r
 }
 
@@ -110,11 +104,6 @@ func (r *Result) SetResult(res message, msg string) *Result {
 		r.Msg = msg
 	}
 	return r
-}
-
-// SetError 错误输出
-func (r *Result) SetError(err error) {
-	r.Error = err
 }
 
 // handleData 处理data特殊类型

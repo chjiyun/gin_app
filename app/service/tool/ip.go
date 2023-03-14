@@ -27,7 +27,7 @@ func GetIpInfo(c *gin.Context) {
 
 	ip := c.Query("ip")
 	if ip == "" {
-		c.JSON(200, r.Fail("ip is not exist", nil))
+		c.JSON(200, r.Fail("ip is not exist"))
 		return
 	}
 
@@ -40,11 +40,11 @@ func GetIpInfo(c *gin.Context) {
 
 	if err != nil {
 		fmt.Println(err)
-		c.JSON(200, r.Fail("", err))
+		c.JSON(200, r.Fail("请求错误"))
 		return
 	}
 	if !resp.IsSuccessState() {
-		c.JSON(200, r.Fail("远程服务异常", err))
+		c.JSON(200, r.Fail(""))
 		return
 	}
 	r.SetData(ipInfo)

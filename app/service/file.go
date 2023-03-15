@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
@@ -20,14 +21,12 @@ import (
 )
 
 // Upload 接收上传的文件
-func Upload(c *gin.Context) {
-	r := result.New()
+func Upload(c *gin.Context) (*model.File, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	f, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(200, r.Fail("上传失败"))
-		return
+		return nil, errors.New("上传失败")
 	}
 
 	ext := filepath.Ext(f.Filename)
@@ -36,8 +35,7 @@ func Upload(c *gin.Context) {
 	defer mfile.Close()
 	mime, err := mimetype.DetectReader(mfile)
 	if err != nil {
-		c.JSON(200, r.Fail("MIME type detect failed"))
-		return
+		return nil, errors.New("MIME type detect failed")
 	}
 	mtype := mime.String()
 	var filetype string
@@ -54,16 +52,16 @@ func Upload(c *gin.Context) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		r.SetResult(result.ResultMap["serverError"], "")
-		c.JSON(200, r)
-		return
+		return nil, errors.New("上传失败")
 	}
 
 	// Upload the file to specific dst.
 	err = c.SaveUploadedFile(f, sourcepath)
 	if err != nil {
-		c.JSON(200, r.Fail("上传失败"))
-		return
+		return nil, errors.New("上传失败")
+	}
+	if true {
+		return &model.File{Name: "test"}, nil
 	}
 
 	file := model.File{
@@ -78,13 +76,9 @@ func Upload(c *gin.Context) {
 	}
 	res := db.Create(&file)
 	if res.Error != nil {
-		c.JSON(200, r.Fail(""))
-		return
+		return nil, errors.New("上传失败")
 	}
-	r.SetData(gin.H{
-		"id": file.ID, "uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
-	})
-	c.JSON(200, r)
+	return &file, nil
 }
 
 // Download 下载文件

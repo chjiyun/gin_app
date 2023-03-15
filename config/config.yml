@@ -10,7 +10,7 @@ server:
 # redis:
 #   host: 127.0.0.1
 #   port: 6379
-#   password: yuanbao@2018
+#   password: 
 #   db: 0
 
 # 日志
@@ -21,3 +21,10 @@ log:
   # filepath: /root/logs
   # 慢查询阈值
   long_query_time: 300
+
+# jwt:
+#   issuer: issuer
+#   audience: gin_app_public
+#   expires: 7200
+#   secret_key: 'b183d0069faf241b'
+#   whitelist: '^\/api\/(user\/(login|register))|bing|tool'

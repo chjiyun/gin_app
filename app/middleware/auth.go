@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"gin_app/app/common"
 	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
@@ -29,16 +30,14 @@ func JWTAuth() gin.HandlerFunc {
 		}
 		// 未登录或cookie已过期
 		if token == "" {
-			r.SetResult(result.ResultMap["unLogin"], "")
-			c.JSON(http.StatusUnauthorized, r)
+			c.JSON(http.StatusOK, r.FailType(common.UnLogin).SetCode(401))
 			c.Abort()
 			return
 		}
 		//从redis取真正的token
 		jwtToken, err := config.RedisDb.Get(c, token).Result()
 		if err != nil {
-			r.SetResult(result.ResultMap["unLogin"], "")
-			c.JSON(http.StatusUnauthorized, r)
+			c.JSON(http.StatusOK, r.FailType(common.UnLogin).SetCode(401))
 			c.Abort()
 			return
 		}
@@ -46,19 +45,19 @@ func JWTAuth() gin.HandlerFunc {
 		claims, err := authUtil.ParseJwtToken(jwtToken, jwtConfig.SecretKey)
 		if err != nil {
 			fmt.Println(err)
-			r.SetResult(result.ResultMap["unLogin"], "")
+			r.FailType(common.UnLogin).SetCode(401)
 
 			// 过期就续签token
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				err = authUtil.RenewJwtToken(jwtConfig, claims.UserId, token)
 				if err != nil {
 					fmt.Println(err)
-					c.JSON(http.StatusUnauthorized, r)
+					c.JSON(http.StatusOK, r)
 					c.Abort()
 					return
 				}
 			}
-			c.JSON(http.StatusUnauthorized, r)
+			c.JSON(http.StatusOK, r)
 			c.Abort()
 			return
 		}

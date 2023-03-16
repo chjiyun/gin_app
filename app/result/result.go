@@ -1,7 +1,7 @@
-// 接口response 定义与配置
 package result
 
 import (
+	"gin_app/app/common"
 	"reflect"
 )
 
@@ -10,85 +10,36 @@ type Result struct {
 	Msg  string      `json:"msg"`
 	Data interface{} `json:"data"`
 }
-type message struct {
-	code int
-	msg  string
-}
-
-var ResultMap = map[string]message{
-	"success": {
-		code: 200,
-		msg:  "成功",
-	},
-	"parameterError": {
-		code: 202,
-		msg:  "参数错误",
-	},
-	"illegalVisit": {
-		code: 203,
-		msg:  "非法访问",
-	},
-	"fail": {
-		code: 204,
-		msg:  "失败",
-	},
-	"unLogin": {
-		code: 205,
-		msg:  "未登录",
-	},
-	"inValidFile": {
-		code: 206,
-		msg:  "无效的文件",
-	},
-	"notFound": {
-		code: 207,
-		msg:  "file not found",
-	},
-	"serverError": {
-		code: 208,
-		msg:  "服务内部错误",
-	},
-}
 
 // New return a new Result instance
 func New() *Result {
 	r := &Result{}
-	res := ResultMap["success"]
-	r.Code = res.code
-	r.Msg = res.msg
+	r.Code = 0
+	r.Msg = common.Success.String()
 	return r
 }
 
 // Success 成功时的返回体，返回的 Result指针是 r的副本
 func (r *Result) Success(data interface{}) *Result {
-	res := ResultMap["success"]
-	r.Code = res.code
+	r.Code = 0
 	r.Data = data
-	return r
-}
-
-func (r *Result) SuccessDefault() *Result {
-	res := ResultMap["success"]
-	r.Code = res.code
-	r.Msg = res.msg
 	return r
 }
 
 // Fail 失败时的输出
 func (r *Result) Fail(msg string) *Result {
-	res := ResultMap["fail"]
 	if msg == "" {
-		msg = res.msg
+		msg = common.Fail.String()
 	}
-	r.Code = res.code
+	r.Code = 1
 	r.Msg = msg
 	return r
 }
 
-func (r *Result) FailDefault() *Result {
-	res := ResultMap["fail"]
-	r.Code = res.code
-	r.Msg = res.msg
+// FailType 指定错误类型（枚举）
+func (r *Result) FailType(msgType common.MsgType) *Result {
+	r.Code = 1
+	r.Msg = msgType.String()
 	return r
 }
 
@@ -96,13 +47,8 @@ func (r *Result) SetData(data interface{}) {
 	r.Data = data
 }
 
-// SetResult 自定义code msg
-func (r *Result) SetResult(res message, msg string) *Result {
-	r.Code = res.code
-	r.Msg = res.msg
-	if msg != "" {
-		r.Msg = msg
-	}
+func (r *Result) SetCode(code int) *Result {
+	r.Code = code
 	return r
 }
 

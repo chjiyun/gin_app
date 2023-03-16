@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"gin_app/app/common"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
@@ -88,7 +89,7 @@ func Download(c *gin.Context) {
 	uid := util.Basename(id)
 	ext := filepath.Ext(id)
 	if ext == "" {
-		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
+		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
 		return
 	}
 	db := c.Value("DB").(*gorm.DB)
@@ -97,13 +98,12 @@ func Download(c *gin.Context) {
 
 	res := db.Where("uid = ? AND ext = ?", uid, ext).First(&file)
 	if res.Error != nil {
-		r.SetResult(result.ResultMap["notFound"], "")
-		c.JSON(http.StatusNotFound, r)
+		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
 		return
 	}
 	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
 	if !util.CheckFileIsExist(sourcePath) {
-		c.JSON(http.StatusNotFound, r.SetResult(result.ResultMap["notFound"], ""))
+		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
 		return
 	}
 	c.File(sourcePath)

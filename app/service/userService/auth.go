@@ -1,7 +1,8 @@
-package user
+package userService
 
 import (
 	"errors"
+	"gin_app/app/common"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
@@ -31,77 +32,69 @@ type ResetPasswordReq struct {
 	Password1 string `json:"password1"`
 }
 
-func Login(c *gin.Context, r *result.Result) {
+func Login(c *gin.Context) *result.Result {
+	r := result.New()
 	db := c.Value("DB").(*gorm.DB)
 	var params LoginReq
 
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
-		r.Fail(err.Error())
-		return
+		return r.Fail(err.Error())
 	}
 
 	splitHost := strings.Split(c.Request.Host, ":")
 	if len(splitHost) < 1 {
-		r.Fail("host error")
-		return
+		return r.Fail("host error")
 	}
 	var user model.User
 	res := db.Where("username = ?", params.Username).First(&user)
 	if res.Error != nil {
-		r.Fail("")
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-			r.Fail("用户名或密码错误")
+			return r.Fail("用户名或密码错误")
 		}
-		return
+		return r.Fail("")
 	}
 
 	//校验密码
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password))
 	if err != nil {
-		r.Fail("用户名或密码错误")
-		return
+		return r.Fail("用户名或密码错误")
 	}
 
 	// 生成jwtToken
 	jwtConfig := config.Cfg.Jwt
 	jwtToken, err := authUtil.GenerateJwtToken(jwtConfig, user.ID)
 	if err != nil {
-		r.Fail("登录失败")
-		return
+		return r.Fail("登录失败")
 	}
 
 	//生成散列hash token，并存到redis
 	token, err := authUtil.SaveMd5Token(jwtToken)
 	if err != nil {
-		r.Fail("登录失败")
-		return
+		return r.Fail("登录失败")
 	}
-
 	c.SetCookie("token", token, jwtConfig.Expires, "/", splitHost[0], false, true)
 	r.SetData(gin.H{"token": token})
 
+	return r
 }
 
-func Register(c *gin.Context, r *result.Result) {
+func Register(c *gin.Context) *result.Result {
+	r := result.New()
 	var params RegisterReq
 
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
-		r.Fail(err.Error())
-		return
+		return r.FailErr(err)
 	}
 	if len(params.Username) < 4 {
-		r.Fail("用户名不能少于4位字符")
-		return
+		return r.Fail("用户名不能少于4位字符")
 	}
 	if len(params.Password) < 8 {
-		r.Fail("密码长度不能少于8位字符")
-		return
+		return r.Fail("密码长度不能少于8位字符")
 	}
 	if !regexp.MustCompile("^1[345789]\\d{9}$").MatchString(params.PhoneNumber) {
-		r.Fail("请输入合法的手机号")
-		return
+		return r.Fail("请输入合法的手机号")
 	}
 
 	db := c.Value("DB").(*gorm.DB)
@@ -110,27 +103,22 @@ func Register(c *gin.Context, r *result.Result) {
 	// 验证用户是否合法
 	res := db.Model(&user).Where("username = ?", params.Username).Count(&count)
 	if res.Error != nil {
-		r.Fail(res.Error.Error())
-		return
+		return r.FailErr(res.Error)
 	}
 	if count > 0 {
-		r.Fail("用户名不能重复")
-		return
+		return r.Fail("用户名不能重复")
 	}
 	res = db.Model(&user).Where("phone_number = ?", params.PhoneNumber).Count(&count)
 	if res.Error != nil {
-		r.Fail(res.Error.Error())
-		return
+		return r.FailErr(res.Error)
 	}
 	if count > 0 {
-		r.Fail("手机号不能重复")
-		return
+		return r.Fail("手机号不能重复")
 	}
 
 	hashPwd, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
-		r.Fail(err.Error())
-		return
+		return r.FailType(common.UnknownError)
 	}
 
 	user = model.User{
@@ -140,33 +128,34 @@ func Register(c *gin.Context, r *result.Result) {
 	}
 	tx := db.Create(&user)
 	if tx.Error != nil {
-		r.Fail("注册失败")
-		return
+		return r.Fail("注册失败")
 	}
-
 	r.SetData(gin.H{"userId": user.ID})
+
+	return r
 }
 
-func Logout(c *gin.Context) {
+func Logout(c *gin.Context) *result.Result {
+	r := result.New()
 	token := authUtil.GetToken(c)
 	// 删除jwtToken
 	if token != "" {
 		config.RedisDb.Del(c, token)
 	}
+	return r
 }
 
 // ResetPassword 重置密码  管理员才有权限
-func ResetPassword(c *gin.Context, r *result.Result) {
+func ResetPassword(c *gin.Context) *result.Result {
+	r := result.New()
 	var params ResetPasswordReq
 
 	err := c.ShouldBindJSON(&params)
 	if err != nil {
-		r.Fail(err.Error())
-		return
+		return r.FailErr(err)
 	}
 	if params.Password != params.Password1 {
-		r.Fail("密码不一致")
-		return
+		return r.Fail("密码不一致")
 	}
 
 	db := c.Value("DB").(*gorm.DB)
@@ -176,20 +165,17 @@ func ResetPassword(c *gin.Context, r *result.Result) {
 
 	db.Model(&user).Where("id = ?", userId).Count(&count)
 	if count == 0 {
-		r.Fail("该用户不存在")
-		return
+		return r.Fail("该用户不存在")
 	}
 
 	hashPwd, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
-		r.Fail(err.Error())
-		return
+		return r.FailType(common.UnknownError)
 	}
 	password := string(hashPwd)
 	tx := db.Model(&user).Where("id = ?", userId).Update("password", password)
 	if tx.Error != nil {
-		r.Fail("更新失败")
-		return
+		return r.Fail("")
 	}
-
+	return r
 }

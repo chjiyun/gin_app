@@ -1,32 +1,27 @@
-package controller
+package userController
 
 import (
-	"gin_app/app/result"
-	userService "gin_app/app/service/user"
+	"gin_app/app/service/userService"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func Login(c *gin.Context) {
-	r := result.New()
-	userService.Login(c, r)
+	r := userService.Login(c)
 	c.JSON(http.StatusOK, r)
 }
 
 func Register(c *gin.Context) {
-	r := result.New()
-	userService.Register(c, r)
+	r := userService.Register(c)
 	c.JSON(http.StatusOK, r)
 }
 
 func Logout(c *gin.Context) {
-	r := result.New()
-	userService.Logout(c)
+	r := userService.Logout(c)
 	c.JSON(http.StatusOK, r)
 }
 
 func ResetPassword(c *gin.Context) {
-	r := result.New()
-	userService.ResetPassword(c, r)
+	r := userService.ResetPassword(c)
 	c.JSON(http.StatusOK, r)
 }

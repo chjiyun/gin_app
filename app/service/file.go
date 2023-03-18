@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"gin_app/app/common"
 	"gin_app/app/model"
 	"gin_app/app/result"
@@ -22,27 +21,28 @@ import (
 )
 
 // Upload 接收上传的文件
-func Upload(c *gin.Context) (*model.File, error) {
+func Upload(c *gin.Context) *result.Result {
+	r := result.New()
 	db := c.Value("DB").(*gorm.DB)
 
 	f, err := c.FormFile("file")
 	if err != nil {
-		return nil, errors.New("上传失败")
+		return r.FailType(common.FileNotFound)
 	}
 
 	ext := filepath.Ext(f.Filename)
 	// mimetype := f.Header["Content-Type"][0]
-	mfile, _ := f.Open()
-	defer mfile.Close()
-	mime, err := mimetype.DetectReader(mfile)
+	mFile, _ := f.Open()
+	defer mFile.Close()
+	mime, err := mimetype.DetectReader(mFile)
 	if err != nil {
-		return nil, errors.New("MIME type detect failed")
+		return r.FailErr(err)
 	}
-	mtype := mime.String()
+	mType := mime.String()
 	var filetype string
 
-	if i := strings.Index(mtype, "/"); i > 0 {
-		filetype = mtype[:i]
+	if i := strings.Index(mType, "/"); i > 0 {
+		filetype = mType[:i]
 	}
 	uid := idgen.NextId()
 	localName := util.ToString(uid) + ext
@@ -53,16 +53,13 @@ func Upload(c *gin.Context) (*model.File, error) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		return nil, errors.New("上传失败")
+		return r.FailErr(err)
 	}
 
 	// Upload the file to specific dst.
 	err = c.SaveUploadedFile(f, sourcepath)
 	if err != nil {
-		return nil, errors.New("上传失败")
-	}
-	if true {
-		return &model.File{Name: "test"}, nil
+		return r.Fail("上传失败")
 	}
 
 	file := model.File{
@@ -71,15 +68,15 @@ func Upload(c *gin.Context) (*model.File, error) {
 		Uid:       uid,
 		Ext:       ext[1:],
 		Type:      filetype,
-		MimeType:  mtype,
+		MimeType:  mType,
 		Path:      relativePath,
 		Size:      uint(f.Size),
 	}
 	res := db.Create(&file)
 	if res.Error != nil {
-		return nil, errors.New("上传失败")
+		return r.FailType(common.UnknownError)
 	}
-	return &file, nil
+	return r
 }
 
 // Download 下载文件

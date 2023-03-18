@@ -43,6 +43,13 @@ func (r *Result) FailType(msgType common.MsgType) *Result {
 	return r
 }
 
+// FailErr 直接输出error
+func (r *Result) FailErr(err error) *Result {
+	r.Code = 1
+	r.Msg = err.Error()
+	return r
+}
+
 func (r *Result) SetData(data interface{}) {
 	r.Data = data
 }

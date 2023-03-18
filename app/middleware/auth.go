@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"gin_app/app/common"
 	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
@@ -44,22 +43,21 @@ func JWTAuth() gin.HandlerFunc {
 
 		claims, err := authUtil.ParseJwtToken(jwtToken, jwtConfig.SecretKey)
 		if err != nil {
-			fmt.Println(err)
 			r.FailType(common.UnLogin).SetCode(401)
 
 			// 过期就续签token
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				err = authUtil.RenewJwtToken(jwtConfig, claims.UserId, token)
 				if err != nil {
-					fmt.Println(err)
 					c.JSON(http.StatusOK, r)
 					c.Abort()
 					return
 				}
+			} else {
+				c.JSON(http.StatusOK, r)
+				c.Abort()
+				return
 			}
-			c.JSON(http.StatusOK, r)
-			c.Abort()
-			return
 		}
 
 		//可以在这里做权限校验

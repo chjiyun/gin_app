@@ -46,11 +46,11 @@ func ParseJwtToken(tokenString string, secret string) (*CustomerClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomerClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return hmacSampleSecret, nil
 	})
-
-	if err != nil {
-		return nil, err
-	}
 	claims := token.Claims.(*CustomerClaims)
+	// 返回claims，续期时需使用里面的信息
+	if err != nil {
+		return claims, err
+	}
 	return claims, nil
 }
 

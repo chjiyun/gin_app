@@ -47,7 +47,7 @@ func Login(c *gin.Context) *result.Result {
 		return r.Fail("host error")
 	}
 	var user model.User
-	res := db.Where("username = ?", params.Username).First(&user)
+	res := db.Where("name = ?", params.Username).First(&user)
 	if res.Error != nil {
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
 			return r.Fail("用户名或密码错误")
@@ -101,7 +101,7 @@ func Register(c *gin.Context) *result.Result {
 	var user model.User
 	var count int64
 	// 验证用户是否合法
-	res := db.Model(&user).Where("username = ?", params.Username).Count(&count)
+	res := db.Model(&user).Where("name = ?", params.Username).Count(&count)
 	if res.Error != nil {
 		return r.FailErr(res.Error)
 	}
@@ -122,7 +122,7 @@ func Register(c *gin.Context) *result.Result {
 	}
 
 	user = model.User{
-		Username:    params.Username,
+		Name:        params.Username,
 		Password:    string(hashPwd),
 		PhoneNumber: params.PhoneNumber,
 	}
@@ -141,41 +141,6 @@ func Logout(c *gin.Context) *result.Result {
 	// 删除jwtToken
 	if token != "" {
 		config.RedisDb.Del(c, token)
-	}
-	return r
-}
-
-// ResetPassword 重置密码  管理员才有权限
-func ResetPassword(c *gin.Context) *result.Result {
-	r := result.New()
-	var params ResetPasswordReq
-
-	err := c.ShouldBindJSON(&params)
-	if err != nil {
-		return r.FailErr(err)
-	}
-	if params.Password != params.Password1 {
-		return r.Fail("密码不一致")
-	}
-
-	db := c.Value("DB").(*gorm.DB)
-	var user model.User
-	var count int64
-	userId := authUtil.GetSessionUserId(c)
-
-	db.Model(&user).Where("id = ?", userId).Count(&count)
-	if count == 0 {
-		return r.Fail("该用户不存在")
-	}
-
-	hashPwd, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return r.FailType(common.UnknownError)
-	}
-	password := string(hashPwd)
-	tx := db.Model(&user).Where("id = ?", userId).Update("password", password)
-	if tx.Error != nil {
-		return r.Fail("")
 	}
 	return r
 }

@@ -144,3 +144,14 @@ func TestSnakeString(t *testing.T) {
 		t.Errorf("result = %v, expect = %v", result, expect)
 	}
 }
+
+func TestRandomInt(t *testing.T) {
+	min := 10
+	max := 1000
+	result := RandomInt(min, max)
+
+	t.Log(result)
+	if result < min || result >= max {
+		t.Errorf("min: %v, max: %v, result：%v", min, max, result)
+	}
+}

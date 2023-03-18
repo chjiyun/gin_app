@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -352,4 +353,13 @@ func ZipFiles(rw *gin.ResponseWriter, files []string, dst []string) {
 		}
 		io.Copy(writer, f)
 	}
+}
+
+// RandomInt 伪随机数
+func RandomInt(min, max int) int {
+	if min >= max {
+		return 0
+	}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return r.Intn(max-min) + min
 }

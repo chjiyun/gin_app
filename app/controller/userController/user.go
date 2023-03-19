@@ -26,7 +26,12 @@ func ResetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, r)
 }
 
-func GetUsers(c *gin.Context) {
-	r := userService.GetUsers(c)
+func GetPageUsers(c *gin.Context) {
+	r := userService.GetPageUsers(c)
+	c.JSON(http.StatusOK, r)
+}
+
+func GetCurrentUser(c *gin.Context) {
+	r := userService.GetCurrentUser(c)
 	c.JSON(http.StatusOK, r)
 }

@@ -12,7 +12,23 @@ import (
 	"strconv"
 )
 
-func GetUsers(c *gin.Context) *result.Result {
+func GetCurrentUser(c *gin.Context) *result.Result {
+	r := result.New()
+	user := getSessionUser(c)
+	r.SetData(user)
+	return r
+}
+
+// getSessionUser 获取登录用户信息
+func getSessionUser(c *gin.Context) model.User {
+	db := c.Value("DB").(*gorm.DB)
+	userId := authUtil.GetSessionUserId(c)
+	var user model.User
+	db.Find(&user, userId)
+	return user
+}
+
+func GetPageUsers(c *gin.Context) *result.Result {
 	r := result.New()
 	db := c.Value("DB").(*gorm.DB)
 

@@ -10,7 +10,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-// 读取router下的路由组
+// ReadRouters 读取router下的路由组
 func ReadRouters(g *gin.RouterGroup) {
 	var funcNames = util.GetFileBasename("app/router", []string{"go"})
 	if len(funcNames) == 0 {

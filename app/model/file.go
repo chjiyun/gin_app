@@ -1,8 +1,9 @@
 package model
 
-// 文件model
+import "gin_app/app/common"
+
 type File struct {
-	BaseModel
+	common.BaseModel
 	Uid  uint64 `gorm:"not null;comment:雪花id" json:"uid"`
 	Ext  string `gorm:"size:20;comment:文件后缀" json:"ext"`
 	Type string `gorm:"size:20;comment:文件类型: image,video,audio,txt" json:"type"`

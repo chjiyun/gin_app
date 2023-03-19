@@ -3,20 +3,19 @@ package userService
 import (
 	"fmt"
 	"gin_app/app/common"
+	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"strconv"
 )
 
-func GetCurrentUser(c *gin.Context) *result.Result {
-	r := result.New()
+func GetCurrentUser(c *gin.Context) {
+	r := c.Value("Result").(*result.Result)
 	user := getSessionUser(c)
 	r.SetData(user)
-	return r
 }
 
 // getSessionUser 获取登录用户信息
@@ -28,42 +27,36 @@ func getSessionUser(c *gin.Context) model.User {
 	return user
 }
 
-func GetPageUsers(c *gin.Context) *result.Result {
-	r := result.New()
+func GetPageUsers(c *gin.Context, reqVo userVo.UserPageReqVo) {
+	r := c.Value("Result").(*result.Result)
 	db := c.Value("DB").(*gorm.DB)
-
-	page, _ := strconv.Atoi(c.Query("page"))
-	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
-	keyword := c.Query("keyword")
-	if page < 1 || pageSize < 1 {
-		return r.Fail("参数缺失")
-	}
 
 	var users []model.User
 	var count int64
 	// 初始条件可以放结构体里面
 	tx := db.Model(model.User{})
 
-	if keyword != "" {
-		str := fmt.Sprintf("%%%s%%", keyword)
+	if reqVo.Keyword != "" {
+		str := fmt.Sprintf("%%%s%%", reqVo.Keyword)
 		tx = tx.Where("name like ?", str).Or("phone_number like ?", str)
 	}
 
 	res := tx.Count(&count)
 	if res.Error != nil {
-		return r.FailErr(res.Error)
+		r.FailErr(res.Error)
+		return
 	}
 
-	res = tx.Offset((page - 1) * pageSize).Limit(pageSize).Order("created_at").Find(&users)
+	res = tx.Offset((reqVo.Page - 1) * reqVo.PageSize).Limit(reqVo.PageSize).Order("created_at").Find(&users)
 	if res.Error != nil {
-		return r.FailErr(res.Error)
+		r.FailErr(res.Error)
+		return
 	}
 
-	r.SetData(common.Page{
+	r.SetData(common.PageRes{
 		Count: count,
 		Rows:  users,
 	})
-	return r
 }
 
 // ResetPassword 重置密码  管理员才有权限

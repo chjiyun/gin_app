@@ -1,6 +1,8 @@
 package userController
 
 import (
+	"gin_app/app/controller/userController/userVo"
+	"gin_app/app/result"
 	"gin_app/app/service/userService"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -27,11 +29,18 @@ func ResetPassword(c *gin.Context) {
 }
 
 func GetPageUsers(c *gin.Context) {
-	r := userService.GetPageUsers(c)
+	var reqVo userVo.UserPageReqVo
+	r := c.Value("Result").(*result.Result)
+	if err := c.ShouldBindQuery(&reqVo); err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	userService.GetPageUsers(c, reqVo)
 	c.JSON(http.StatusOK, r)
 }
 
 func GetCurrentUser(c *gin.Context) {
-	r := userService.GetCurrentUser(c)
+	r := c.Value("Result").(*result.Result)
+	userService.GetCurrentUser(c)
 	c.JSON(http.StatusOK, r)
 }

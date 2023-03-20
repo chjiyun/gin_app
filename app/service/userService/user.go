@@ -2,11 +2,11 @@ package userService
 
 import (
 	"errors"
-	"fmt"
 	"gin_app/app/common"
 	"gin_app/app/common/myError"
 	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/model"
+	"gin_app/app/util"
 	"gin_app/app/util/authUtil"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -31,7 +31,7 @@ func GetUserPage(c *gin.Context, reqVo userVo.UserPageReqVo) (*common.PageRes, e
 	tx := db.Model(model.User{})
 
 	if reqVo.Keyword != "" {
-		str := fmt.Sprintf("%%%s%%", reqVo.Keyword)
+		str := util.WriteString("%", reqVo.Keyword, "%")
 		tx = tx.Where("name like ?", str).Or("phone_number like ?", str)
 	}
 

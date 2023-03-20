@@ -3,11 +3,11 @@ package userService
 import (
 	"errors"
 	"gin_app/app/common"
+	"gin_app/app/common/myError"
+	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/model"
-	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
-	"regexp"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -16,131 +16,89 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type LoginReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type RegisterReq struct {
-	Username    string `json:"username"`
-	PhoneNumber string `json:"phoneNumber"`
-	Password    string `json:"password"`
-}
-
-type ResetPasswordReq struct {
-	Password  string `json:"password"`
-	Password1 string `json:"password1"`
-}
-
-func Login(c *gin.Context) *result.Result {
-	r := result.New()
+func Login(c *gin.Context, reqVo userVo.UserLoginReqVo) (string, error) {
 	db := c.Value("DB").(*gorm.DB)
-	var params LoginReq
-
-	err := c.ShouldBindJSON(&params)
-	if err != nil {
-		return r.Fail(err.Error())
-	}
 
 	splitHost := strings.Split(c.Request.Host, ":")
 	if len(splitHost) < 1 {
-		return r.Fail("host error")
+		return "", myError.New("host error")
 	}
 	var user model.User
-	res := db.Where("name = ?", params.Username).First(&user)
+	res := db.Where("name = ?", reqVo.Username).First(&user)
 	if res.Error != nil {
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-			return r.Fail("用户名或密码错误")
+			return "", myError.NewET(common.ErrUsernameOrPwd)
 		}
-		return r.Fail("")
+		return "", res.Error
 	}
 
 	//校验密码
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(params.Password))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqVo.Password))
 	if err != nil {
-		return r.Fail("用户名或密码错误")
+		return "", myError.NewET(common.ErrUsernameOrPwd)
 	}
 
 	// 生成jwtToken
 	jwtConfig := config.Cfg.Jwt
 	jwtToken, err := authUtil.GenerateJwtToken(jwtConfig, user.ID)
 	if err != nil {
-		return r.Fail("登录失败")
+		return "", myError.NewET(common.UnknownError)
 	}
 
 	//生成散列hash token，并存到redis
 	token, err := authUtil.SaveMd5Token(jwtToken)
 	if err != nil {
-		return r.Fail("登录失败")
+		return "", myError.NewET(common.UnknownError)
 	}
 	c.SetCookie("token", token, jwtConfig.Expires, "/", splitHost[0], false, true)
-	r.SetData(gin.H{"token": token})
 
-	return r
+	return token, nil
 }
 
-func Register(c *gin.Context) *result.Result {
-	r := result.New()
-	var params RegisterReq
-
-	err := c.ShouldBindJSON(&params)
-	if err != nil {
-		return r.FailErr(err)
-	}
-	if len(params.Username) < 4 {
-		return r.Fail("用户名不能少于4位字符")
-	}
-	if len(params.Password) < 8 {
-		return r.Fail("密码长度不能少于8位字符")
-	}
-	if !regexp.MustCompile("^1[345789]\\d{9}$").MatchString(params.PhoneNumber) {
-		return r.Fail("请输入合法的手机号")
-	}
-
+func Register(c *gin.Context, reqVo userVo.UserRegisterReqVo) error {
+	//if !regexp.MustCompile("^1[345789]\\d{9}$").MatchString(params.PhoneNumber) {
+	//	return r.Fail("请输入合法的手机号")
+	//}
 	db := c.Value("DB").(*gorm.DB)
 	var user model.User
 	var count int64
 	// 验证用户是否合法
-	res := db.Model(&user).Where("name = ?", params.Username).Count(&count)
+	res := db.Model(&user).Where("name = ?", reqVo.Username).Count(&count)
 	if res.Error != nil {
-		return r.FailErr(res.Error)
+		return res.Error
 	}
 	if count > 0 {
-		return r.Fail("用户名不能重复")
+		return myError.New("用户名不能重复")
 	}
-	res = db.Model(&user).Where("phone_number = ?", params.PhoneNumber).Count(&count)
+	res = db.Model(&user).Where("phone_number = ?", reqVo.PhoneNumber).Count(&count)
 	if res.Error != nil {
-		return r.FailErr(res.Error)
+		return res.Error
 	}
 	if count > 0 {
-		return r.Fail("手机号不能重复")
+		return myError.New("手机号不能重复")
 	}
 
-	hashPwd, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	hashPwd, err := bcrypt.GenerateFromPassword([]byte(reqVo.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return r.FailType(common.UnknownError)
+		return myError.NewET(common.UnknownError)
 	}
 
 	user = model.User{
-		Name:        params.Username,
+		Name:        reqVo.Username,
 		Password:    string(hashPwd),
-		PhoneNumber: params.PhoneNumber,
+		PhoneNumber: reqVo.PhoneNumber,
 	}
 	tx := db.Create(&user)
 	if tx.Error != nil {
-		return r.Fail("注册失败")
+		return tx.Error
 	}
-	r.SetData(gin.H{"userId": user.ID})
-
-	return r
+	return nil
 }
 
-func Logout(c *gin.Context) *result.Result {
-	r := result.New()
+func Logout(c *gin.Context) {
 	token := authUtil.GetToken(c)
 	// 删除jwtToken
 	if token != "" {
 		config.RedisDb.Del(c, token)
 	}
-	return r
 }

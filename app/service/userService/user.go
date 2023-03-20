@@ -1,34 +1,28 @@
 package userService
 
 import (
+	"errors"
 	"fmt"
 	"gin_app/app/common"
+	"gin_app/app/common/myError"
 	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/model"
-	"gin_app/app/result"
 	"gin_app/app/util/authUtil"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func GetCurrentUser(c *gin.Context) {
-	r := c.Value("Result").(*result.Result)
-	user := getSessionUser(c)
-	r.SetData(user)
-}
-
-// getSessionUser 获取登录用户信息
-func getSessionUser(c *gin.Context) model.User {
+// GetCurrentUser 获取登录用户信息
+func GetCurrentUser(c *gin.Context) *model.User {
 	db := c.Value("DB").(*gorm.DB)
 	userId := authUtil.GetSessionUserId(c)
 	var user model.User
 	db.Find(&user, userId)
-	return user
+	return &user
 }
 
-func GetPageUsers(c *gin.Context, reqVo userVo.UserPageReqVo) {
-	r := c.Value("Result").(*result.Result)
+func GetUserPage(c *gin.Context, reqVo userVo.UserPageReqVo) (*common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var users []model.User
@@ -43,35 +37,19 @@ func GetPageUsers(c *gin.Context, reqVo userVo.UserPageReqVo) {
 
 	res := tx.Count(&count)
 	if res.Error != nil {
-		r.FailErr(res.Error)
-		return
+		return nil, res.Error
 	}
 
 	res = tx.Offset((reqVo.Page - 1) * reqVo.PageSize).Limit(reqVo.PageSize).Order("created_at").Find(&users)
 	if res.Error != nil {
-		r.FailErr(res.Error)
-		return
+		return nil, res.Error
 	}
 
-	r.SetData(common.PageRes{
-		Count: count,
-		Rows:  users,
-	})
+	return &common.PageRes{Count: count, Rows: users}, nil
 }
 
 // ResetPassword 重置密码  管理员才有权限
-func ResetPassword(c *gin.Context) *result.Result {
-	r := result.New()
-	var params ResetPasswordReq
-
-	err := c.ShouldBindJSON(&params)
-	if err != nil {
-		return r.FailErr(err)
-	}
-	if params.Password != params.Password1 {
-		return r.Fail("密码不一致")
-	}
-
+func ResetPassword(c *gin.Context, reqVo userVo.UserResetPasswordReqVo) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
 	var user model.User
 	var count int64
@@ -79,17 +57,17 @@ func ResetPassword(c *gin.Context) *result.Result {
 
 	db.Model(&user).Where("id = ?", userId).Count(&count)
 	if count == 0 {
-		return r.Fail("该用户不存在")
+		return false, errors.New("该用户不存在")
 	}
 
-	hashPwd, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	hashPwd, err := bcrypt.GenerateFromPassword([]byte(reqVo.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return r.FailType(common.UnknownError)
+		return false, myError.NewET(common.UnknownError)
 	}
 	password := string(hashPwd)
 	tx := db.Model(&user).Where("id = ?", userId).Update("password", password)
 	if tx.Error != nil {
-		return r.Fail("")
+		return false, tx.Error
 	}
-	return r
+	return true, nil
 }

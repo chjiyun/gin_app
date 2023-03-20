@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"gin_app/app/result"
 	"gin_app/config"
 
 	"github.com/gin-gonic/gin"
@@ -17,8 +16,6 @@ func SetContext() gin.HandlerFunc {
 		c.Set("DB", config.DB.WithContext(context.Background()))
 		// Add a context to the log entry.
 		c.Set("Logger", config.Logger.WithContext(context.Background()))
-		// 设置json返回体
-		c.Set("Result", result.New())
 		c.Next()
 	}
 }

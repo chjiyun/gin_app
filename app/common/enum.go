@@ -1,9 +1,9 @@
 package common
 
-type MsgType int
+type ErrType int
 
 const (
-	Success MsgType = iota
+	Success ErrType = iota
 	Fail
 	ParameterError
 	IllegalVisit
@@ -14,8 +14,8 @@ const (
 	ErrUsernameOrPwd
 )
 
-func (m MsgType) String() string {
-	switch m {
+func (t ErrType) String() string {
+	switch t {
 	case 0:
 		return "成功"
 	case 1:

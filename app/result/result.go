@@ -37,9 +37,9 @@ func (r *Result) Fail(msg string) *Result {
 }
 
 // FailType 指定错误类型（枚举）
-func (r *Result) FailType(msgType common.MsgType) *Result {
+func (r *Result) FailType(errType common.ErrType) *Result {
 	r.Code = 1
-	r.Msg = msgType.String()
+	r.Msg = errType.String()
 	return r
 }
 

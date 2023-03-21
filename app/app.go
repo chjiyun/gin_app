@@ -6,10 +6,11 @@ import (
 	"gin_app/app/schedule"
 	"gin_app/app/util"
 	"gin_app/app/validation"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/robfig/cron/v3"
 )
 
@@ -58,6 +59,7 @@ func InitSchedule() {
 		crontab.AddFunc(job.Cron, job.Task)
 	}
 	crontab.Start()
+	fmt.Println(">>>schedule init successful")
 	// 定时任务是另起协程执行的,这里使用 select 简答阻塞.实际开发中需要
 	//关闭着计划任务, 但是不能关闭已经在执行中的任务.
 	// defer crontab.Stop()
@@ -68,7 +70,7 @@ func InitSchedule() {
 
 func RegisterValidation() {
 	vf := validation.ValidateFunc{}
-	// typ := reflect.TypeOf(vf)
+	typ := reflect.TypeOf(vf)
 	val := reflect.ValueOf(vf)
 	if val.Kind() != reflect.Struct {
 		return
@@ -78,17 +80,25 @@ func RegisterValidation() {
 	if numOfMethod == 0 {
 		return
 	}
-	// methods := make([]reflect.Value, 0, numOfMethod)
+	validate, ok := binding.Validator.Engine().(*validator.Validate)
+	if !ok {
+		return
+	}
+	count := 0
 	for i := 0; i < numOfMethod; i++ {
-		if fn, ok := val.Method(i).Interface().(validator.Func); !ok {
-			fmt.Println(fn)
+		fn, ok := val.Method(i).Interface().(func(fl validator.FieldLevel) bool)
+		if !ok {
 			continue
 		}
-		fmt.Println(val.Method(i).Kind())
-		// methods = append(methods, val.Method(i))
+		// 注册自定义校验函数
+		err := validate.RegisterValidation(typ.Method(i).Name, fn)
+		if err != nil {
+			fmt.Println(typ.Method(i).Name, err)
+			continue
+		}
+		count++
 	}
-	// validate, ok := binding.Validator.Engine().(*validator.Validate)
-	// if ok {
-	// 	validate.RegisterValidation("verifyPassword")
-	// }
+	if count == numOfMethod {
+		fmt.Println(">>>自定义校验函数注册完成")
+	}
 }

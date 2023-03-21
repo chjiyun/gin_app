@@ -19,10 +19,6 @@ func (vf ValidateFunc) VerifyPhoneNumber(fl validator.FieldLevel) bool {
 }
 
 func (vf ValidateFunc) VerifyPassword(fl validator.FieldLevel) bool {
-	// validate, ok := binding.Validator.Engine().(*validator.Validate)
-	// if ok {
-	// 	var vf ValidateFunc
-	// 	validate.RegisterValidation("verifyPassword", vf.verifyPhoneNumber)
-	// }
+
 	return true
 }

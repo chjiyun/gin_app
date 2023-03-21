@@ -77,10 +77,9 @@ func main() {
 
 	var options = idgen.NewIdGeneratorOptions(1)
 	idgen.SetIdGenerator(options)
-	fmt.Println("雪花算法生成器初始化完成>>>")
+	fmt.Println(">>>雪花id生成器初始化完成")
 
 	app.InitSchedule()
-	fmt.Println("schedule init success...")
 
 	// By default it serves on :8080 unless a
 	// PORT environment variable was defined.

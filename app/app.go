@@ -1,12 +1,15 @@
 package app
 
 import (
+	"fmt"
 	"gin_app/app/router"
 	"gin_app/app/schedule"
 	"gin_app/app/util"
+	"gin_app/app/validation"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/robfig/cron/v3"
 )
 
@@ -63,20 +66,29 @@ func InitSchedule() {
 	// select {} //阻塞主线程停止
 }
 
-// 利用反射动态调用 --- 测试
-// func DynamicFunc() {
-// 	funcMap := map[string]interface{}{
-// 		"GetBingImg": schedule.GetBingImg,
-// 	}
-// 	for k := range funcMap {
-// 		fmt.Println("start schedule:", k)
-// 		result, err := Call(funcMap, k)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		for _, v := range result {
-// 			// 打印返回值和类型
-// 			fmt.Printf("type=%v, value=%+v\n", v.Type(), v.Interface().(schedule.GinSchedule))
-// 		}
-// 	}
-// }
+func RegisterValidation() {
+	vf := validation.ValidateFunc{}
+	// typ := reflect.TypeOf(vf)
+	val := reflect.ValueOf(vf)
+	if val.Kind() != reflect.Struct {
+		return
+	}
+	// 获取到该结构体有多少个方法
+	numOfMethod := val.NumMethod()
+	if numOfMethod == 0 {
+		return
+	}
+	// methods := make([]reflect.Value, 0, numOfMethod)
+	for i := 0; i < numOfMethod; i++ {
+		if fn, ok := val.Method(i).Interface().(validator.Func); !ok {
+			fmt.Println(fn)
+			continue
+		}
+		fmt.Println(val.Method(i).Kind())
+		// methods = append(methods, val.Method(i))
+	}
+	// validate, ok := binding.Validator.Engine().(*validator.Validate)
+	// if ok {
+	// 	validate.RegisterValidation("verifyPassword")
+	// }
+}

@@ -48,6 +48,8 @@ func main() {
 	router := r.Group("/api")
 	app.ReadRouters(router)
 
+	app.RegisterValidation()
+
 	// srv := &http.Server{
 	// 	Addr:    ":8080",
 	// 	Handler: r,

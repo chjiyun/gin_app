@@ -56,9 +56,6 @@ func Login(c *gin.Context, reqVo userVo.UserLoginReqVo) (string, error) {
 }
 
 func Register(c *gin.Context, reqVo userVo.UserRegisterReqVo) error {
-	//if !regexp.MustCompile("^1[345789]\\d{9}$").MatchString(params.PhoneNumber) {
-	//	return r.Fail("请输入合法的手机号")
-	//}
 	db := c.Value("DB").(*gorm.DB)
 	var user model.User
 	var count int64

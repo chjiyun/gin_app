@@ -92,26 +92,23 @@ func Upload(c *gin.Context) *result.Result {
 	}
 
 	// 关键：重置offset
-	mfile.Seek(0, 0)
+	mFile.Seek(0, 0)
 
 	imgSuffix := regexp.MustCompile(`jpg|jpeg|png$`)
 	if imgSuffix.MatchString(ext) {
-		width, height, err := getImageXY(mfile)
+		width, height, err := getImageXY(mFile)
 		if err != nil {
-			c.JSON(200, r.Fail("文件解码失败"))
-			return
+			return r.Fail("文件解码失败")
 		}
 		err = toWebp(c, file, width, height)
 		if err != nil {
-			c.JSON(200, r.Fail("图片转webp失败"))
-			return
+			return r.Fail("图片转webp失败")
 		}
 	}
 
 	r.SetData(gin.H{
 		"id": file.ID, "uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
 	})
-	c.JSON(200, r)
 	return r
 }
 
@@ -332,7 +329,7 @@ func transformImage(inputFilename string, outputFilename string, outputWidth int
 	return nil
 }
 
-// convertToWebp 图片转换成webp格式
+// ConvertToWebp 图片转换成webp格式
 func ConvertToWebp(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
 	log := c.Value("Logger").(*logrus.Entry)

@@ -76,8 +76,8 @@ func ResetPassword(c *gin.Context, reqVo userVo.UserResetPasswordReqVo) (bool, e
 	return true, nil
 }
 
-func saveLoginIpInfo(c *gin.Context, userId uint) {
-	log := c.Value("Logger").(*logrus.Logger)
+func saveLoginIpInfo(c *gin.Context, token string, userId uint) {
+	log := c.Value("Logger").(*logrus.Entry)
 	db := c.Value("DB").(*gorm.DB)
 
 	ip := c.ClientIP()
@@ -90,13 +90,13 @@ func saveLoginIpInfo(c *gin.Context, userId uint) {
 	var userIp = model.UserIp{
 		UserId: userId,
 	}
-	if err = copier.Copy(userIp, info); err != nil {
+	if err = copier.Copy(&userIp, &info); err != nil {
 		log.Error(err)
 		return
 	}
 	db.Create(&userIp)
 
-	if err = cacheService.SaveSessionIp("", userIp.ID); err != nil {
+	if err = cacheService.SaveSessionIp(token, userIp.ID); err != nil {
 		log.Error(err)
 	}
 }

@@ -6,9 +6,13 @@ import (
 	"gin_app/app/common/myError"
 	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/model"
+	"gin_app/app/service/cacheService"
+	"gin_app/app/service/toolService"
 	"gin_app/app/util"
 	"gin_app/app/util/authUtil"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -70,4 +74,29 @@ func ResetPassword(c *gin.Context, reqVo userVo.UserResetPasswordReqVo) (bool, e
 		return false, tx.Error
 	}
 	return true, nil
+}
+
+func saveLoginIpInfo(c *gin.Context, userId uint) {
+	log := c.Value("Logger").(*logrus.Logger)
+	db := c.Value("DB").(*gorm.DB)
+
+	ip := c.ClientIP()
+	info, err := toolService.GetIpInfo(c, ip)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var userIp = model.UserIp{
+		UserId: userId,
+	}
+	if err = copier.Copy(userIp, info); err != nil {
+		log.Error(err)
+		return
+	}
+	db.Create(&userIp)
+
+	if err = cacheService.SaveSessionIp("", userIp.ID); err != nil {
+		log.Error(err)
+	}
 }

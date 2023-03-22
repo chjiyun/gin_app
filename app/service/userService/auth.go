@@ -52,6 +52,9 @@ func Login(c *gin.Context, reqVo userVo.UserLoginReqVo) (string, error) {
 	}
 	c.SetCookie("token", token, jwtConfig.Expires, "/", splitHost[0], false, true)
 
+	if config.Cfg.Env != gin.DebugMode {
+		go saveLoginIpInfo(c.Copy(), user.ID)
+	}
 	return token, nil
 }
 

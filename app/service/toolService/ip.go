@@ -1,10 +1,8 @@
-package tool
+package toolService
 
 import (
-	"fmt"
 	"gin_app/app/common"
-	"gin_app/app/result"
-
+	"gin_app/app/common/myError"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/req/v3"
 )
@@ -22,15 +20,7 @@ type IPInfo struct {
 	Desc      string `json:"desc"`
 }
 
-func GetIpInfo(c *gin.Context) {
-	r := result.New()
-
-	ip := c.Query("ip")
-	if ip == "" {
-		c.JSON(200, r.Fail("ip is not exist"))
-		return
-	}
-
+func GetIpInfo(c *gin.Context, ip string) (*IPInfo, error) {
 	client := req.C()
 	var ipInfo IPInfo
 	resp, err := client.R().
@@ -39,14 +29,10 @@ func GetIpInfo(c *gin.Context) {
 		Get(common.SEARCH_IP_URL)
 
 	if err != nil {
-		fmt.Println(err)
-		c.JSON(200, r.Fail("请求错误"))
-		return
+		return nil, err
 	}
 	if !resp.IsSuccessState() {
-		c.JSON(200, r.Fail(""))
-		return
+		return nil, myError.New("远程请求错误")
 	}
-	r.SetData(ipInfo)
-	c.JSON(200, r)
+	return &ipInfo, nil
 }

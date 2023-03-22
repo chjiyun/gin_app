@@ -5,9 +5,11 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"gin_app/app/util"
 	"gin_app/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -28,9 +30,11 @@ func GenerateJwtToken(jwtConfig config.JwtConfig, userId uint) (string, error) {
 		jwtConfig.Refresh = 10 * 60
 	}
 	expiredTime := jwt.NewNumericDate(time.Now().Add(time.Duration(jwtConfig.Refresh) * time.Second))
+	id := strconv.Itoa(util.RandomInt(0, 10000))
 	token.Claims = CustomerClaims{
 		UserId: userId,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        id,
 			NotBefore: nowTime,          // 签名生效时间
 			ExpiresAt: expiredTime,      // 签名过期时间
 			Issuer:    jwtConfig.Issuer, // 签名颁发者
@@ -46,11 +50,11 @@ func ParseJwtToken(tokenString string, secret string) (*CustomerClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomerClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return hmacSampleSecret, nil
 	})
-
-	if err != nil {
-		return nil, err
-	}
 	claims := token.Claims.(*CustomerClaims)
+	// 返回claims，续期时需使用里面的信息
+	if err != nil {
+		return claims, err
+	}
 	return claims, nil
 }
 

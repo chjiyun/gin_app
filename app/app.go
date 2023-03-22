@@ -1,16 +1,20 @@
 package app
 
 import (
+	"fmt"
 	"gin_app/app/router"
 	"gin_app/app/schedule"
 	"gin_app/app/util"
+	"gin_app/app/validation"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
 )
 
-// 读取router下的路由组
+// ReadRouters 读取router下的路由组
 func ReadRouters(g *gin.RouterGroup) {
 	var funcNames = util.GetFileBasename("app/router", []string{"go"})
 	if len(funcNames) == 0 {
@@ -55,6 +59,7 @@ func InitSchedule() {
 		crontab.AddFunc(job.Cron, job.Task)
 	}
 	crontab.Start()
+	fmt.Println(">>>schedule init successful")
 	// 定时任务是另起协程执行的,这里使用 select 简答阻塞.实际开发中需要
 	//关闭着计划任务, 但是不能关闭已经在执行中的任务.
 	// defer crontab.Stop()
@@ -63,20 +68,37 @@ func InitSchedule() {
 	// select {} //阻塞主线程停止
 }
 
-// 利用反射动态调用 --- 测试
-// func DynamicFunc() {
-// 	funcMap := map[string]interface{}{
-// 		"GetBingImg": schedule.GetBingImg,
-// 	}
-// 	for k := range funcMap {
-// 		fmt.Println("start schedule:", k)
-// 		result, err := Call(funcMap, k)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		for _, v := range result {
-// 			// 打印返回值和类型
-// 			fmt.Printf("type=%v, value=%+v\n", v.Type(), v.Interface().(schedule.GinSchedule))
-// 		}
-// 	}
-// }
+func RegisterValidation() {
+	vf := validation.ValidateFunc{}
+	typ := reflect.TypeOf(vf)
+	val := reflect.ValueOf(vf)
+	if val.Kind() != reflect.Struct {
+		return
+	}
+	// 获取到该结构体有多少个方法
+	numOfMethod := val.NumMethod()
+	if numOfMethod == 0 {
+		return
+	}
+	validate, ok := binding.Validator.Engine().(*validator.Validate)
+	if !ok {
+		return
+	}
+	count := 0
+	for i := 0; i < numOfMethod; i++ {
+		fn, ok := val.Method(i).Interface().(func(fl validator.FieldLevel) bool)
+		if !ok {
+			continue
+		}
+		// 注册自定义校验函数
+		err := validate.RegisterValidation(typ.Method(i).Name, fn)
+		if err != nil {
+			fmt.Println(typ.Method(i).Name, err)
+			continue
+		}
+		count++
+	}
+	if count == numOfMethod {
+		fmt.Println(">>>自定义校验函数注册完成")
+	}
+}

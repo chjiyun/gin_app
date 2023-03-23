@@ -14,5 +14,6 @@ func (r *Router) User(g *gin.RouterGroup) {
 		rg.POST("/resetPassword", userController.ResetPassword)
 		rg.GET("/page", userController.GetUserPage)
 		rg.GET("/current", userController.GetCurrentUser)
+		rg.GET("/ip/page", userController.GetUserIpPage)
 	}
 }

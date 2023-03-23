@@ -1,6 +1,7 @@
 package userController
 
 import (
+	"gin_app/app/controller/userController/userIpVo"
 	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/result"
 	"gin_app/app/service/userService"
@@ -66,16 +67,23 @@ func GetUserPage(c *gin.Context) {
 		c.JSON(http.StatusOK, r.FailErr(err))
 		return
 	}
-	res, err := userService.GetUserPage(c, reqVo)
-	if err != nil {
-		r.FailErr(err)
-		return
-	}
+	res, _ := userService.GetUserPage(c, reqVo)
 	c.JSON(http.StatusOK, r.Success(res))
 }
 
 func GetCurrentUser(c *gin.Context) {
 	r := result.New()
 	res := userService.GetCurrentUser(c)
+	c.JSON(http.StatusOK, r.Success(res))
+}
+
+func GetUserIpPage(c *gin.Context) {
+	r := result.New()
+	var reqVo userIpVo.UserIpPageReqVo
+	if err := c.ShouldBindQuery(&reqVo); err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	res, _ := userService.GetUserIpPage(c, reqVo)
 	c.JSON(http.StatusOK, r.Success(res))
 }

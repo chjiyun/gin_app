@@ -4,7 +4,7 @@ import "gin_app/app/common"
 
 type UserIp struct {
 	common.BaseModel
-	UserId   uint   `gorm:"comment:用户名" json:"userId"`
+	UserId   uint   `gorm:"not null;comment:用户id" json:"userId"`
 	Ip       string `gorm:"size:45;comment:ip地址" json:"ip"`
 	Country  string `gorm:"size:30;comment:国家" json:"country"`
 	Province string `gorm:"size:30;comment:省份" json:"province"`

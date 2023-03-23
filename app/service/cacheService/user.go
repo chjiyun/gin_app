@@ -15,3 +15,12 @@ func SaveSessionIp(token string, userIpId uint) error {
 	}
 	return nil
 }
+
+func GetSessionIp(token string) (uint, error) {
+	key := "login_ip:" + token
+	userIpId, err := config.RedisDb.Get(context.Background(), key).Uint64()
+	if err != nil {
+		return 0, err
+	}
+	return uint(userIpId), nil
+}

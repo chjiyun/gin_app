@@ -1,8 +1,10 @@
 package model
 
+import "gin_app/app/common"
+
 // 缩略图 webp/jpeg/jpg/png model
 type Thumb struct {
-	BaseModel
+	common.BaseModel
 	Uid       uint64 `gorm:"not null;comment:雪花id" json:"uid"`
 	FileId    uint   `gorm:"not null;comment:file_id" json:"file_id"`
 	Ext       string `gorm:"size:20;comment:文件后缀" json:"ext"`

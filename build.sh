@@ -88,7 +88,7 @@ flags="-X '${path}.AppVersion=v1.0' -X '${path}.GoVersion=$(go version | awk '{p
 buildResult=`go build -ldflags "$flags" -o "${targetFile}" "$buildPkg"`
 
 # 编译成功无输出
-if [ -z "$buildResult" ]; then 
+if [ $? -eq 0 ]; then 
   chmod 773 ${targetFile}
   echo "build success, filename: ${targetFile}"
 else

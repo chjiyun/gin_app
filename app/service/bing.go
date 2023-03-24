@@ -145,7 +145,7 @@ func GetImg(c *gin.Context) {
 		log.Errorln(err)
 		return
 	}
-	if result.Code != 200 {
+	if result.Code != 0 {
 		log.Errorf("file upload failed: %v", result)
 		return
 	}

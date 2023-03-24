@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gin_app/app/common"
+	"gin_app/app/common/myError"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
@@ -35,13 +36,12 @@ var EncodeOptions = map[string]map[int]int{
 }
 
 // Upload 接收上传的文件
-func Upload(c *gin.Context) *result.Result {
-	r := result.New()
+func Upload(c *gin.Context) (*model.File, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	f, err := c.FormFile("file")
 	if err != nil {
-		return r.FailType(common.FileNotFound)
+		return nil, myError.NewET(common.FileNotFound)
 	}
 
 	ext := filepath.Ext(f.Filename)
@@ -50,7 +50,7 @@ func Upload(c *gin.Context) *result.Result {
 	defer mFile.Close()
 	mime, err := mimetype.DetectReader(mFile)
 	if err != nil {
-		return r.FailErr(err)
+		return nil, err
 	}
 	mType := mime.String()
 	var filetype string
@@ -67,13 +67,13 @@ func Upload(c *gin.Context) *result.Result {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		return r.FailErr(err)
+		return nil, err
 	}
 
 	// Upload the file to specific dst.
 	err = c.SaveUploadedFile(f, sourcepath)
 	if err != nil {
-		return r.Fail("上传失败")
+		return nil, myError.New("文件保存失败")
 	}
 
 	file := model.File{
@@ -88,7 +88,7 @@ func Upload(c *gin.Context) *result.Result {
 	}
 	res := db.Create(&file)
 	if res.Error != nil {
-		return r.FailType(common.UnknownError)
+		return nil, myError.NewET(common.UnknownError)
 	}
 
 	// 关键：重置offset
@@ -98,18 +98,14 @@ func Upload(c *gin.Context) *result.Result {
 	if imgSuffix.MatchString(ext) {
 		width, height, err := getImageXY(mFile)
 		if err != nil {
-			return r.Fail("文件解码失败")
+			return nil, myError.New("文件解码失败")
 		}
 		err = toWebp(c, file, width, height)
 		if err != nil {
-			return r.Fail("图片转webp失败")
+			return nil, myError.New("图片转webp失败")
 		}
 	}
-
-	r.SetData(gin.H{
-		"id": file.ID, "uid": file.Uid, "ext": file.Ext, "name": file.Name, "size": file.Size,
-	})
-	return r
+	return &file, nil
 }
 
 // Download 下载文件

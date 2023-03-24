@@ -4,6 +4,7 @@ import (
 	"errors"
 	"gin_app/app/common"
 	"gin_app/app/common/myError"
+	"gin_app/app/controller/userController/userIpVo"
 	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/model"
 	"gin_app/app/service/cacheService"
@@ -18,12 +19,22 @@ import (
 )
 
 // GetCurrentUser 获取登录用户信息
-func GetCurrentUser(c *gin.Context) *model.User {
+func GetCurrentUser(c *gin.Context) *userVo.UserRespVo {
 	db := c.Value("DB").(*gorm.DB)
 	userId := authUtil.GetSessionUserId(c)
+
 	var user model.User
 	db.Find(&user, userId)
-	return &user
+	var userIp model.UserIp
+	token := authUtil.GetToken(c)
+	if userIpId, err := cacheService.GetSessionIp(token); err == nil {
+		db.Find(&userIp, userIpId)
+	}
+
+	userRespVo := userVo.UserRespVo{}
+	_ = copier.Copy(&userRespVo, &user)
+	_ = copier.Copy(userRespVo.UserIp, &userIp)
+	return &userRespVo
 }
 
 func GetUserPage(c *gin.Context, reqVo userVo.UserPageReqVo) (*common.PageRes, error) {
@@ -99,4 +110,29 @@ func saveLoginIpInfo(c *gin.Context, token string, userId uint) {
 	if err = cacheService.SaveSessionIp(token, userIp.ID); err != nil {
 		log.Error(err)
 	}
+}
+
+func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (*common.PageRes, error) {
+	db := c.Value("DB").(*gorm.DB)
+
+	var userIps []userIpVo.UserIpRespVo
+	var count int64
+
+	db.Joins("user").Model(&userIps).Count(&count)
+	tx := db.Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Select("name")
+	})
+	if reqVo.StartTime != nil {
+		tx = tx.Where("created_at >= ?", reqVo.StartTime)
+	}
+	if reqVo.EndTime != nil {
+		tx = tx.Where("created_at < ?", reqVo.EndTime)
+	}
+
+	tx.Offset((reqVo.Page - 1) * reqVo.PageSize).
+		Limit(reqVo.PageSize).
+		Order("created_at desc").
+		Find(&userIps)
+
+	return &common.PageRes{Count: count, Rows: userIps}, nil
 }

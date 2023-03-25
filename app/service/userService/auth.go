@@ -44,7 +44,7 @@ func Login(c *gin.Context, reqVo userVo.UserLoginReqVo) (string, error) {
 		return "", myError.NewET(common.UnknownError)
 	}
 
-	//生成散列hash token，并存到redis
+	//生成散列hash token，写入redis，token为键，jwtToken为值
 	token, err := authUtil.SaveMd5Token(jwtToken)
 	if err != nil {
 		return "", myError.NewET(common.UnknownError)
@@ -56,6 +56,7 @@ func Login(c *gin.Context, reqVo userVo.UserLoginReqVo) (string, error) {
 	if config.Cfg.Env != gin.DebugMode {
 		go saveLoginIpInfo(c.Copy(), token, user.ID)
 	}
+
 	return token, nil
 }
 

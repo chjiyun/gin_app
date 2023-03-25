@@ -14,9 +14,8 @@ targetFile="$appName"
 buildPkg="main.go"
 # 编译结果
 buildResult=""
+# 应用启动端口
 port="8000"
-
-pidFile="pid.txt"
 
 today=$(date "+%Y_%m_%d")
 # 日志存放路径
@@ -30,12 +29,6 @@ echo "app name: ${appName}"
 echo "app dir: ${pwd}"
 echo "current branch: ${localBranch}"
 
-if [ -f $pidFile ]; then
-  # pid=$(cat $pidFile)
-  pid=$(<$pidFile)
-  echo "Prepare to kill the process: ${pid}"
-  kill -9 $pid
-fi
 
 echo "start clean log file"
 
@@ -73,34 +66,29 @@ done
 
 echo "complete the clean"
 
-# if [ -n "$1" ]; then
-#   branch="$1"
-#   echo "Switch branch to ${branch}"
-# else
-#   echo "Building Branch: ${branch}"
-# fi
-
-# git checkout "$branch"
-# git pull
-
 
 flags="-X '${path}.AppVersion=v1.0' -X '${path}.GoVersion=$(go version | awk '{print $3 " " $4}')' -X '${path}.BuildTime=$(date "+%Y.%m.%d %H:%M:%S")' -X '${path}.BuildUser=$(id -u -n)' -X '${path}.CommitId=$(git rev-parse --short HEAD)'"
 buildResult=`go build -ldflags "$flags" -o "${targetFile}" "$buildPkg"`
 
-# 编译成功无输出
+# 编译成功才能杀旧进程
 if [ $? -eq 0 ]; then 
   chmod 773 ${targetFile}
   echo "build success, filename: ${targetFile}"
+
+  pid=`ps -ef |grep $targetFile | grep -v grep|awk '{print $2}'`
+  echo "current pid is $pid"
+  if [ "$pid" != "" ]; then
+    echo "Prepare to kill the process: ${pid}"
+    kill -9 $pid
+    sleep 1
+  fi
 else
   echo "build error $buildResult"
   exit
 fi
 
-
 # nohup "./${targetFile}" 1>"${info_log}" 2>"${error_log}" & echo $! > "$pidFile"
-nohup "./${targetFile}" 1>/dev/null 2>&1 & echo $! > "$pidFile"
-
-echo "------new pid: $(<$pidFile)"
+nohup "./${targetFile}" 1>/dev/null 2>&1 &
 
 echo "starting..."
 # 监听端口是否启动

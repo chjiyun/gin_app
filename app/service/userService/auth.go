@@ -8,10 +8,9 @@ import (
 	"gin_app/app/model"
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
-	"strings"
-
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,16 +44,19 @@ func Login(c *gin.Context, reqVo userVo.UserLoginReqVo) (string, error) {
 		return "", myError.NewET(common.UnknownError)
 	}
 
-	//生成散列hash token，并存到redis
+	//生成散列hash token，写入redis，token为键，jwtToken为值
 	token, err := authUtil.SaveMd5Token(jwtToken)
 	if err != nil {
 		return "", myError.NewET(common.UnknownError)
 	}
-	c.SetCookie("token", token, jwtConfig.Expires, "/", splitHost[0], false, true)
+	// 防止过快失效
+	maxAge := jwtConfig.Expires + 60*60*22
+	c.SetCookie("token", token, maxAge, "/", splitHost[0], false, true)
 
 	if config.Cfg.Env != gin.DebugMode {
 		go saveLoginIpInfo(c.Copy(), token, user.ID)
 	}
+
 	return token, nil
 }
 

@@ -7,7 +7,6 @@ import (
 	"gin_app/app/controller/userController/userIpVo"
 	"gin_app/app/controller/userController/userVo"
 	"gin_app/app/model"
-	"gin_app/app/service/cacheService"
 	"gin_app/app/service/toolService"
 	"gin_app/app/util"
 	"gin_app/app/util/authUtil"
@@ -24,16 +23,18 @@ func GetCurrentUser(c *gin.Context) *userVo.UserRespVo {
 	userId := authUtil.GetSessionUserId(c)
 
 	var user model.User
-	db.Find(&user, userId)
 	var userIp model.UserIp
-	token := authUtil.GetToken(c)
-	if userIpId, err := cacheService.GetSessionIp(token); err == nil {
-		db.Find(&userIp, userIpId)
-	}
+	db.Find(&user, userId)
 
 	userRespVo := userVo.UserRespVo{}
 	_ = copier.Copy(&userRespVo, &user)
-	_ = copier.Copy(userRespVo.UserIp, &userIp)
+
+	token := authUtil.GetToken(c)
+	err := db.Where(&model.UserIp{UserId: userId, Token: token}).First(&userIp).Error
+	if err != nil {
+		return &userRespVo
+	}
+	userRespVo.UserIp = &userIp
 	return &userRespVo
 }
 
@@ -87,29 +88,27 @@ func ResetPassword(c *gin.Context, reqVo userVo.UserResetPasswordReqVo) (bool, e
 	return true, nil
 }
 
+// saveLoginIpInfo 存储登录用户设备相关信息
 func saveLoginIpInfo(c *gin.Context, token string, userId uint) {
 	log := c.Value("Logger").(*logrus.Entry)
 	db := c.Value("DB").(*gorm.DB)
 
-	ip := c.ClientIP()
+	//ip := c.ClientIP()
+	ip := "171.43.156.25"
 	info, err := toolService.GetIpInfo(c, ip)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-
 	var userIp = model.UserIp{
 		UserId: userId,
+		Token:  token,
 	}
 	if err = copier.Copy(&userIp, &info); err != nil {
 		log.Error(err)
 		return
 	}
 	db.Create(&userIp)
-
-	if err = cacheService.SaveSessionIp(token, userIp.ID); err != nil {
-		log.Error(err)
-	}
 }
 
 func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (*common.PageRes, error) {

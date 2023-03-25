@@ -17,6 +17,6 @@ func (d Date) MarshalJSON() ([]byte, error) {
 type BaseModel struct {
 	ID        uint                  `gorm:"primaryKey" json:"id"`
 	CreatedAt time.Time             `json:"createdAt"`
-	UpdatedAt time.Time             `json:"updatedAt"`
+	UpdatedAt time.Time             `json:"-"`
 	IsDel     soft_delete.DeletedAt `gorm:"softDelete:flag;not null;default:0" json:"-"`
 }

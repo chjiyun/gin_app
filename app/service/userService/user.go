@@ -129,7 +129,7 @@ func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (*common.Page
 	}
 	tx.Count(&count)
 	tx = tx.Preload("User", func(db *gorm.DB) *gorm.DB {
-		return db.Select("name")
+		return db.Select("id", "name")
 	})
 	tx.Offset((reqVo.Page - 1) * reqVo.PageSize).
 		Limit(reqVo.PageSize).

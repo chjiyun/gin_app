@@ -8,6 +8,7 @@ import (
 	"gin_app/config"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -52,6 +53,10 @@ func JWTAuth() gin.HandlerFunc {
 					c.JSON(http.StatusOK, r)
 					c.Abort()
 					return
+				}
+				splitHost := strings.Split(c.Request.Host, ":")
+				if len(splitHost) > 0 {
+					c.SetCookie("token", token, jwtConfig.Expires, "/", splitHost[0], false, true)
 				}
 			} else {
 				c.JSON(http.StatusOK, r)

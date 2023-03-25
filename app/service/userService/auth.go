@@ -49,9 +49,7 @@ func Login(c *gin.Context, reqVo userVo.UserLoginReqVo) (string, error) {
 	if err != nil {
 		return "", myError.NewET(common.UnknownError)
 	}
-	// 防止过快失效
-	maxAge := jwtConfig.Expires + 60*60*22
-	c.SetCookie("token", token, maxAge, "/", splitHost[0], false, true)
+	c.SetCookie("token", token, jwtConfig.Expires, "/", splitHost[0], false, true)
 
 	if config.Cfg.Env != gin.DebugMode {
 		go saveLoginIpInfo(c.Copy(), token, user.ID)

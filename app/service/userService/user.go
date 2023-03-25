@@ -93,8 +93,7 @@ func saveLoginIpInfo(c *gin.Context, token string, userId uint) {
 	log := c.Value("Logger").(*logrus.Entry)
 	db := c.Value("DB").(*gorm.DB)
 
-	//ip := c.ClientIP()
-	ip := "171.43.156.25"
+	ip := c.ClientIP()
 	info, err := toolService.GetIpInfo(c, ip)
 	if err != nil {
 		log.Error(err)
@@ -114,20 +113,24 @@ func saveLoginIpInfo(c *gin.Context, token string, userId uint) {
 func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (*common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
 
-	var userIps []userIpVo.UserIpRespVo
+	var userIps []model.UserIp
 	var count int64
 
-	db.Joins("user").Model(&userIps).Count(&count)
-	tx := db.Preload("User", func(db *gorm.DB) *gorm.DB {
-		return db.Select("name")
-	})
+	tx := db.Model(&model.UserIp{})
+
+	if reqVo.UserId != 0 {
+		tx = tx.Where("user_id = ?", reqVo.UserId)
+	}
 	if reqVo.StartTime != nil {
 		tx = tx.Where("created_at >= ?", reqVo.StartTime)
 	}
 	if reqVo.EndTime != nil {
 		tx = tx.Where("created_at < ?", reqVo.EndTime)
 	}
-
+	tx.Count(&count)
+	tx = tx.Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Select("name")
+	})
 	tx.Offset((reqVo.Page - 1) * reqVo.PageSize).
 		Limit(reqVo.PageSize).
 		Order("created_at desc").

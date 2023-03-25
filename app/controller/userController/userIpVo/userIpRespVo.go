@@ -14,7 +14,7 @@ type UserIpRespVo struct {
 	City      string      `gorm:"size:30;comment:城市" json:"city"`
 	Area      string      `gorm:"size:30;comment:市、区" json:"area"`
 	CreatedAt time.Time   `json:"createdAt"`
-	User      *model.User `gorm:"foreignKey:UserId;references:ID" json:"user"`
+	User      *model.User `json:"user"`
 }
 
 func (UserIpRespVo) TableName() string {

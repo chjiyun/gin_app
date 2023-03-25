@@ -11,4 +11,5 @@ type UserIp struct {
 	City     string `gorm:"size:30;comment:城市" json:"city"`
 	Area     string `gorm:"size:30;comment:市、区" json:"area"`
 	Token    string `gorm:"size:32;comment:登录token" json:"-"`
+	User     *User  `gorm:"foreignKey:UserId;references:ID" json:"user"`
 }

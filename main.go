@@ -37,9 +37,9 @@ func main() {
 	// 初始化配置
 	config.Init()
 
-	// r := gin.Default()
 	r := gin.New()
-	_ = r.SetTrustedProxies(nil)
+	// /8表示IP地址的前8位是网络地址或者子网地址，后24位为主机地址
+	_ = r.SetTrustedProxies([]string{"127.0.0.0/8", "10.0.0.0/8"})
 
 	r.Use(middleware.LoggerToFile(), middleware.SetTimeout(), middleware.SetContext(), middleware.JWTAuth(), gin.Recovery())
 

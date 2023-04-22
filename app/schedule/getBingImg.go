@@ -6,21 +6,9 @@ import (
 	"time"
 )
 
-// 任务都挂载在此结构体下面
-type Schedule struct {
-}
-
-// 定时任务公共属性
-type GinSchedule struct {
-	Cron      string `json:"cron"`
-	Immediate bool   `json:"immediate"`
-	Disable   bool   `json:"disable"`
-	Task      func()
-}
-
-// 定时获取必应的壁纸
-func (s *Schedule) GetBingImg() GinSchedule {
-	task := GinSchedule{
+// GetBingImg 定时获取必应的壁纸
+func (s Schedule) GetBingImg() MySchedule {
+	task := MySchedule{
 		Cron:      "0 5 0 * * ?",
 		Immediate: true,
 	}
@@ -31,7 +19,7 @@ func (s *Schedule) GetBingImg() GinSchedule {
 			fmt.Println("img err:", err)
 			return
 		}
-		fmt.Println(time.Now().Format("2006-01-02 15:04:05"), " 必应壁纸下载成功")
+		fmt.Println(time.Now().Format(time.DateTime), " 必应壁纸下载成功")
 	}
 	return task
 }

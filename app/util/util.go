@@ -96,7 +96,12 @@ func WriteString(str ...string) string {
 	if len(str) == 1 {
 		return str[0]
 	}
+	length := 0
+	for _, s := range str {
+		length += len(s) // 字节长度
+	}
 	var b strings.Builder
+	b.Grow(length)
 	for _, s := range str {
 		b.WriteString(s)
 	}
@@ -175,12 +180,6 @@ func ToString(v interface{}) string {
 		fmt.Printf("type %s is not support, use fmt.Sprintf instead", t.Kind())
 	}
 	return s
-}
-
-// ParseInt 字符串数字转整型
-func ParseInt(s string, base int, bitSize int) {
-	// v, err := strconv.Atoi(s)
-
 }
 
 // ToJson 转成json字符串

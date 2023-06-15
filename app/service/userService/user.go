@@ -121,10 +121,10 @@ func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (*common.Page
 	if reqVo.UserId != 0 {
 		tx = tx.Where("user_id = ?", reqVo.UserId)
 	}
-	if reqVo.StartTime != nil {
+	if !reqVo.StartTime.IsZero() {
 		tx = tx.Where("created_at >= ?", reqVo.StartTime)
 	}
-	if reqVo.EndTime != nil {
+	if !reqVo.EndTime.IsZero() {
 		tx = tx.Where("created_at < ?", reqVo.EndTime)
 	}
 	tx.Count(&count)

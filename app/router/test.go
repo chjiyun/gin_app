@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (r *Router) Test(g *gin.RouterGroup) {
+func (r Router) Test(g *gin.RouterGroup) {
 	rg := g.Group("/test")
 	{
 		rg.GET("/index", test.For)

@@ -77,7 +77,7 @@ if [ $? -eq 0 ]; then
 
   pid=`ps -ef |grep $targetFile | grep -v grep|awk '{print $2}'`
   echo "current pid is $pid"
-  if [ "$pid" != "" ]; then
+  if [ -n "$pid" ]; then
     echo "Prepare to kill the process: ${pid}"
     kill -9 $pid
     sleep 1

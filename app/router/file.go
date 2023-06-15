@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (r *Router) File(g *gin.RouterGroup) {
+func (r Router) File(g *gin.RouterGroup) {
 	rg := g.Group("/file")
 	{
 		rg.GET("/:id", service.Download)

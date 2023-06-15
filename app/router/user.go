@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (r *Router) User(g *gin.RouterGroup) {
+func (r Router) User(g *gin.RouterGroup) {
 	rg := g.Group("/user")
 	{
 		rg.POST("/login", userController.Login)

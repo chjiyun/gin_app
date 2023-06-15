@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gin_app/app/router"
 	"gin_app/app/schedule"
-	"gin_app/app/util"
 	"gin_app/app/validation"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -16,47 +15,43 @@ import (
 
 // ReadRouters 读取router下的路由组
 func ReadRouters(g *gin.RouterGroup) {
-	var funcNames = util.GetFileBasename("app/router", []string{"go"})
-	if len(funcNames) == 0 {
-		return
-	}
-	// 获取反射值
-	value := reflect.ValueOf(&router.Router{})
-	in := []reflect.Value{reflect.ValueOf(g)}
-	for _, fnName := range funcNames {
-		fn := value.MethodByName(fnName) //通过反射获取它对应的函数
-		if fn.Kind() != reflect.Func || fn.IsNil() {
+	routes := router.Router{}
+	val := reflect.ValueOf(routes)
+	// 获取到该结构体有多少个方法
+	numOfMethod := val.NumMethod()
+	for i := 0; i < numOfMethod; i++ {
+		// 断言特定类型的方法
+		fn, ok := val.Method(i).Interface().(func(g *gin.RouterGroup))
+		if !ok {
 			continue
 		}
-		fn.Call(in)
+		fn(g)
 	}
 }
 
 // InitSchedule 初始化定时任务配置，自动添加文件下所有任务到队列
 func InitSchedule() {
-	names := util.GetFileBasename("app/schedule", []string{"go"})
-	if len(names) == 0 {
-		return
-	}
+	schedules := schedule.Schedule{}
+	val := reflect.ValueOf(schedules)
+	numOfMethod := val.NumMethod()
 	// 新建一个定时任务对象
 	// 根据cron表达式进行时间调度，cron可以精确到秒，大部分表达式格式也是从秒开始。
 	// crontab := cron.New()  默认从分开始进行时间调度
 	crontab := cron.New(cron.WithSeconds()) //精确到秒
-
-	value := reflect.ValueOf(&schedule.Schedule{})
-	in := []reflect.Value{}
-	for _, fnName := range names {
-		fn := value.MethodByName(fnName) //通过反射获取它对应的函数
-		if fn.Kind() != reflect.Func || fn.IsNil() {
+	for i := 0; i < numOfMethod; i++ {
+		fn, ok := val.Method(i).Interface().(func() schedule.MySchedule)
+		if !ok {
 			continue
 		}
-		// 拿到定时任务配置结构体 GinSchedule
-		result := fn.Call(in)
-		job, ok := result[0].Interface().(schedule.GinSchedule)
-		if !ok || job.Disable {
+		job := fn()
+		if job.Disable {
 			continue
 		}
-		crontab.AddFunc(job.Cron, job.Task)
+		_, err := crontab.AddFunc(job.Cron, job.Task)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
 	crontab.Start()
 	fmt.Println(">>>schedule init successful")
@@ -84,7 +79,6 @@ func RegisterValidation() {
 	if !ok {
 		return
 	}
-	count := 0
 	for i := 0; i < numOfMethod; i++ {
 		fn, ok := val.Method(i).Interface().(func(fl validator.FieldLevel) bool)
 		if !ok {
@@ -96,9 +90,6 @@ func RegisterValidation() {
 			fmt.Println(typ.Method(i).Name, err)
 			continue
 		}
-		count++
 	}
-	if count == numOfMethod {
-		fmt.Println(">>>自定义校验函数注册完成")
-	}
+	fmt.Println(">>>自定义校验函数注册完成")
 }

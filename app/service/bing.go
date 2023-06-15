@@ -9,10 +9,10 @@ import (
 	"gin_app/app/util"
 	"gin_app/config"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -42,6 +42,7 @@ type uploadResult struct {
 // GetImg 获取远程图片并返回
 func GetImg(c *gin.Context) {
 	isSchedule := c.Query("schedule")
+	isUHD := c.Query("uhd")
 	log := c.Value("Logger").(*logrus.Entry)
 	db := c.Value("DB").(*gorm.DB)
 	var bing model.Bing
@@ -55,24 +56,6 @@ func GetImg(c *gin.Context) {
 	defer res.Body.Close()
 
 	// 方法一：转成map对象后再转格式化的json对象
-	// body, err := ioutil.ReadAll(res.Body)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// var result map[string]interface{}
-	// if err := json.Unmarshal([]byte(body), &result); err != nil {
-	// 	fmt.Println("err:", err)
-	// }
-	// imgURL := result["images"].(map[string]interface{})
-	// fmt.Println(result, imgURL)
-
-	// 转为json编码字符串并格式化输出
-	// formatRes, err := json.MarshalIndent(result, "", "  ") //这里返回的data值，类型是[]byte
-	// if err != nil {
-	// 	fmt.Println("ERROR:", err)
-	// }
-	// fmt.Println(string(formatRes))
 
 	// 方法二：解析为json对象
 	bingRes := BingRes{}
@@ -87,7 +70,7 @@ func GetImg(c *gin.Context) {
 		log.Errorln(res2.Error)
 		return
 	}
-	if res2.RowsAffected > 0 && config.Cfg.Env != gin.DebugMode {
+	if isUHD == "" && res2.RowsAffected > 0 && config.Cfg.Env != gin.DebugMode {
 		if isSchedule != "1" {
 			fileRes := db.First(&file, "id", bing.FileId)
 			if fileRes.Error != nil {
@@ -100,6 +83,9 @@ func GetImg(c *gin.Context) {
 		return
 	}
 
+	if isUHD != "" {
+		imgInfo.URL = strings.ReplaceAll(imgInfo.URL, "1920x1080", "UHD")
+	}
 	// 获取图片
 	imgURL := util.WriteString("https://cn.bing.com", imgInfo.URL)
 	res1, err := http.Get(imgURL)
@@ -110,12 +96,11 @@ func GetImg(c *gin.Context) {
 	defer res1.Body.Close()
 
 	// Body 是 ReadCloser,只能读一次,不能 Seek ,只能把 Body 读出来, 保存到 buffer里面
-	imgByte, err1 := ioutil.ReadAll(res1.Body)
+	imgByte, err1 := io.ReadAll(res1.Body)
 	if err1 != nil {
 		fmt.Println(err1)
 		return
 	}
-	// res1.Body = ioutil.NopCloser(bytes.NewReader(imgByte))
 	imgReader := bytes.NewReader(imgByte)
 
 	// 使用固定的32K缓冲区，因此无论源数据多大，都只会占用32K内存空间
@@ -139,26 +124,26 @@ func GetImg(c *gin.Context) {
 		return
 	}
 	defer fileRes.Body.Close()
-	result := uploadResult{}
-	err = json.NewDecoder(fileRes.Body).Decode(&result)
+	upResult := uploadResult{}
+	err = json.NewDecoder(fileRes.Body).Decode(&upResult)
 	if err != nil {
 		log.Errorln(err)
 		return
 	}
-	if result.Code != 0 {
-		log.Errorf("file upload failed: %v", result)
+	if upResult.Code != 0 {
+		log.Errorf("file upload failed: %v", upResult)
 		return
 	}
 	releaseAt, _ := time.Parse("20060102", imgInfo.Enddate)
 	bing = model.Bing{
-		FileId:    result.Data.ID,
+		FileId:    upResult.Data.ID,
 		Url:       imgURL,
 		Hsh:       imgInfo.Hsh,
 		Desc:      imgInfo.Copyright,
 		ReleaseAt: releaseAt,
 	}
 	db.Create(&bing)
-	db.Model(&result.Data).Update("desc", imgInfo.Copyright)
+	db.Model(&upResult.Data).Update("desc", imgInfo.Copyright)
 
 	// var f *os.File
 	// defer f.Close()

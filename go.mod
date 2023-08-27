@@ -5,8 +5,6 @@ go 1.20
 require (
 	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f // indirect
-	github.com/gabriel-vasile/mimetype v1.4.0
-	github.com/gin-gonic/gin v1.9.0
 	github.com/elliotchance/pie/v2 v2.5.2
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/gin-gonic/gin v1.9.1

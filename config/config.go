@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"gin_app/app/util"
+	"gorm.io/driver/postgres"
 	"io"
 	"os"
 	"path/filepath"
@@ -18,7 +19,6 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
@@ -195,8 +195,10 @@ func dbInit() {
 		IgnoreRecordNotFoundError: true,
 	})
 
-	DB, err = gorm.Open(mysql.New(mysql.Config{
-		DSN: Cfg.Datasource[0].Dsn,
+	DB, err = gorm.Open(postgres.New(postgres.Config{
+		DSN:                  Cfg.Datasource[0].Dsn,
+		PreferSimpleProtocol: true, //禁用 prepared statement 缓存
+		//Conn:                 conn,
 	}), &gorm.Config{
 		Logger: sqlLogger,
 		NamingStrategy: schema.NamingStrategy{
@@ -207,20 +209,30 @@ func dbInit() {
 	if err != nil {
 		panic(err)
 	}
+	db, err := DB.DB()
+	if err != nil {
+		panic(err)
+	}
+	db.SetMaxIdleConns(5)
+	db.SetMaxOpenConns(10)
+	// 若服务端设置保活了机制 则必须小于 tcp_keepalives_idle=300
+	db.SetConnMaxLifetime(time.Minute * 5)
+
 	Logger.Printf("datasource: %s has been connected", Cfg.Datasource[0].Model)
+
 	if length == 1 {
 		return
 	}
 	// init other db
 	var dr *dbresolver.DBResolver
 	for i, ds := range Cfg.Datasource[1:] {
-		dr_cfg := dbresolver.Config{
-			Sources: []gorm.Dialector{mysql.Open(ds.Dsn)},
+		drCfg := dbresolver.Config{
+			Sources: []gorm.Dialector{postgres.Open(ds.Dsn)},
 		}
 		if i == 0 {
-			dr = dbresolver.Register(dr_cfg)
+			dr = dbresolver.Register(drCfg)
 		} else {
-			dr.Register(dr_cfg)
+			dr.Register(drCfg)
 		}
 		Logger.Printf("datasource: %s has been connected", ds.Model)
 	}

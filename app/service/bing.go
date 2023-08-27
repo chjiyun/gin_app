@@ -181,7 +181,7 @@ func GetAllBing(c *gin.Context) {
 	var bing []model.Bing
 	var count int64
 
-	db.Joins("left join file on `file`.id = `bing`.file_id and `file`.is_del = 0").Model(&model.Bing{}).Count(&count)
+	db.Model(&model.Bing{}).Count(&count)
 
 	tx := db.Preload("File", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id, uid, ext, name, size")

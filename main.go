@@ -36,6 +36,7 @@ func main() {
 
 	// 初始化配置
 	config.Init()
+	defer config.SugarLog.Sync()
 
 	r := gin.New()
 	// /8表示IP地址的前8位是网络地址或者子网地址，后24位为主机地址

@@ -3,11 +3,11 @@ package service
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -43,14 +42,15 @@ type uploadResult struct {
 func GetImg(c *gin.Context) {
 	isSchedule := c.Query("schedule")
 	isUHD := c.Query("uhd")
-	log := c.Value("Logger").(*logrus.Entry)
+	log := c.Value("Logger").(*zap.SugaredLogger)
 	db := c.Value("DB").(*gorm.DB)
+
 	var bing model.Bing
 	var file model.File
 
 	res, err := http.Get("https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN")
 	if err != nil {
-		fmt.Println("info err:", err)
+		log.Error(err)
 		return
 	}
 	defer res.Body.Close()
@@ -60,8 +60,7 @@ func GetImg(c *gin.Context) {
 	// 方法二：解析为json对象
 	bingRes := BingRes{}
 	json.NewDecoder(res.Body).Decode(&bingRes)
-	// 打印返回信息
-	fmt.Println("bingRes:", bingRes)
+
 	imgInfo := bingRes.Images[0]
 
 	// 非定时任务请求时 检查本地文件是否已下载
@@ -90,15 +89,15 @@ func GetImg(c *gin.Context) {
 	imgURL := util.WriteString("https://cn.bing.com", imgInfo.URL)
 	res1, err := http.Get(imgURL)
 	if err != nil {
-		fmt.Println("img err:", err)
+		log.Error(err)
 		return
 	}
 	defer res1.Body.Close()
 
 	// Body 是 ReadCloser,只能读一次,不能 Seek ,只能把 Body 读出来, 保存到 buffer里面
-	imgByte, err1 := io.ReadAll(res1.Body)
-	if err1 != nil {
-		fmt.Println(err1)
+	imgByte, err := io.ReadAll(res1.Body)
+	if err != nil {
+		log.Error(err)
 		return
 	}
 	imgReader := bytes.NewReader(imgByte)

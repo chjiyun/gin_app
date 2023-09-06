@@ -3,21 +3,19 @@ package config
 import (
 	"fmt"
 	"gin_app/app/util"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/postgres"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"time"
 
-	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	"github.com/rifflock/lfshook"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -65,20 +63,18 @@ type JwtConfig struct {
 }
 
 type SqlWriter struct {
-	log *logrus.Logger
+	log *zap.SugaredLogger
 }
 
-// 配置信息缓存
 var Cfg Config
 
-// redis 实例
 var RedisDb *redis.Client
 
-// db实例指针
 var DB *gorm.DB
 
-// logrus实例指针
-var Logger = logrus.New()
+//var Logger = logrus.New()
+
+var SugarLog *zap.SugaredLogger
 
 // 初始化 config 配置
 func Init() {
@@ -134,7 +130,8 @@ func Init() {
 
 	// fmt.Println("merge Config:", Cfg)
 	// 按顺序执行
-	LogInit()
+	//LogInit()
+	zapLogInit()
 	redisInit()
 	dbInit()
 }
@@ -163,7 +160,7 @@ func redisInit() {
 	if err != nil {
 		panic(err)
 	}
-	Logger.Printf("redis is connected to %s", options.Addr)
+	SugarLog.Infof("redis is connected to %s", options.Addr)
 }
 
 // 初始化 db
@@ -173,7 +170,7 @@ func dbInit() {
 		return
 	}
 	var err error
-	// 设置sql日志级别
+	// 设置sql日志打印级别  开发环境下才会输出sql到日志
 	logMode := logger.Warn
 	if Cfg.Env == gin.DebugMode {
 		logMode = logger.Info
@@ -189,7 +186,7 @@ func dbInit() {
 		}
 	}
 	// sql记录到日志
-	sqlLogger := logger.New(&SqlWriter{log: Logger}, logger.Config{
+	sqlLogger := logger.New(&SqlWriter{log: SugarLog}, logger.Config{
 		SlowThreshold:             time.Duration(Cfg.Log.LongQueryTime) * time.Millisecond,
 		LogLevel:                  logMode,
 		IgnoreRecordNotFoundError: true,
@@ -218,7 +215,7 @@ func dbInit() {
 	// 若服务端设置保活了机制 则必须小于 tcp_keepalives_idle=300
 	db.SetConnMaxLifetime(time.Minute * 5)
 
-	Logger.Printf("datasource: %s has been connected", Cfg.Datasource[0].Model)
+	SugarLog.Infof("datasource: %s has been connected", Cfg.Datasource[0].Model)
 
 	if length == 1 {
 		return
@@ -234,13 +231,92 @@ func dbInit() {
 		} else {
 			dr.Register(drCfg)
 		}
-		Logger.Printf("datasource: %s has been connected", ds.Model)
+		SugarLog.Infof("datasource: %s has been connected", ds.Model)
 	}
 	DB.Use(dr)
 }
 
 // logrus实例初始化
-func LogInit() {
+//func LogInit() {
+//	logFilePath := Cfg.Log.Filepath
+//	logFileName := Cfg.Log.Filename
+//	if logFileName == "" {
+//		logFileName = Cfg.Name
+//	}
+//
+//	if logFilePath == "" {
+//		switch runtime.GOOS {
+//		case "darwin", "windows":
+//			// 没配置path就在项目根目录创建文件夹
+//			logFilePath = filepath.Join(Cfg.Basedir, "logs")
+//		default:
+//			// log目录下再加同名项目文件夹
+//			logFilePath = filepath.Join("/root/logs", Cfg.Name)
+//		}
+//	}
+//	// 创建路径中缺失的文件夹
+//	if !util.CheckFileIsExist(logFilePath) {
+//		err := os.MkdirAll(logFilePath, 0666)
+//		if err != nil {
+//			panic(err)
+//		}
+//	}
+//	baseLog := filepath.Join(logFilePath, logFileName+".log")
+//
+//	fileName := filepath.Join(logFilePath, logFileName)
+//	// 写入文件（0660：其他用户的权限）
+//	file, err := os.OpenFile(baseLog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+//	if err != nil {
+//		panic(err)
+//	}
+//	// 设置输出
+//	if Cfg.Env == gin.DebugMode {
+//		w := io.MultiWriter(os.Stdout, file)
+//		Logger.Out = w
+//		gin.DefaultWriter = w
+//		gin.DefaultErrorWriter = io.MultiWriter(file, os.Stderr)
+//	} else {
+//		gin.DisableConsoleColor()
+//		Logger.SetOutput(file)
+//	}
+//	// 设置日志级别
+//	Logger.SetLevel(logrus.DebugLevel)
+//	// 输出行号
+//	// Logger.SetReportCaller(true)
+//	// 设置 rotatelogs
+//	logWriter, err := rotatelogs.New(
+//		// 分割后的文件名称
+//		fileName+".%Y%m%d.log",
+//		// 生成软链，指向最新日志文件
+//		rotatelogs.WithLinkName(fileName),
+//		// 设置最大保存时间(7天)
+//		rotatelogs.WithMaxAge(30*24*time.Hour),
+//		// 设置日志切割时间间隔(1天)
+//		rotatelogs.WithRotationTime(24*time.Hour),
+//	)
+//	if err != nil {
+//		panic(err)
+//	}
+//	writeMap := lfshook.WriterMap{
+//		logrus.InfoLevel:  logWriter,
+//		logrus.FatalLevel: logWriter,
+//		logrus.DebugLevel: logWriter,
+//		logrus.WarnLevel:  logWriter,
+//		logrus.ErrorLevel: logWriter,
+//		logrus.PanicLevel: logWriter,
+//	}
+//	lfHook := lfshook.NewHook(writeMap, &nested.Formatter{
+//		TimestampFormat: "2006-01-02 15:04:05",
+//		// PrettyPrint:     true,
+//		HideKeys: true,
+//		NoColors: true,
+//	})
+//	// 新增 Hook
+//	Logger.AddHook(lfHook)
+//}
+
+// 日志自定义配置
+func zapLogInit() {
 	logFilePath := Cfg.Log.Filepath
 	logFileName := Cfg.Log.Filename
 	if logFileName == "" {
@@ -264,63 +340,46 @@ func LogInit() {
 			panic(err)
 		}
 	}
-	baseLog := filepath.Join(logFilePath, logFileName+".log")
+	filename := filepath.Join(logFilePath, logFileName+".log")
 
-	fileName := filepath.Join(logFilePath, logFileName)
-	// 写入文件（0660：其他用户的权限）
-	file, err := os.OpenFile(baseLog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
-	if err != nil {
-		panic(err)
+	timeEncoder := func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 	}
-	// 设置输出
+	levelEncoder := func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(level.CapitalString())
+	}
+	callerEncoder := func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+		path := util.WriteString("[", caller.TrimmedPath(), "]")
+		enc.AppendString(path)
+	}
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeLevel = levelEncoder
+	encoderConfig.EncodeTime = timeEncoder
+	encoderConfig.EncodeCaller = callerEncoder
+	encoderConfig.ConsoleSeparator = " "
+	fmt.Println(filename)
+	logWriter := &lumberjack.Logger{
+		Filename:  "logs/app.log",
+		MaxSize:   20,
+		MaxAge:    30,
+		LocalTime: true,
+		Compress:  false,
+	}
+	var syncWriter zapcore.WriteSyncer
 	if Cfg.Env == gin.DebugMode {
-		w := io.MultiWriter(os.Stdout, file)
-		Logger.Out = w
-		gin.DefaultWriter = w
-		gin.DefaultErrorWriter = io.MultiWriter(file, os.Stderr)
+		syncWriter = zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(logWriter))
 	} else {
+		syncWriter = zapcore.AddSync(logWriter)
 		gin.DisableConsoleColor()
-		Logger.SetOutput(file)
 	}
-	// 设置日志级别
-	Logger.SetLevel(logrus.DebugLevel)
-	// 输出行号
-	// Logger.SetReportCaller(true)
-	// 设置 rotatelogs
-	logWriter, err := rotatelogs.New(
-		// 分割后的文件名称
-		fileName+".%Y%m%d.log",
-		// 生成软链，指向最新日志文件
-		rotatelogs.WithLinkName(fileName),
-		// 设置最大保存时间(7天)
-		rotatelogs.WithMaxAge(30*24*time.Hour),
-		// 设置日志切割时间间隔(1天)
-		rotatelogs.WithRotationTime(24*time.Hour),
-	)
-	if err != nil {
-		panic(err)
-	}
-	writeMap := lfshook.WriterMap{
-		logrus.InfoLevel:  logWriter,
-		logrus.FatalLevel: logWriter,
-		logrus.DebugLevel: logWriter,
-		logrus.WarnLevel:  logWriter,
-		logrus.ErrorLevel: logWriter,
-		logrus.PanicLevel: logWriter,
-	}
-	lfHook := lfshook.NewHook(writeMap, &nested.Formatter{
-		TimestampFormat: "2006-01-02 15:04:05",
-		// PrettyPrint:     true,
-		HideKeys: true,
-		NoColors: true,
-	})
-	// 新增 Hook
-	Logger.AddHook(lfHook)
+	gin.DefaultWriter = syncWriter
+
+	level := zapcore.InfoLevel
+	zapCore := zapcore.NewCore(zapcore.NewConsoleEncoder(encoderConfig), syncWriter, level)
+	SugarLog = zap.New(zapCore, zap.AddStacktrace(zapcore.ErrorLevel)).Sugar()
 }
 
-// 实现gorm/logger.Writer接口
+// Printf 实现gorm/logger.Writer接口
 func (m *SqlWriter) Printf(format string, v ...interface{}) {
-	logstr := fmt.Sprintf(format, v...)
-	// 利用logrus记录日志
-	m.log.Info(logstr)
+	m.log.Infof(format, v...)
 }

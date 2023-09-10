@@ -4,7 +4,7 @@ import "gin_app/app/common"
 
 type File struct {
 	common.BaseModel
-	ID   string `gorm:"primaryKey" json:"id"`
+	ID   string `gorm:"primaryKey;size:32;comment:nanoid拼接ext" json:"id"`
 	Uid  uint64 `gorm:"not null;comment:雪花id" json:"uid"`
 	Ext  string `gorm:"size:20;comment:文件后缀" json:"ext"`
 	Type string `gorm:"size:20;comment:文件类型: image,video,audio,txt" json:"type"`

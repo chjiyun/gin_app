@@ -86,6 +86,8 @@ func Upload(c *gin.Context) (*model.File, error) {
 func Download(c *gin.Context) {
 	r := result.New()
 	id := c.Param("id")
+	isThumb := c.Query("thumb")
+	format := c.Query("format")
 	realId := util.Basename(id)
 	ext := filepath.Ext(id)
 	db := c.Value("DB").(*gorm.DB)
@@ -99,7 +101,22 @@ func Download(c *gin.Context) {
 		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
 		return
 	}
-	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
+	sourcePath := file.Path
+	// 返回thumb文件
+	if isThumb != "" {
+		var thumb model.Thumb
+		tx := db.Where("file_id = ?", file.ID)
+		if format != "" {
+			tx = tx.Where("ext = ?", format)
+		}
+		tx.Select("id", "path").First(&thumb)
+		if tx.Error != nil {
+			c.JSON(http.StatusNotFound, r.Fail("thumb not found"))
+			return
+		}
+		sourcePath = thumb.Path
+	}
+	sourcePath = filepath.Join(config.Cfg.Basedir, sourcePath)
 	if !util.CheckFileIsExist(sourcePath) {
 		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
 		return

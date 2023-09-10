@@ -7,6 +7,7 @@ import (
 	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
+	"github.com/yitter/idgenerator-go/idgen"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -134,6 +135,7 @@ func GetImg(c *gin.Context) {
 		return
 	}
 	releaseAt, _ := time.Parse("20060102", imgInfo.Enddate)
+	id := idgen.NextId()
 	bing = model.Bing{
 		FileId:    upResult.Data.ID,
 		Url:       imgURL,
@@ -141,6 +143,7 @@ func GetImg(c *gin.Context) {
 		Desc:      imgInfo.Copyright,
 		ReleaseAt: releaseAt,
 	}
+	bing.ID = id
 	db.Create(&bing)
 	db.Model(&upResult.Data).Update("desc", imgInfo.Copyright)
 

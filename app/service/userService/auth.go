@@ -8,6 +8,7 @@ import (
 	"gin_app/app/model"
 	"gin_app/app/util/authUtil"
 	"gin_app/config"
+	"github.com/yitter/idgenerator-go/idgen"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"strings"
@@ -88,6 +89,7 @@ func Register(c *gin.Context, reqVo userVo.UserRegisterReqVo) error {
 		Password:    string(hashPwd),
 		PhoneNumber: reqVo.PhoneNumber,
 	}
+	user.ID = idgen.NextId()
 	tx := db.Create(&user)
 	if tx.Error != nil {
 		return tx.Error

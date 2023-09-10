@@ -7,6 +7,7 @@ import (
 	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"io"
 	"net/http"
 	"os"
@@ -45,6 +46,7 @@ func Upload(c *gin.Context) (*model.File, error) {
 		filetype = mType[:i]
 	}
 	uid := idgen.NextId()
+	id := gonanoid.Must()
 	localName := util.ToString(uid) + ext
 	year, month, _ := time.Now().Date()
 	relativePath := filepath.Join("files", util.ToString(year), util.ToString(int(month)), localName)
@@ -72,6 +74,7 @@ func Upload(c *gin.Context) (*model.File, error) {
 		Path:      relativePath,
 		Size:      uint(f.Size),
 	}
+	file.ID = id
 	res := db.Create(&file)
 	if res.Error != nil {
 		return nil, myError.NewET(common.UnknownError)
@@ -83,18 +86,16 @@ func Upload(c *gin.Context) (*model.File, error) {
 func Download(c *gin.Context) {
 	r := result.New()
 	id := c.Param("id")
-	uid := util.Basename(id)
+	realId := util.Basename(id)
 	ext := filepath.Ext(id)
-	if ext == "" {
-		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
-		return
-	}
 	db := c.Value("DB").(*gorm.DB)
 	var file model.File
-	ext = ext[1:]
+	if ext != "" {
+		ext = ext[1:]
+	}
 
-	res := db.Where("uid = ? AND ext = ?", uid, ext).First(&file)
-	if res.Error != nil {
+	res := db.Where("id = ?", realId).First(&file)
+	if res.Error != nil || file.Ext != ext {
 		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
 		return
 	}

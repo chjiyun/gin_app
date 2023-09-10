@@ -9,5 +9,5 @@ type User struct {
 	Email       string `gorm:"size:100;comment:邮箱" json:"email"`
 	Password    string `gorm:"size:80;comment:密码" json:"-"`
 	Gender      int    `gorm:"comment:性别" json:"gender"`
-	Portrait    uint64 `gorm:"comment:头像" json:"portrait"`
+	Portrait    string `gorm:"comment:头像" json:"portrait"`
 }

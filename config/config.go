@@ -359,7 +359,7 @@ func zapLogInit() {
 	encoderConfig.ConsoleSeparator = " "
 	fmt.Println(filename)
 	logWriter := &lumberjack.Logger{
-		Filename:  "logs/app.log",
+		Filename:  filename,
 		MaxSize:   20,
 		MaxAge:    30,
 		LocalTime: true,

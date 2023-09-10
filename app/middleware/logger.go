@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 // 日志记录到文件
@@ -26,13 +25,14 @@ func LoggerToFile() gin.HandlerFunc {
 		// 请求IP
 		clientIP := c.ClientIP()
 		// 日志格式
-		config.Logger.WithFields(logrus.Fields{
-			"status_code":  statusCode,
-			"latency_time": latencyTime,
-			"client_ip":    clientIP,
-			"req_method":   reqMethod,
-			"req_uri":      reqUri,
-		}).Info()
+		//config.Logger.WithFields(logrus.Fields{
+		//	"status_code":  statusCode,
+		//	"latency_time": latencyTime,
+		//	"client_ip":    clientIP,
+		//	"req_method":   reqMethod,
+		//	"req_uri":      reqUri,
+		//}).Info()
+		config.SugarLog.Infof("[%s] [%s] [%s] [%s] [%v]", clientIP, latencyTime, reqMethod, reqUri, statusCode)
 	}
 }
 

@@ -15,7 +15,7 @@ func SetContext() gin.HandlerFunc {
 		// defer cancel()
 		c.Set("DB", config.DB.WithContext(context.Background()))
 		// Add a context to the log entry.
-		c.Set("Logger", config.Logger.WithContext(context.Background()))
+		c.Set("Logger", config.SugarLog)
 		c.Next()
 	}
 }

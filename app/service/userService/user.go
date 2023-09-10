@@ -12,7 +12,8 @@ import (
 	"gin_app/app/util/authUtil"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	"github.com/sirupsen/logrus"
+	"github.com/yitter/idgenerator-go/idgen"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -89,8 +90,8 @@ func ResetPassword(c *gin.Context, reqVo userVo.UserResetPasswordReqVo) (bool, e
 }
 
 // saveLoginIpInfo 存储登录用户设备相关信息
-func saveLoginIpInfo(c *gin.Context, token string, userId uint) {
-	log := c.Value("Logger").(*logrus.Entry)
+func saveLoginIpInfo(c *gin.Context, token string, userId uint64) {
+	log := c.Value("Logger").(*zap.SugaredLogger)
 	db := c.Value("DB").(*gorm.DB)
 
 	ip := c.ClientIP()
@@ -99,10 +100,12 @@ func saveLoginIpInfo(c *gin.Context, token string, userId uint) {
 		log.Error(err)
 		return
 	}
+	id := idgen.NextId()
 	var userIp = model.UserIp{
 		UserId: userId,
 		Token:  token,
 	}
+	userIp.ID = id
 	if err = copier.Copy(&userIp, &info); err != nil {
 		log.Error(err)
 		return

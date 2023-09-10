@@ -17,11 +17,11 @@ import (
 
 // CustomerClaims 嵌套匿名struct实现继承
 type CustomerClaims struct {
-	UserId uint `json:"userId"`
+	UserId uint64 `json:"userId"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJwtToken(jwtConfig config.JwtConfig, userId uint) (string, error) {
+func GenerateJwtToken(jwtConfig config.JwtConfig, userId uint64) (string, error) {
 	hmacSampleSecret := []byte(jwtConfig.SecretKey) //密钥，不能泄露
 	token := jwt.New(jwt.SigningMethodHS256)
 	nowTime := jwt.NewNumericDate(time.Now())
@@ -59,7 +59,7 @@ func ParseJwtToken(tokenString string, secret string) (*CustomerClaims, error) {
 }
 
 // RenewJwtToken 续签jwtToken
-func RenewJwtToken(jwtConfig config.JwtConfig, userId uint, token string) error {
+func RenewJwtToken(jwtConfig config.JwtConfig, userId uint64, token string) error {
 	jwtToken, err := GenerateJwtToken(jwtConfig, userId)
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func SaveMd5Token(jwtToken string) (string, error) {
 	return token, nil
 }
 
-func GetSessionUserId(c *gin.Context) uint {
+func GetSessionUserId(c *gin.Context) uint64 {
 	claims := c.Value("session").(*CustomerClaims)
 	return claims.UserId
 }

@@ -6,7 +6,7 @@ import "gin_app/app/common"
 type Thumb struct {
 	common.BaseModel
 	Uid       uint64 `gorm:"not null;comment:雪花id" json:"uid"`
-	FileId    uint   `gorm:"not null;comment:file_id" json:"file_id"`
+	FileId    string `gorm:"not null;comment:file_id" json:"file_id"`
 	Ext       string `gorm:"size:20;comment:文件后缀" json:"ext"`
 	Width     uint   `gorm:"comment:宽度" json:"width"`
 	Height    uint   `gorm:"comment:高度" json:"height"`

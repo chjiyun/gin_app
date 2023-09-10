@@ -10,6 +10,7 @@ import (
 	"gin_app/app/util"
 	"gin_app/config"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"go.uber.org/zap"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
@@ -214,7 +215,7 @@ func getImageXY(file io.Reader) (int, int, error) {
 // toWebp 转webp格式
 func toWebp(c *gin.Context, file model.File, width int, height int) error {
 	db := c.Value("DB").(*gorm.DB)
-	log := c.Value("Logger").(*logrus.Entry)
+	log := c.Value("Logger").(*zap.SugaredLogger)
 
 	ext := ".webp"
 	uid := idgen.NextId()
@@ -327,7 +328,7 @@ func transformImage(inputFilename string, outputFilename string, outputWidth int
 // ConvertToWebp 图片转换成webp格式
 func ConvertToWebp(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
-	log := c.Value("Logger").(*logrus.Entry)
+	log := c.Value("Logger").(*zap.SugaredLogger)
 	var files []model.File
 
 	db.Where("ext = ? or ext = ? or ext = ?", "jpg", "jpeg", "png").Find(&files)

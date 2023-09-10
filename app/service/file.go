@@ -218,6 +218,7 @@ func toWebp(c *gin.Context, file model.File, width int, height int) error {
 	log := c.Value("Logger").(*zap.SugaredLogger)
 
 	ext := ".webp"
+	id := idgen.NextId()
 	uid := idgen.NextId()
 	localName := util.ToString(uid) + ext
 	outputFilename := filepath.Join("files", "thumb", localName)
@@ -243,6 +244,7 @@ func toWebp(c *gin.Context, file model.File, width int, height int) error {
 		Width:     uint(width),
 		Height:    uint(height),
 	}
+	thumb.ID = id
 	res := db.Create(&thumb)
 	if res.Error != nil {
 		log.Errorln("thumb create error:", res.Error)

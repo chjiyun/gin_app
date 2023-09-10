@@ -117,7 +117,6 @@ func Download(c *gin.Context) {
 	id := c.Param("id")
 	isThumb := c.Query("thumb")
 	format := c.Query("format")
-	realId := util.Basename(id)
 	ext := filepath.Ext(id)
 	db := c.Value("DB").(*gorm.DB)
 	var file model.File
@@ -125,7 +124,7 @@ func Download(c *gin.Context) {
 		ext = ext[1:]
 	}
 
-	res := db.Where("id = ?", realId).First(&file)
+	res := db.Where("id = ?", id).First(&file)
 	if res.Error != nil || file.Ext != ext {
 		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
 		return

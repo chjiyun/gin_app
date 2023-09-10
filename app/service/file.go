@@ -88,7 +88,7 @@ func Upload(c *gin.Context) (*model.File, error) {
 		Path:      relativePath,
 		Size:      uint(f.Size),
 	}
-	file.ID = id
+	file.ID = id + ext
 	res := db.Create(&file)
 	if res.Error != nil {
 		return nil, myError.NewET(common.UnknownError)

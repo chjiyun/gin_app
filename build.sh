@@ -73,12 +73,12 @@ wait_for_process_exit() {
     end=$(date +%s)
     if [ $((end-begin)) -gt 60 ];then
         failed=1
-        echo -e "\nTimeout..."
+        printf "\nTimeout...\n"
         break;
     fi
   done
   if [ $failed -eq 0 ];then
-    echo -e "\n"
+    printf "\n"
   else
     exit
   fi

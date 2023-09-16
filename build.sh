@@ -65,16 +65,23 @@ wait_for_process_exit() {
   local pidKilled=$1
   local begin=$(date +%s)
   local end
+  local failed=0
   while kill -0 "$pidKilled" > /dev/null 2>&1
   do
     echo -n "."
     sleep 1;
     end=$(date +%s)
-    if [ $((end-begin)) -gt 60  ];then
-        echo -e "\nTimeout"
+    if [ $((end-begin)) -gt 60 ];then
+        failed=1
+        printf "\nTimeout...\n"
         break;
     fi
   done
+  if [ $failed -eq 0 ];then
+    printf "\n"
+  else
+    exit
+  fi
 }
 
 flags="-X '${path}.AppVersion=v1.0' -X '${path}.GoVersion=$(go version | awk '{print $3 " " $4}')' -X '${path}.BuildTime=$(date "+%Y.%m.%d %H:%M:%S")' -X '${path}.BuildUser=$(id -u -n)' -X '${path}.CommitId=$(git rev-parse --short HEAD)'"
@@ -90,23 +97,23 @@ if [ $? -eq 0 ]; then
   if [ -n "$pid" ]; then
     echo "Try to kill the process: ${pid}"
     kill $pid && wait_for_process_exit "$pid"
-    sleep 1
   fi
 else
   echo "build error $buildResult"
   exit
 fi
 
+echo "start server..."
+
 # nohup "./${targetFile}" 1>"${info_log}" 2>"${error_log}" & echo $! > "$pidFile"
 nohup "./${targetFile}" 1>/dev/null 2>&1 &
 
-echo "starting..."
 # 监听端口是否启动
 while :
 do
     running=`lsof -i:$port | wc -l`
     if [ $running -gt "0" ]; then
-        echo "server is running on $port"
+        echo "server is running on 127.0.0.1:$port"
         break
     fi
     sleep 1

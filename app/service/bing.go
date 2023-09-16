@@ -2,11 +2,11 @@ package service
 
 import (
 	"bytes"
-	"encoding/json"
 	"gin_app/app/model"
 	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"go.uber.org/zap"
 	"io"
@@ -60,7 +60,10 @@ func GetImg(c *gin.Context) {
 
 	// 方法二：解析为json对象
 	bingRes := BingRes{}
-	json.NewDecoder(res.Body).Decode(&bingRes)
+	if err = jsoniter.NewDecoder(res.Body).Decode(&bingRes); err != nil {
+		log.Error(err)
+		return
+	}
 
 	imgInfo := bingRes.Images[0]
 
@@ -125,8 +128,7 @@ func GetImg(c *gin.Context) {
 	}
 	defer fileRes.Body.Close()
 	upResult := uploadResult{}
-	err = json.NewDecoder(fileRes.Body).Decode(&upResult)
-	if err != nil {
+	if err = jsoniter.NewDecoder(fileRes.Body).Decode(&upResult); err != nil {
 		log.Errorln(err)
 		return
 	}
@@ -145,7 +147,6 @@ func GetImg(c *gin.Context) {
 	}
 	bing.ID = id
 	db.Create(&bing)
-	db.Model(&upResult.Data).Update("desc", imgInfo.Copyright)
 
 	// var f *os.File
 	// defer f.Close()

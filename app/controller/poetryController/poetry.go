@@ -39,7 +39,7 @@ func UpdatePoetry(c *gin.Context) {
 
 func ImportPoetry(c *gin.Context) {
 	r := result.New()
-	res, err := poetryService.ImportPoetry(c)
+	res, err := poetryService.PoetryImport(c)
 	if err != nil {
 		c.JSON(http.StatusOK, r.FailErr(err))
 		return

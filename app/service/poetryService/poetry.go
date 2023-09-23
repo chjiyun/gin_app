@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gin_app/app/controller/poetryController/poetryVo"
 	"gin_app/app/model"
+	"gin_app/app/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	jsoniter "github.com/json-iterator/go"
@@ -15,29 +16,38 @@ import (
 // SearchPoetry 模糊搜索诗词
 func SearchPoetry(c *gin.Context, keyword string) *[]poetryVo.PoetryRespVo {
 	db := c.Value("DB").(*gorm.DB)
+	var data []model.Poetry
 	var respVos []poetryVo.PoetryRespVo
 
-	db.Find(&respVos)
+	str := util.WriteString("%", keyword, "%")
+	//db.Select("b_poetry.id, b_poetry.author, b_poetry.title, b_poetry.tag, pc.content, pc.sort").
+	//	Joins("left join b_poetry_content as pc on pc.poetry_id = b_poetry.id").
+	//	Model(&model.Poetry{}).
+	//	Where("title like ?", str).Or("author like ?", str).
+	//	Or("exists (select 1 from b_poetry_content where poetry_id = b_poetry.id and content like ?)", str).
+	//	Limit(10).Find(&data)
+
+	db.Select("id, author, title, tag").
+		Preload("PoetryContent", func(db *gorm.DB) *gorm.DB {
+			return db.Select("poetry_id, content, sort").Order("sort")
+		}).
+		Where("title like ?", str).Or("author like ?", str).
+		Or("exists (select 1 from b_poetry_content where poetry_id = b_poetry.id and content like ?)", str).
+		Limit(10).Find(&data)
+	_ = copier.Copy(&respVos, &data)
 	return &respVos
 }
 
 func GetPoetry(c *gin.Context, id string) *poetryVo.PoetryRespVo {
 	db := c.Value("DB").(*gorm.DB)
 	var poetry model.Poetry
-	var contents []model.PoetryContent
 	var respVo poetryVo.PoetryRespVo
 
-	err := db.Find(&poetry, id).Error
+	err := db.Preload("PoetryContent").Find(&poetry, id).Error
 	if err != nil {
 		return nil
 	}
-	db.Where("poetry_id = ?", id).Find(&contents)
 	_ = copier.Copy(&respVo, &poetry)
-	var content []string
-	for _, item := range contents {
-		content = append(content, item.Content)
-	}
-	respVo.Content = content
 	return &respVo
 }
 
@@ -46,7 +56,7 @@ func CreatePoetry(c *gin.Context) (bool, error) {
 	return true, nil
 }
 
-func ImportPoetry(c *gin.Context) (bool, error) {
+func PoetryImport(c *gin.Context) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var data []model.Poetry

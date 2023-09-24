@@ -1,6 +1,7 @@
 package poetryController
 
 import (
+	"gin_app/app/controller/poetryController/poetryVo"
 	"gin_app/app/result"
 	"gin_app/app/service/poetryService"
 	"github.com/gin-gonic/gin"
@@ -9,8 +10,16 @@ import (
 
 func SearchPoetry(c *gin.Context) {
 	r := result.New()
-	keyword := c.Query("keyword")
-	res := poetryService.SearchPoetry(c, keyword)
+	var reqVo poetryVo.PoetrySearchReqVo
+	if err := c.ShouldBindQuery(&reqVo); err != nil {
+		c.JSON(http.StatusOK, r.Fail("invalid query params"))
+		return
+	}
+	res, err := poetryService.SearchPoetry(c, reqVo)
+	if err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
 	c.JSON(http.StatusOK, r.Success(res))
 }
 

@@ -8,7 +8,7 @@ import (
 func (r Router) Poetry(g *gin.RouterGroup) {
 	rg := g.Group("/poetry")
 	{
-		rg.GET("/", poetryController.SearchPoetry)
+		rg.GET("/search", poetryController.SearchPoetry)
 		rg.GET("/:id", poetryController.GetPoetry)
 		rg.POST("/", poetryController.CreatePoetry)
 		rg.PUT("/", poetryController.UpdatePoetry)

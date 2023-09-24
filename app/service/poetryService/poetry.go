@@ -1,7 +1,6 @@
 package poetryService
 
 import (
-	"fmt"
 	"gin_app/app/controller/poetryController/poetryVo"
 	"gin_app/app/model"
 	"gin_app/app/util"
@@ -29,11 +28,12 @@ func SearchPoetry(c *gin.Context, keyword string) *[]poetryVo.PoetryRespVo {
 
 	db.Select("id, author, title, tag").
 		Preload("PoetryContent", func(db *gorm.DB) *gorm.DB {
-			return db.Select("poetry_id, content, sort").Order("sort")
+			return db.Select("poetry_id, content, sort").Where("content like ?", str).Order("sort")
 		}).
 		Where("title like ?", str).Or("author like ?", str).
 		Or("exists (select 1 from b_poetry_content where poetry_id = b_poetry.id and content like ?)", str).
 		Limit(10).Find(&data)
+
 	_ = copier.Copy(&respVos, &data)
 	return &respVos
 }
@@ -64,7 +64,7 @@ func PoetryImport(c *gin.Context) (bool, error) {
 	var source []poetryVo.PoetryImportReqVo
 
 	// 读取本地json
-	bytes, err := os.ReadFile("../chinese-poetry/唐诗/data5.json")
+	bytes, err := os.ReadFile("../chinese-poetry/宋词/data2_x.json")
 	if err != nil {
 		return false, err
 	}
@@ -76,7 +76,7 @@ func PoetryImport(c *gin.Context) (bool, error) {
 		_ = copier.Copy(&d, &item)
 		id := idgen.NextId()
 		d.ID = id
-		d.Tag = 1
+		d.Tag = 2
 		data = append(data, d)
 		for i, content := range item.Content {
 			var pc model.PoetryContent
@@ -87,15 +87,15 @@ func PoetryImport(c *gin.Context) (bool, error) {
 			contents = append(contents, pc)
 		}
 	}
-	fmt.Println(data)
-	fmt.Println(contents)
+	//fmt.Println(data)
+	//fmt.Println(contents)
 
 	err = db.Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(&model.Poetry{}).CreateInBatches(&data, 200).Error
+		err = tx.Model(&model.Poetry{}).CreateInBatches(&data, 400).Error
 		if err != nil {
 			return err
 		}
-		err = tx.Model(&model.PoetryContent{}).CreateInBatches(&contents, 200).Error
+		err = tx.Model(&model.PoetryContent{}).CreateInBatches(&contents, 400).Error
 		if err != nil {
 			return err
 		}

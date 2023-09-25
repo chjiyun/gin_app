@@ -11,7 +11,21 @@ import (
 func GetDictType(c *gin.Context) {
 	r := result.New()
 	keyword := c.Query("keyword")
-	res := dictService.GetDictType(c, keyword)
+	res, err := dictService.GetDictType(c, keyword)
+	if err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	c.JSON(http.StatusOK, r.Success(res))
+}
+
+func GetAllDictType(c *gin.Context) {
+	r := result.New()
+	res, err := dictService.GetAllDictType(c)
+	if err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
 	c.JSON(http.StatusOK, r.Success(res))
 }
 

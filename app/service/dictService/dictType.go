@@ -12,7 +12,7 @@ import (
 )
 
 // GetDictType 获取所有字典类型
-func GetDictType(c *gin.Context, keyword string) *[]dictVo.DictTypeRespVo {
+func GetDictType(c *gin.Context, keyword string) (*[]dictVo.DictTypeRespVo, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var data []model.DictType
@@ -23,9 +23,26 @@ func GetDictType(c *gin.Context, keyword string) *[]dictVo.DictTypeRespVo {
 		str := util.WriteString("%", keyword, "%")
 		tx.Where(db.Where("name like ?", str).Or("value like ?", str))
 	}
-	tx.Find(&data)
+	err := tx.Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
 	_ = copier.Copy(&respVo, &data)
-	return &respVo
+	return &respVo, nil
+}
+
+func GetAllDictType(c *gin.Context) (*[]dictVo.DictTypeRespVo, error) {
+	db := c.Value("DB").(*gorm.DB)
+
+	var data []model.DictType
+	var respVo []dictVo.DictTypeRespVo
+
+	err := db.Preload("DictValue").Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+	_ = copier.Copy(&respVo, &data)
+	return &respVo, nil
 }
 
 func CreateDictType(c *gin.Context, reqVo dictVo.DictTypeCreateReqVo) (uint64, error) {

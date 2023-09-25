@@ -20,6 +20,17 @@ func GetDictValue(c *gin.Context) {
 	c.JSON(http.StatusOK, r.Success(res))
 }
 
+func GetDictValueByType(c *gin.Context) {
+	r := result.New()
+	values := c.QueryArray("value")
+	res, err := dictService.GetDictValueByType(c, values)
+	if err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	c.JSON(http.StatusOK, r.Success(res))
+}
+
 func CreateDictValue(c *gin.Context) {
 	r := result.New()
 	var reqVo dictVo.DictValueCreateReqVo

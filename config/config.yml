@@ -21,6 +21,8 @@ log:
   # filepath: /root/logs
   # 慢查询阈值
   long_query_time: 300
+  # 日志等级
+  level: INFO
 
 # jwt:
 #   issuer: issuer

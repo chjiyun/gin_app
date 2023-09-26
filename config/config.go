@@ -51,6 +51,7 @@ type Log struct {
 	Filename      string `yaml:"filename"`
 	Filepath      string `yaml:"filepath"`
 	LongQueryTime int    `yaml:"long_query_time"`
+	Level         string `yaml:"level"`
 }
 
 type JwtConfig struct {
@@ -374,7 +375,19 @@ func zapLogInit() {
 	}
 	gin.DefaultWriter = syncWriter
 
-	level := zapcore.InfoLevel
+	var level zapcore.Level
+	switch Cfg.Log.Level {
+	case "DEBUG":
+		level = zapcore.DebugLevel
+	case "INFO":
+		level = zapcore.InfoLevel
+	case "WARN":
+		level = zapcore.WarnLevel
+	case "Error":
+		level = zapcore.ErrorLevel
+	default:
+		level = zapcore.WarnLevel
+	}
 	zapCore := zapcore.NewCore(zapcore.NewConsoleEncoder(encoderConfig), syncWriter, level)
 	SugarLog = zap.New(zapCore, zap.AddStacktrace(zapcore.ErrorLevel)).Sugar()
 }

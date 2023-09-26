@@ -69,11 +69,11 @@ func CreateDictValue(c *gin.Context, reqVo dictVo.DictValueCreateReqVo) (uint64,
 	if err != nil {
 		return 0, err
 	}
-	if ok, _ := checkDictValueValue(c, data.Value, data.TypeId, data.ID); !ok {
-		return 0, errors.New("字典映射值不能重复")
+	if ok, err := checkDictValueValue(c, data.Value, data.TypeId, data.ID); !ok {
+		return 0, err
 	}
-	if ok, _ := checkDictValueLabel(c, data.Label, data.TypeId, data.ID); !ok {
-		return 0, errors.New("字典映射名称不能重复")
+	if ok, err := checkDictValueLabel(c, data.Label, data.TypeId, data.ID); !ok {
+		return 0, err
 	}
 	// 查询并写入最大sort
 	maxSort := 0
@@ -100,11 +100,11 @@ func UpdateDictValue(c *gin.Context, reqVo dictVo.DictValueUpdateReqVo) (bool, e
 	if err != nil {
 		return false, err
 	}
-	if ok, _ := checkDictValueValue(c, data.Value, data.TypeId, data.ID); !ok {
-		return false, errors.New("字典映射值不能重复")
+	if ok, err := checkDictValueValue(c, data.Value, data.TypeId, data.ID); !ok {
+		return false, err
 	}
-	if ok, _ := checkDictValueLabel(c, data.Label, data.TypeId, data.ID); !ok {
-		return false, errors.New("字典映射名称不能重复")
+	if ok, err := checkDictValueLabel(c, data.Label, data.TypeId, data.ID); !ok {
+		return false, err
 	}
 	// 零值也会保存
 	err = db.Save(&data).Error

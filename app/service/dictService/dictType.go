@@ -53,9 +53,12 @@ func CreateDictType(c *gin.Context, reqVo dictVo.DictTypeCreateReqVo) (uint64, e
 	if err != nil {
 		return 0, err
 	}
+	if ok, err := checkDictTypeValue(c, reqVo.Value, data.ID); !ok {
+		return 0, err
+	}
 	id := idgen.NextId()
 	data.ID = id
-	db.Create(data)
+	db.Create(&data)
 	return id, nil
 }
 
@@ -63,11 +66,14 @@ func UpdateDictType(c *gin.Context, reqVo dictVo.DictTypeUpdateReqVo) (bool, err
 	db := c.Value("DB").(*gorm.DB)
 
 	var data model.DictType
-	if tx := db.First(&data, reqVo.ID); tx.RowsAffected == 0 {
+	if err := db.First(&data, reqVo.ID).Error; err != nil {
 		return false, errors.New("该字典类型不存在")
 	}
 	err := copier.Copy(&data, &reqVo)
 	if err != nil {
+		return false, err
+	}
+	if ok, err := checkDictTypeValue(c, reqVo.Value, data.ID); !ok {
 		return false, err
 	}
 	db.Save(&data)
@@ -80,6 +86,26 @@ func DeleteDictType(c *gin.Context, id string) (bool, error) {
 	err := db.Delete(&model.DictType{}, id).Error
 	if err != nil {
 		return false, err
+	}
+	return true, nil
+}
+
+func checkDictTypeValue(c *gin.Context, value string, id uint64) (bool, error) {
+	db := c.Value("DB").(*gorm.DB)
+
+	var data model.DictType
+	var count int64
+	// 结构体参数会自动忽略零值
+	w := model.DictType{
+		Value: value,
+	}
+	w.ID = id
+	err := db.Model(&data).Where(&w).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	if count > 0 {
+		return false, errors.New("标识符不能重复")
 	}
 	return true, nil
 }

@@ -38,7 +38,7 @@ func GetDictValueByType(c *gin.Context, value []string) (*[]dictVo.DictValueResp
 	}
 
 	db := c.Value("DB").(*gorm.DB)
-	var data model.DictValue
+	var data []model.DictValue
 	var dictType []model.DictType
 	var respVo []dictVo.DictValueRespVo
 
@@ -69,20 +69,20 @@ func CreateDictValue(c *gin.Context, reqVo dictVo.DictValueCreateReqVo) (uint64,
 	if err != nil {
 		return 0, err
 	}
-	if ok, _ := checkValueUnique(c, data.Value, data.TypeId, data.ID); ok {
+	if ok, _ := checkDictValueValue(c, data.Value, data.TypeId, data.ID); !ok {
 		return 0, errors.New("字典映射值不能重复")
 	}
-	if ok, _ := checkLabelUnique(c, data.Label, data.TypeId, data.ID); ok {
+	if ok, _ := checkDictValueLabel(c, data.Label, data.TypeId, data.ID); !ok {
 		return 0, errors.New("字典映射名称不能重复")
 	}
 	// 查询并写入最大sort
 	maxSort := 0
-	db.Select("max(sort)").Find(&maxSort)
+	db.Model(&model.DictValue{}).Select("max(sort)").Find(&maxSort)
 	data.Sort = maxSort + 1
 
 	id := idgen.NextId()
 	data.ID = id
-	err = db.Create(data).Error
+	err = db.Create(&data).Error
 	if err != nil {
 		return 0, err
 	}
@@ -93,12 +93,18 @@ func UpdateDictValue(c *gin.Context, reqVo dictVo.DictValueUpdateReqVo) (bool, e
 	db := c.Value("DB").(*gorm.DB)
 
 	var data model.DictValue
-	if tx := db.First(&data, reqVo.ID); tx.RowsAffected == 0 {
-		return false, errors.New("该字典不存在")
+	if err := db.First(&data, reqVo.ID).Error; err != nil {
+		return false, errors.New("该字典映射不存在")
 	}
 	err := copier.Copy(&data, &reqVo)
 	if err != nil {
 		return false, err
+	}
+	if ok, _ := checkDictValueValue(c, data.Value, data.TypeId, data.ID); !ok {
+		return false, errors.New("字典映射值不能重复")
+	}
+	if ok, _ := checkDictValueLabel(c, data.Label, data.TypeId, data.ID); !ok {
+		return false, errors.New("字典映射名称不能重复")
 	}
 	// 零值也会保存
 	err = db.Save(&data).Error
@@ -122,13 +128,13 @@ func SortDictValue(c *gin.Context, id uint64) {
 
 }
 
-func checkValueUnique(c *gin.Context, value int16, typeId uint64, id uint64) (bool, error) {
+func checkDictValueValue(c *gin.Context, value string, typeId uint64, id uint64) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var data model.DictValue
 	var count int64
 	// 结构体参数会自动忽略零值
-	w := &model.DictValue{
+	w := model.DictValue{
 		Value:  value,
 		TypeId: typeId,
 	}
@@ -137,16 +143,19 @@ func checkValueUnique(c *gin.Context, value int16, typeId uint64, id uint64) (bo
 	if err != nil {
 		return false, err
 	}
-	return count == 0, nil
+	if count > 0 {
+		return false, errors.New("字典对应值不能重复")
+	}
+	return true, nil
 }
 
-func checkLabelUnique(c *gin.Context, label string, typeId uint64, id uint64) (bool, error) {
+func checkDictValueLabel(c *gin.Context, label string, typeId uint64, id uint64) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var data model.DictValue
 	var count int64
 	// 结构体参数会自动忽略零值
-	w := &model.DictValue{
+	w := model.DictValue{
 		Label:  label,
 		TypeId: typeId,
 	}
@@ -155,5 +164,8 @@ func checkLabelUnique(c *gin.Context, label string, typeId uint64, id uint64) (b
 	if err != nil {
 		return false, err
 	}
-	return count == 0, nil
+	if count > 0 {
+		return false, errors.New("字典名不能重复")
+	}
+	return true, nil
 }

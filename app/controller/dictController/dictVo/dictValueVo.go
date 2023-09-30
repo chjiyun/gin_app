@@ -1,5 +1,7 @@
 package dictVo
 
+import "gin_app/app/common"
+
 type DictValueCreateReqVo struct {
 	Label  string `gorm:"size:100;comment:字典值对应中文名" json:"label" binding:"required"`
 	Value  string `gorm:"not null;comment:字典值" json:"value" binding:"required"`
@@ -17,7 +19,7 @@ type DictValueUpdateReqVo struct {
 }
 
 type DictValueRespVo struct {
-	ID     uint64 `json:"id"`
+	common.BaseModel
 	Label  string `gorm:"size:100;comment:字典值对应中文名" json:"label"`
 	Value  string `gorm:"not null;comment:字典值" json:"value"`
 	Sort   int32  `gorm:"comment:序号" json:"sort"`

@@ -83,7 +83,7 @@ func UpdateDictType(c *gin.Context, reqVo dictVo.DictTypeUpdateReqVo) (bool, err
 func DeleteDictType(c *gin.Context, id string) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
 
-	err := db.Delete(&model.DictType{}, id).Error
+	err := db.Select("DictValue").Delete(&model.DictType{}, id).Error
 	if err != nil {
 		return false, err
 	}

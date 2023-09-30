@@ -9,9 +9,10 @@ require (
 	github.com/go-playground/validator/v10 v10.15.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1
-	github.com/imdario/mergo v0.3.12
 	github.com/imroc/req/v3 v3.41.4
 	github.com/jinzhu/copier v0.3.2
+	github.com/json-iterator/go v1.1.12
+	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/nguyenthenguyen/docx v0.0.0-20201105043207-fda3c29a0605
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/yitter/idgenerator-go v1.2.1
@@ -49,11 +50,9 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
-	github.com/matoous/go-nanoid/v2 v2.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

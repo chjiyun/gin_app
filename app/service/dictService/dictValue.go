@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetDictValue(c *gin.Context, reqVo dictVo.DictValueReqVo) *[]dictVo.DictValueRespVo {
+func GetDictValue(c *gin.Context, reqVo dictVo.DictValueReqVo) []dictVo.DictValueRespVo {
 	db := c.Value("DB").(*gorm.DB)
 
 	var data model.DictValue
@@ -29,10 +29,10 @@ func GetDictValue(c *gin.Context, reqVo dictVo.DictValueReqVo) *[]dictVo.DictVal
 	tx.Order(order).Find(&data)
 	_ = copier.Copy(&respVo, &data)
 
-	return &respVo
+	return respVo
 }
 
-func GetDictValueByType(c *gin.Context, value []string) (*[]dictVo.DictValueRespVo, error) {
+func GetDictValueByType(c *gin.Context, value []string) ([]dictVo.DictValueRespVo, error) {
 	if len(value) == 0 {
 		return nil, errors.New("empty value")
 	}
@@ -47,7 +47,7 @@ func GetDictValueByType(c *gin.Context, value []string) (*[]dictVo.DictValueResp
 		return nil, err
 	}
 	if len(dictType) == 0 {
-		return &respVo, nil
+		return respVo, nil
 	}
 	typeIds := make([]uint64, 0, len(dictType))
 	for _, item := range dictType {
@@ -58,7 +58,7 @@ func GetDictValueByType(c *gin.Context, value []string) (*[]dictVo.DictValueResp
 		return nil, err
 	}
 	_ = copier.Copy(&respVo, &data)
-	return &respVo, nil
+	return respVo, nil
 }
 
 func CreateDictValue(c *gin.Context, reqVo dictVo.DictValueCreateReqVo) (uint64, error) {

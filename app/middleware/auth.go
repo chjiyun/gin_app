@@ -14,7 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func JWTAuth() gin.HandlerFunc {
+func (m Middleware) JWTAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := result.New()
 		jwtConfig := config.Cfg.Jwt

@@ -8,7 +8,7 @@ import (
 )
 
 // context传递
-func SetContext() gin.HandlerFunc {
+func (m Middleware) SetContext() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 设置超时 Context
 		// timeoutContext, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -18,4 +18,7 @@ func SetContext() gin.HandlerFunc {
 		c.Set("Logger", config.SugarLog)
 		c.Next()
 	}
+}
+
+type Middleware struct {
 }

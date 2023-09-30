@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"gin_app/app"
-	"gin_app/app/middleware"
 	"gin_app/app/service"
 	"gin_app/config"
 	"os"
@@ -42,7 +41,8 @@ func main() {
 	// /8表示IP地址的前8位是网络地址或者子网地址，后24位为主机地址
 	_ = r.SetTrustedProxies([]string{"127.0.0.0/8", "10.0.0.0/8"})
 
-	r.Use(middleware.LoggerToFile(), middleware.SetTimeout(), middleware.SetContext(), middleware.JWTAuth(), gin.Recovery())
+	middlewares := app.ReadMiddleware()
+	r.Use(middlewares...)
 
 	// 简单的路由组: api
 	r.GET("/", service.Index)

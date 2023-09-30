@@ -8,7 +8,7 @@ import (
 )
 
 // 日志记录到文件
-func LoggerToFile() gin.HandlerFunc {
+func (m Middleware) LoggerToFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 开始时间
 		startTime := time.Now()

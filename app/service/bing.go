@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -116,32 +117,29 @@ func GetImg(c *gin.Context) {
 	}
 
 	fileName := time.Now().Format("2006-01-02") + "." + imgInfo.Hsh[:16] + ".jpg"
-	// sourcePath := filepath.Join("files", fileName)
-
-	fd := map[string]interface{}{
-		"file":     &imgByte,
-		"filename": fileName,
+	sourcePath := filepath.Join(config.Cfg.Basedir, "files/temp", fileName)
+	if util.CheckFileIsExist(sourcePath) {
+		_ = os.Remove(sourcePath)
 	}
-	uploadUrl := util.WriteString("http://127.0.0.1:", config.Cfg.Server.Port, "/api/file/upload")
-	fileRes, err := util.SendFormData(uploadUrl, "file", fd)
+	out, err := os.Create(sourcePath)
 	if err != nil {
-		log.Errorf("error in SendFormData: %v", err)
 		return
 	}
-	defer fileRes.Body.Close()
-	upResult := uploadResult{}
-	if err = jsoniter.NewDecoder(fileRes.Body).Decode(&upResult); err != nil {
-		log.Errorln(err)
+	if _, err = imgReader.Seek(0, 0); err != nil {
 		return
 	}
-	if upResult.Code != 0 {
-		log.Errorf("file upload failed: %v", upResult)
+	if _, err = io.Copy(out, imgReader); err != nil {
+		return
+	}
+	fileId, err := Save(c, out)
+	if err != nil {
+		log.Error(err)
 		return
 	}
 	releaseAt, _ := time.Parse("20060102", imgInfo.Enddate)
 	id := idgen.NextId()
 	bing = model.Bing{
-		FileId:    upResult.Data.ID,
+		FileId:    fileId,
 		Url:       imgURL,
 		Hsh:       imgInfo.Hsh,
 		Desc:      imgInfo.Copyright,
@@ -149,6 +147,8 @@ func GetImg(c *gin.Context) {
 	}
 	bing.ID = id
 	db.Create(&bing)
+	out.Close()
+	_ = os.Remove(sourcePath)
 }
 
 // GetAllBing 获取bing数据

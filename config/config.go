@@ -128,6 +128,9 @@ func Init() {
 			panic(err1)
 		}
 	}
+	if err = os.MkdirAll(filepath.Join(Cfg.Basedir, "files/temp"), 0666); err != nil {
+		panic(err)
+	}
 
 	// fmt.Println("merge Config:", Cfg)
 	// 按顺序执行

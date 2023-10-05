@@ -16,3 +16,12 @@ func Upload(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, r.Success(res))
 }
+
+func DownloadThumb(c *gin.Context) {
+	err := service.DownloadThumb(c)
+	if err != nil {
+		r := result.New()
+		c.JSON(http.StatusNotFound, r.FailErr(err))
+		return
+	}
+}

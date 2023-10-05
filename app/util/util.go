@@ -362,3 +362,13 @@ func RandomInt(min, max int) int {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return r.Intn(max-min) + min
 }
+
+// GetFileExt 获取文件的后缀 不包含.
+func GetFileExt(path string) string {
+	for i := len(path) - 1; i >= 0 && !os.IsPathSeparator(path[i]); i-- {
+		if path[i] == '.' {
+			return path[i+1:]
+		}
+	}
+	return ""
+}

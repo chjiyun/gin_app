@@ -2,17 +2,19 @@ package service
 
 import (
 	"bytes"
+	"gin_app/app/common"
+	"gin_app/app/controller/bingController/bingVo"
 	"gin_app/app/model"
-	"gin_app/app/result"
 	"gin_app/app/util"
 	"gin_app/config"
+	"github.com/jinzhu/copier"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"path/filepath"
-	"strconv"
+	"slices"
 	"strings"
 	"time"
 
@@ -147,42 +149,16 @@ func GetImg(c *gin.Context) {
 	}
 	bing.ID = id
 	db.Create(&bing)
-
-	// var f *os.File
-	// defer f.Close()
-	// if util.CheckFileIsExist(sourcePath) { //如果文件存在
-	// 	// f, err1 = os.OpenFile(sourcePath, os.O_APPEND, 0666) //打开文件
-	// 	fmt.Println("文件已存在")
-	// 	return
-	// } else {
-	// 	f, err1 = os.Create(sourcePath) //创建文件
-	// }
-	// if err1 != nil {
-	// 	panic(err1)
-	// }
-	// writer := bufio.NewWriter(f) //创建新的 Writer 对象
-
-	// if err1 != nil {
-	// 	fmt.Println(err1)
-	// }
-	// n, _ := writer.Write(imgByte)
-	// fmt.Printf("写入 %d 个字节\n", n)
-	// writer.Flush()
-
 }
 
-// GetAllBing 搜索符合条件的记录
-func GetAllBing(c *gin.Context) {
-	r := result.New()
+// GetAllBing 获取bing数据
+func GetAllBing(c *gin.Context, reqVo bingVo.BingPageReqVo) (common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
-
-	page, _ := strconv.Atoi(c.Query("page"))
-	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
-	startTime := c.Query("start_time")
-	endTime := c.Query("end_time")
 
 	var bing []model.Bing
 	var count int64
+	var respVo []bingVo.BingRespVo
+	var pageRes common.PageRes
 
 	db.Model(&model.Bing{}).Count(&count)
 
@@ -190,22 +166,60 @@ func GetAllBing(c *gin.Context) {
 		return db.Select("id, uid, ext, name, size")
 	}).Omit("url", "hsh", "updated_at")
 
-	if startTime != "" {
-		tx = tx.Where("created_at >= ?", startTime)
+	if !reqVo.StartTime.IsZero() {
+		tx = tx.Where("created_at >= ?", reqVo.StartTime)
 	}
-	if endTime != "" {
-		tx = tx.Where("created_at < ?", endTime)
+	if !reqVo.EndTime.IsZero() {
+		tx = tx.Where("created_at < ?", reqVo.EndTime)
 	}
-	if page > 0 && pageSize > 0 {
-		tx = tx.Limit(pageSize).Offset((page - 1) * pageSize)
+	if reqVo.Page > 0 && reqVo.PageSize > 0 {
+		tx = tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize)
 	}
 	tx.Order("created_at desc").Find(&bing)
+	_ = copier.Copy(&respVo, &bing)
 
-	r.SetData(gin.H{
-		"count": count,
-		"rows":  bing,
-	})
-	c.JSON(200, r)
+	pageRes.Count = count
+	pageRes.Rows = respVo
+	return pageRes, nil
+}
+
+func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, error) {
+	db := c.Value("DB").(*gorm.DB)
+
+	var bing []model.Bing
+	var count int64
+	var thumbs []model.Thumb
+	var respVo []bingVo.WallPaperRespVo
+	var pageRes common.PageRes
+
+	db.Model(&model.Bing{}).Count(&count)
+	db.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
+		Order("created_at desc").Find(&bing)
+	fileIds := make([]string, 0, len(bing))
+	for _, item := range bing {
+		fileIds = append(fileIds, item.FileId)
+	}
+	db.Where("file_id in ?", fileIds).Where("ext = ?", "webp").Find(&thumbs)
+
+	_ = copier.Copy(&respVo, &bing)
+	// type 取file 中的ext
+	for i := range respVo {
+		index := slices.IndexFunc(thumbs, func(m model.Thumb) bool {
+			return m.FileId == respVo[i].FileId
+		})
+		if index < 0 {
+			continue
+		}
+		thumb := thumbs[index]
+		respVo[i].Name = thumb.Name
+		respVo[i].Width = thumb.Width
+		respVo[i].Height = thumb.Height
+		respVo[i].Ext = util.GetFileExt(respVo[i].FileId)
+		respVo[i].ThumbId = util.WriteString(util.ToString(thumb.ID), ".", thumb.Ext)
+	}
+	pageRes.Count = count
+	pageRes.Rows = respVo
+	return pageRes, nil
 }
 
 // GetBingZip 压缩下载bing图片

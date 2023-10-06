@@ -89,8 +89,12 @@ func Upload(c *gin.Context, f *multipart.FileHeader) (string, error) {
 		return "", myError.NewET(common.UnknownError)
 	}
 
+	// 默认不传此参数
+	if _, ok := c.Value("noThumb").(bool); ok {
+		return file.ID, nil
+	}
 	// 关键：重置offset
-	_,_ = mFile.Seek(0, 0)
+	_, _ = mFile.Seek(0, 0)
 	imgSuffix := regexp.MustCompile(`jpg|jpeg|png$`)
 	if imgSuffix.MatchString(ext) {
 		width, height, err := GetImageXY(mFile)
@@ -164,6 +168,19 @@ func Save(c *gin.Context, f *os.File) (string, error) {
 	file.ID = id + ext
 	if err = db.Create(&file).Error; err != nil {
 		return "", myError.NewET(common.UnknownError)
+	}
+	// 关键：重置offset
+	_, _ = f.Seek(0, 0)
+	imgSuffix := regexp.MustCompile(`jpg|jpeg|png$`)
+	if imgSuffix.MatchString(ext) {
+		width, height, err := GetImageXY(f)
+		if err != nil {
+			return "", myError.New("文件解码失败")
+		}
+		err = toWebp(c, file, width, height)
+		if err != nil {
+			return "", myError.New("图片转webp失败")
+		}
 	}
 	return file.ID, nil
 }

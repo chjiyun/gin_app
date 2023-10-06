@@ -7,7 +7,6 @@ import (
 	"gin_app/app/model"
 	"gin_app/app/service"
 	"gin_app/app/util"
-	"gin_app/config"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/yitter/idgenerator-go/idgen"
@@ -28,8 +27,9 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 	var respVo []bingVo.WallPaperRespVo
 	var pageRes common.PageRes
 
-	db.Model(&model.Bing{}).Count(&count)
-	db.Where("pass = ?", reqVo.Pass).Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
+	tx := db.Where("pass = ?", reqVo.Pass)
+	tx.Model(&model.Bing{}).Count(&count)
+	tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
 		Order("created_at desc").Find(&bing)
 	fileIds := make([]string, 0, len(bing))
 	for _, item := range bing {
@@ -86,12 +86,6 @@ func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, erro
 		return false, myError.New("图片尺寸过小，请上传高分辨率的图片")
 	}
 
-	// 保存临时文件
-	sourcePath := filepath.Join(config.Cfg.Basedir, "files/temp", f.Filename)
-	if err := c.SaveUploadedFile(f, sourcePath); err != nil {
-		log.Error(err)
-		return false, myError.NewET(common.UnknownError)
-	}
 	// 保存文件 禁止转缩略图  节约资源
 	c.Set("noThumb", true)
 	fileId, err := service.Upload(c, f)

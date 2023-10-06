@@ -156,11 +156,7 @@ func GetAllBing(c *gin.Context, reqVo bingVo.BingPageReqVo) (common.PageRes, err
 	var respVo []bingVo.BingRespVo
 	var pageRes common.PageRes
 
-	db.Model(&model.Bing{}).Count(&count)
-
-	tx := db.Preload("File", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id, uid, ext, name, size")
-	}).Omit("url", "hsh", "updated_at")
+	tx := db.Model(&model.Bing{}).Where("is_bing = ?", true)
 
 	if !reqVo.StartTime.IsZero() {
 		tx = tx.Where("created_at >= ?", reqVo.StartTime)
@@ -168,12 +164,14 @@ func GetAllBing(c *gin.Context, reqVo bingVo.BingPageReqVo) (common.PageRes, err
 	if !reqVo.EndTime.IsZero() {
 		tx = tx.Where("created_at < ?", reqVo.EndTime)
 	}
-	if reqVo.Page > 0 && reqVo.PageSize > 0 {
-		tx = tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize)
-	}
-	tx.Order("created_at desc").Find(&bing)
-	_ = copier.Copy(&respVo, &bing)
+	tx.Count(&count)
+	tx = tx.Preload("File", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, uid, ext, name, size")
+	}).Omit("url", "hsh", "pass", "updated_at", "is_del").
+		Order("created_at desc").
+		Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).Find(&bing)
 
+	_ = copier.Copy(&respVo, &bing)
 	pageRes.Count = count
 	pageRes.Rows = respVo
 	return pageRes, nil

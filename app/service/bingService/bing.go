@@ -140,6 +140,7 @@ func GetImg(c *gin.Context) {
 		Desc:      imgInfo.Copyright,
 		ReleaseAt: releaseAt,
 		IsBing:    true,
+		Pass:      true,
 	}
 	bing.ID = id
 	db.Create(&bing)

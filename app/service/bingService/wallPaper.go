@@ -29,7 +29,7 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 	var pageRes common.PageRes
 
 	db.Model(&model.Bing{}).Count(&count)
-	db.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
+	db.Where("pass = ?", reqVo.Pass).Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
 		Order("created_at desc").Find(&bing)
 	fileIds := make([]string, 0, len(bing))
 	for _, item := range bing {
@@ -93,7 +93,7 @@ func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, erro
 		return false, myError.NewET(common.UnknownError)
 	}
 	// 保存文件 禁止转缩略图  节约资源
-	c.Set("noThumb", false)
+	c.Set("noThumb", true)
 	fileId, err := service.Upload(c, f)
 	if err != nil {
 		log.Error(err)

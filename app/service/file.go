@@ -125,6 +125,7 @@ func Save(c *gin.Context, f *os.File) (string, error) {
 	if _, err = io.Copy(out, f); err != nil {
 		return "", err
 	}
+
 	db := c.Value("DB").(*gorm.DB)
 	file := model.File{
 		Name:      name,

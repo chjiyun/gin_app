@@ -27,8 +27,9 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 	var respVo []bingVo.WallPaperRespVo
 	var pageRes common.PageRes
 
-	db.Model(&model.Bing{}).Count(&count)
-	db.Where("pass = ?", reqVo.Pass).Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
+	tx := db.Where("pass = ?", reqVo.Pass)
+	tx.Model(&model.Bing{}).Count(&count)
+	tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
 		Order("created_at desc").Find(&bing)
 	fileIds := make([]string, 0, len(bing))
 	for _, item := range bing {

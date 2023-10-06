@@ -5,9 +5,9 @@ import (
 	"gin_app/app/controller/poetryController/poetryVo"
 	"gin_app/app/model"
 	"gin_app/app/util"
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"gorm.io/gorm"
 	"os"
@@ -92,7 +92,7 @@ func PoetryImport(c *gin.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if err = jsoniter.Unmarshal(bytes, &source); err != nil {
+	if err = sonic.Unmarshal(bytes, &source); err != nil {
 		return false, err
 	}
 	for _, item := range source {

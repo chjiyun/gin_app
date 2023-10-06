@@ -3,9 +3,9 @@ package util
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"io"
 	"math/rand"
 	"mime/multipart"
@@ -184,11 +184,11 @@ func ToString(v interface{}) string {
 
 // ToJson 转成json字符串
 func ToJson(m interface{}) string {
-	data, err := json.Marshal(m)
+	str, err := sonic.MarshalString(m)
 	if err != nil {
 		panic(err)
 	}
-	return string(data)
+	return str
 }
 
 // SendFormData 以multipart/form-data格式发送文件,

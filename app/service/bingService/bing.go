@@ -8,9 +8,9 @@ import (
 	"gin_app/app/service"
 	"gin_app/app/util"
 	"gin_app/config"
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -57,7 +57,7 @@ func GetImg(c *gin.Context) {
 
 	// 方法二：解析为json对象
 	bingRes := BingRes{}
-	if err = jsoniter.NewDecoder(res.Body).Decode(&bingRes); err != nil {
+	if err = sonic.ConfigDefault.NewDecoder(res.Body).Decode(&bingRes); err != nil {
 		log.Error(err)
 		return
 	}
@@ -65,7 +65,8 @@ func GetImg(c *gin.Context) {
 	imgInfo := bingRes.Images[0]
 
 	// 非定时任务请求时 检查本地文件是否已下载
-	res2 := db.Where("created_at >= ?", time.Now().Format("2006-01-02")).Limit(1).Find(&bing)
+	today := time.Now().Format("2006-01-02")
+	res2 := db.Where("created_at >= ?", today).Limit(1).Find(&bing)
 	if res2.Error != nil {
 		log.Errorln(res2.Error)
 		return

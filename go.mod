@@ -3,6 +3,7 @@ module gin_app
 go 1.20
 
 require (
+	github.com/bytedance/sonic v1.10.0
 	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f // indirect
 	github.com/elliotchance/pie/v2 v2.5.2
 	github.com/gabriel-vasile/mimetype v1.4.2
@@ -10,9 +11,9 @@ require (
 	github.com/go-playground/validator/v10 v10.15.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1
-	github.com/imdario/mergo v0.3.12
 	github.com/imroc/req/v3 v3.41.4
 	github.com/jinzhu/copier v0.3.2
+	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/nguyenthenguyen/docx v0.0.0-20201105043207-fda3c29a0605
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/yitter/idgenerator-go v1.2.1
@@ -30,7 +31,6 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/bytedance/sonic v1.10.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
@@ -54,7 +54,6 @@ require (
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
-	github.com/matoous/go-nanoid/v2 v2.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

@@ -3,9 +3,9 @@ package util
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bytedance/sonic"
 	"io"
 	"math/rand"
 	"mime/multipart"
@@ -195,11 +195,11 @@ func ToString(v interface{}) string {
 
 // ToJson 转成json字符串
 func ToJson(m interface{}) string {
-	data, err := json.Marshal(m)
+	str, err := sonic.MarshalString(m)
 	if err != nil {
 		panic(err)
 	}
-	return string(data)
+	return str
 }
 
 // SendFormData 以multipart/form-data格式发送文件,
@@ -372,4 +372,14 @@ func RandomInt(min, max int) int {
 	}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return r.Intn(max-min) + min
+}
+
+// GetFileExt 获取文件的后缀 不包含.
+func GetFileExt(path string) string {
+	for i := len(path) - 1; i >= 0 && !os.IsPathSeparator(path[i]); i-- {
+		if path[i] == '.' {
+			return path[i+1:]
+		}
+	}
+	return ""
 }

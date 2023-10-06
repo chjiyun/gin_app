@@ -12,7 +12,7 @@ import (
 )
 
 // GetDictType 获取所有字典类型
-func GetDictType(c *gin.Context, keyword string) (*[]dictVo.DictTypeRespVo, error) {
+func GetDictType(c *gin.Context, keyword string) ([]dictVo.DictTypeRespVo, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var data []model.DictType
@@ -28,10 +28,10 @@ func GetDictType(c *gin.Context, keyword string) (*[]dictVo.DictTypeRespVo, erro
 		return nil, err
 	}
 	_ = copier.Copy(&respVo, &data)
-	return &respVo, nil
+	return respVo, nil
 }
 
-func GetAllDictType(c *gin.Context) (*[]dictVo.DictTypeRespVo, error) {
+func GetAllDictType(c *gin.Context) ([]dictVo.DictTypeRespVo, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var data []model.DictType
@@ -42,7 +42,7 @@ func GetAllDictType(c *gin.Context) (*[]dictVo.DictTypeRespVo, error) {
 		return nil, err
 	}
 	_ = copier.Copy(&respVo, &data)
-	return &respVo, nil
+	return respVo, nil
 }
 
 func CreateDictType(c *gin.Context, reqVo dictVo.DictTypeCreateReqVo) (uint64, error) {
@@ -83,7 +83,7 @@ func UpdateDictType(c *gin.Context, reqVo dictVo.DictTypeUpdateReqVo) (bool, err
 func DeleteDictType(c *gin.Context, id string) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
 
-	err := db.Delete(&model.DictType{}, id).Error
+	err := db.Select("DictValue").Delete(&model.DictType{}, id).Error
 	if err != nil {
 		return false, err
 	}

@@ -1,12 +1,13 @@
 package userIpVo
 
 import (
+	"gin_app/app/common"
 	"gin_app/app/model"
 	"time"
 )
 
 type UserIpRespVo struct {
-	ID        uint64      `gorm:"primaryKey" json:"id"`
+	common.BaseModel
 	UserId    uint64      `gorm:"not null;comment:用户id" json:"userId"`
 	Ip        string      `gorm:"size:45;comment:ip地址" json:"ip"`
 	Country   string      `gorm:"size:30;comment:国家" json:"country"`

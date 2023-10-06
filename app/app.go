@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"gin_app/app/middleware"
 	"gin_app/app/router"
 	"gin_app/app/schedule"
 	"gin_app/app/validation"
@@ -27,6 +28,26 @@ func ReadRouters(g *gin.RouterGroup) {
 		}
 		fn(g)
 	}
+}
+
+func ReadMiddleware() []gin.HandlerFunc {
+	var midWares []gin.HandlerFunc
+	mw := middleware.Middleware{}
+	typ := reflect.TypeOf(mw)
+	val := reflect.ValueOf(mw)
+	numOfMethod := val.NumMethod()
+	for i := 0; i < numOfMethod; i++ {
+		// 断言特定类型的方法
+		fn, ok := val.Method(i).Interface().(func() gin.HandlerFunc)
+		if !ok {
+			continue
+		}
+		// 实例化后的结构体中的方法按自然语言排序
+		fmt.Printf("中间件: %s 启用成功\n", typ.Method(i).Name)
+		midWares = append(midWares, fn())
+	}
+	midWares = append(midWares, gin.Recovery())
+	return midWares
 }
 
 // InitSchedule 初始化定时任务配置，自动添加文件下所有任务到队列

@@ -14,7 +14,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
@@ -124,9 +123,13 @@ func Init() {
 		}
 		// fmt.Println(extFile, extCfg)
 		// 合并配置
-		if err = mergo.Merge(&Cfg, extCfg); err != nil {
-			panic(err)
+		err1 = copier.CopyWithOption(&Cfg, &extCfg, copier.Option{DeepCopy: true, IgnoreEmpty: true})
+		if err1 != nil {
+			panic(err1)
 		}
+	}
+	if err = os.MkdirAll(filepath.Join(Cfg.Basedir, "files/temp"), 0666); err != nil {
+		panic(err)
 	}
 
 	// fmt.Println("merge Config:", Cfg)

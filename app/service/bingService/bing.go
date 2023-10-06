@@ -1,23 +1,25 @@
-package service
+package bingService
 
 import (
 	"bytes"
+	"gin_app/app/common"
+	"gin_app/app/controller/bingController/bingVo"
 	"gin_app/app/model"
-	"gin_app/app/result"
+	"gin_app/app/service"
 	"gin_app/app/util"
 	"gin_app/config"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/bytedance/sonic"
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"github.com/yitter/idgenerator-go/idgen"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // BingRes 接收接口响应
@@ -32,11 +34,6 @@ type ImgInfo struct {
 	Copyright string `json:"copyright"`
 	Hsh       string
 	Enddate   string
-}
-type uploadResult struct {
-	Code int
-	Msg  string
-	Data model.File
 }
 
 // GetImg 获取远程图片并返回
@@ -60,7 +57,7 @@ func GetImg(c *gin.Context) {
 
 	// 方法二：解析为json对象
 	bingRes := BingRes{}
-	if err = jsoniter.NewDecoder(res.Body).Decode(&bingRes); err != nil {
+	if err = sonic.ConfigDefault.NewDecoder(res.Body).Decode(&bingRes); err != nil {
 		log.Error(err)
 		return
 	}
@@ -68,7 +65,8 @@ func GetImg(c *gin.Context) {
 	imgInfo := bingRes.Images[0]
 
 	// 非定时任务请求时 检查本地文件是否已下载
-	res2 := db.Where("created_at >= ?", time.Now().Format("2006-01-02")).Limit(1).Find(&bing)
+	today := time.Now().Format(time.DateOnly)
+	res2 := db.Where("created_at >= ? and is_bing=true", today).Limit(1).Find(&bing)
 	if res2.Error != nil {
 		log.Errorln(res2.Error)
 		return
@@ -114,75 +112,49 @@ func GetImg(c *gin.Context) {
 	}
 
 	fileName := time.Now().Format("2006-01-02") + "." + imgInfo.Hsh[:16] + ".jpg"
-	// sourcePath := filepath.Join("files", fileName)
-
-	fd := map[string]interface{}{
-		"file":     &imgByte,
-		"filename": fileName,
+	sourcePath := filepath.Join(config.Cfg.Basedir, "files/temp", fileName)
+	if util.CheckFileIsExist(sourcePath) {
+		_ = os.Remove(sourcePath)
 	}
-	uploadUrl := util.WriteString("http://127.0.0.1:", config.Cfg.Server.Port, "/api/file/upload")
-	fileRes, err := util.SendFormData(uploadUrl, "file", fd)
+	out, err := os.Create(sourcePath)
 	if err != nil {
-		log.Errorf("error in SendFormData: %v", err)
 		return
 	}
-	defer fileRes.Body.Close()
-	upResult := uploadResult{}
-	if err = jsoniter.NewDecoder(fileRes.Body).Decode(&upResult); err != nil {
-		log.Errorln(err)
+	if _, err = imgReader.Seek(0, 0); err != nil {
 		return
 	}
-	if upResult.Code != 0 {
-		log.Errorf("file upload failed: %v", upResult)
+	if _, err = io.Copy(out, imgReader); err != nil {
+		return
+	}
+	fileId, err := service.Save(c, out)
+	if err != nil {
+		log.Error(err)
 		return
 	}
 	releaseAt, _ := time.Parse("20060102", imgInfo.Enddate)
 	id := idgen.NextId()
 	bing = model.Bing{
-		FileId:    upResult.Data.ID,
+		FileId:    fileId,
 		Url:       imgURL,
 		Hsh:       imgInfo.Hsh,
 		Desc:      imgInfo.Copyright,
 		ReleaseAt: releaseAt,
+		IsBing:    true,
 	}
 	bing.ID = id
 	db.Create(&bing)
-
-	// var f *os.File
-	// defer f.Close()
-	// if util.CheckFileIsExist(sourcePath) { //如果文件存在
-	// 	// f, err1 = os.OpenFile(sourcePath, os.O_APPEND, 0666) //打开文件
-	// 	fmt.Println("文件已存在")
-	// 	return
-	// } else {
-	// 	f, err1 = os.Create(sourcePath) //创建文件
-	// }
-	// if err1 != nil {
-	// 	panic(err1)
-	// }
-	// writer := bufio.NewWriter(f) //创建新的 Writer 对象
-
-	// if err1 != nil {
-	// 	fmt.Println(err1)
-	// }
-	// n, _ := writer.Write(imgByte)
-	// fmt.Printf("写入 %d 个字节\n", n)
-	// writer.Flush()
-
+	out.Close()
+	_ = os.Remove(sourcePath)
 }
 
-// GetAllBing 搜索符合条件的记录
-func GetAllBing(c *gin.Context) {
-	r := result.New()
+// GetAllBing 获取bing数据
+func GetAllBing(c *gin.Context, reqVo bingVo.BingPageReqVo) (common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
-
-	page, _ := strconv.Atoi(c.Query("page"))
-	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
-	startTime := c.Query("start_time")
-	endTime := c.Query("end_time")
 
 	var bing []model.Bing
 	var count int64
+	var respVo []bingVo.BingRespVo
+	var pageRes common.PageRes
 
 	db.Model(&model.Bing{}).Count(&count)
 
@@ -190,22 +162,21 @@ func GetAllBing(c *gin.Context) {
 		return db.Select("id, uid, ext, name, size")
 	}).Omit("url", "hsh", "updated_at")
 
-	if startTime != "" {
-		tx = tx.Where("created_at >= ?", startTime)
+	if !reqVo.StartTime.IsZero() {
+		tx = tx.Where("created_at >= ?", reqVo.StartTime)
 	}
-	if endTime != "" {
-		tx = tx.Where("created_at < ?", endTime)
+	if !reqVo.EndTime.IsZero() {
+		tx = tx.Where("created_at < ?", reqVo.EndTime)
 	}
-	if page > 0 && pageSize > 0 {
-		tx = tx.Limit(pageSize).Offset((page - 1) * pageSize)
+	if reqVo.Page > 0 && reqVo.PageSize > 0 {
+		tx = tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize)
 	}
 	tx.Order("created_at desc").Find(&bing)
+	_ = copier.Copy(&respVo, &bing)
 
-	r.SetData(gin.H{
-		"count": count,
-		"rows":  bing,
-	})
-	c.JSON(200, r)
+	pageRes.Count = count
+	pageRes.Rows = respVo
+	return pageRes, nil
 }
 
 // GetBingZip 压缩下载bing图片

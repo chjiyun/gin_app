@@ -5,9 +5,9 @@ import (
 	"gin_app/app/controller/poetryController/poetryVo"
 	"gin_app/app/model"
 	"gin_app/app/util"
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/yitter/idgenerator-go/idgen"
 	"gorm.io/gorm"
 	"os"
@@ -16,7 +16,7 @@ import (
 )
 
 // SearchPoetry 模糊搜索诗词
-func SearchPoetry(c *gin.Context, reqVo poetryVo.PoetrySearchReqVo) (*[]poetryVo.PoetryRespVo, error) {
+func SearchPoetry(c *gin.Context, reqVo poetryVo.PoetrySearchReqVo) ([]poetryVo.PoetryRespVo, error) {
 	reqVo.Keyword = strings.TrimSpace(reqVo.Keyword)
 	if reqVo.Keyword == "" {
 		return nil, errors.New("invalid keyword")
@@ -59,20 +59,20 @@ func SearchPoetry(c *gin.Context, reqVo poetryVo.PoetrySearchReqVo) (*[]poetryVo
 	tx.Limit(10).Find(&data)
 
 	_ = copier.Copy(&respVos, &data)
-	return &respVos, nil
+	return respVos, nil
 }
 
-func GetPoetry(c *gin.Context, id string) *poetryVo.PoetryRespVo {
+func GetPoetry(c *gin.Context, id string) poetryVo.PoetryRespVo {
 	db := c.Value("DB").(*gorm.DB)
 	var poetry model.Poetry
 	var respVo poetryVo.PoetryRespVo
 
 	err := db.Preload("PoetryContent").Find(&poetry, id).Error
 	if err != nil {
-		return nil
+		return respVo
 	}
 	_ = copier.Copy(&respVo, &poetry)
-	return &respVo
+	return respVo
 }
 
 func CreatePoetry(c *gin.Context) (bool, error) {
@@ -92,7 +92,7 @@ func PoetryImport(c *gin.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if err = jsoniter.Unmarshal(bytes, &source); err != nil {
+	if err = sonic.Unmarshal(bytes, &source); err != nil {
 		return false, err
 	}
 	for _, item := range source {

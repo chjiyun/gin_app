@@ -9,6 +9,7 @@ const (
 	IllegalVisit
 	UnLogin
 	InValidFile
+	UnsupportedFormat
 	FileNotFound
 	UnknownError
 	ErrUsernameOrPwd
@@ -29,10 +30,12 @@ func (t ErrType) String() string {
 	case 5:
 		return "无效的文件"
 	case 6:
-		return "文件不存在"
+		return "不支持的格式"
 	case 7:
-		return "未知错误"
+		return "文件不存在"
 	case 8:
+		return "未知错误"
+	case 9:
 		return "用户名或密码错误"
 	default:
 		return "未知错误"

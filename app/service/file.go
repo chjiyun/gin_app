@@ -15,6 +15,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -37,13 +38,8 @@ var EncodeOptions = map[string]map[int]int{
 }
 
 // Upload 接收上传的文件
-func Upload(c *gin.Context) (*model.File, error) {
+func Upload(c *gin.Context, f *multipart.FileHeader) (string, error) {
 	db := c.Value("DB").(*gorm.DB)
-
-	f, err := c.FormFile("file")
-	if err != nil {
-		return nil, myError.NewET(common.FileNotFound)
-	}
 
 	ext := filepath.Ext(f.Filename)
 	// mimetype := f.Header["Content-Type"][0]
@@ -51,7 +47,7 @@ func Upload(c *gin.Context) (*model.File, error) {
 	defer mFile.Close()
 	mime, err := mimetype.DetectReader(mFile)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	mType := mime.String()
 	var filetype string
@@ -69,13 +65,13 @@ func Upload(c *gin.Context) (*model.File, error) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Upload the file to specific dst.
 	err = c.SaveUploadedFile(f, sourcepath)
 	if err != nil {
-		return nil, myError.New("文件保存失败")
+		return "", myError.New("文件保存失败")
 	}
 
 	file := model.File{
@@ -89,26 +85,87 @@ func Upload(c *gin.Context) (*model.File, error) {
 		Size:      uint(f.Size),
 	}
 	file.ID = id + ext
-	res := db.Create(&file)
-	if res.Error != nil {
-		return nil, myError.NewET(common.UnknownError)
+	if err := db.Create(&file).Error; err != nil {
+		return "", myError.NewET(common.UnknownError)
 	}
 
 	// 关键：重置offset
-	mFile.Seek(0, 0)
-
+	_,_ = mFile.Seek(0, 0)
 	imgSuffix := regexp.MustCompile(`jpg|jpeg|png$`)
 	if imgSuffix.MatchString(ext) {
-		width, height, err := getImageXY(mFile)
+		width, height, err := GetImageXY(mFile)
 		if err != nil {
-			return nil, myError.New("文件解码失败")
+			return "", myError.New("文件解码失败")
 		}
 		err = toWebp(c, file, width, height)
 		if err != nil {
-			return nil, myError.New("图片转webp失败")
+			return "", myError.New("图片转webp失败")
 		}
 	}
-	return &file, nil
+	return file.ID, nil
+}
+
+// Save 临时文件保存到files目录
+func Save(c *gin.Context, f *os.File) (string, error) {
+	fileInfo, err := f.Stat()
+	if err != nil {
+		return "", err
+	}
+	size := fileInfo.Size()
+	name := fileInfo.Name()
+	ext := filepath.Ext(name)
+	// 必须重置偏移量
+	if _, err = f.Seek(0, 0); err != nil {
+		return "", err
+	}
+	mime, err := mimetype.DetectReader(f)
+	if err != nil {
+		return "", err
+	}
+	mType := mime.String()
+	var filetype string
+	if i := strings.Index(mType, "/"); i > 0 {
+		filetype = mType[:i]
+	}
+	uid := idgen.NextId()
+	id := gonanoid.Must()
+	localName := util.ToString(uid) + ext
+	year, month, _ := time.Now().Date()
+	relativePath := filepath.Join("files", util.ToString(year), util.ToString(int(month)), localName)
+	sourcePath := filepath.Join(config.Cfg.Basedir, relativePath)
+	// 文件所在文件夹目录
+	dirname := filepath.Dir(sourcePath)
+	if err = os.MkdirAll(dirname, 0666); err != nil {
+		return "", err
+	}
+	// 复制到另一个目录
+	out, err := os.Create(sourcePath)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+	if _, err = f.Seek(0, 0); err != nil {
+		return "", err
+	}
+	if _, err = io.Copy(out, f); err != nil {
+		return "", err
+	}
+	db := c.Value("DB").(*gorm.DB)
+	file := model.File{
+		Name:      name,
+		LocalName: localName,
+		Uid:       uid,
+		Ext:       ext[1:],
+		Type:      filetype,
+		MimeType:  mType,
+		Path:      relativePath,
+		Size:      uint(size),
+	}
+	file.ID = id + ext
+	if err = db.Create(&file).Error; err != nil {
+		return "", myError.NewET(common.UnknownError)
+	}
+	return file.ID, nil
 }
 
 // Download 下载文件
@@ -150,6 +207,24 @@ func Download(c *gin.Context) {
 		return
 	}
 	c.File(sourcePath)
+}
+
+func DownloadThumb(c *gin.Context) error {
+	id := c.Param("id")
+	ext := util.GetFileExt(id)
+	db := c.Value("DB").(*gorm.DB)
+	var thumb model.Thumb
+
+	res := db.Where("id = ?", id).First(&thumb)
+	if res.Error != nil || thumb.Ext != ext {
+		return myError.NewET(common.FileNotFound)
+	}
+	sourcePath := filepath.Join(config.Cfg.Basedir, thumb.Path)
+	if !util.CheckFileIsExist(sourcePath) {
+		return myError.NewET(common.FileNotFound)
+	}
+	c.File(sourcePath)
+	return nil
 }
 
 // ThumbInfo 获取image thumb
@@ -199,8 +274,8 @@ func ExtractWord(c *gin.Context) {
 	c.JSON(200, text)
 }
 
-// getImageXY 获取图片宽高 px
-func getImageXY(file io.Reader) (int, int, error) {
+// GetImageXY 获取图片宽高 px
+func GetImageXY(file io.Reader) (int, int, error) {
 	img, _, err := image.Decode(file)
 	if err != nil {
 		return 0, 0, err
@@ -345,7 +420,7 @@ func ConvertToWebp(c *gin.Context) {
 			})
 			continue
 		}
-		width, height, err := getImageXY(f)
+		width, height, err := GetImageXY(f)
 		if err != nil {
 			log.Errorln("文件解码失败", err)
 			errs = append(errs, gin.H{

@@ -11,6 +11,7 @@ func (r Router) File(g *gin.RouterGroup) {
 	rg := g.Group("/file")
 	{
 		rg.GET("/:id", service.Download)
+		rg.GET("/thumb/:id", fileController.DownloadThumb)
 		rg.POST("/upload", fileController.Upload)
 		rg.GET("/thumbInfo", service.ThumbInfo)
 		rg.GET("/downloadFromUrl", service.DownloadFromUrl)

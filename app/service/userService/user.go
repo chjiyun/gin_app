@@ -19,7 +19,7 @@ import (
 )
 
 // GetCurrentUser 获取登录用户信息
-func GetCurrentUser(c *gin.Context) *userVo.UserRespVo {
+func GetCurrentUser(c *gin.Context) userVo.UserRespVo {
 	db := c.Value("DB").(*gorm.DB)
 	userId := authUtil.GetSessionUserId(c)
 
@@ -33,17 +33,18 @@ func GetCurrentUser(c *gin.Context) *userVo.UserRespVo {
 	token := authUtil.GetToken(c)
 	err := db.Where(&model.UserIp{UserId: userId, Token: token}).First(&userIp).Error
 	if err != nil {
-		return &userRespVo
+		return userRespVo
 	}
 	userRespVo.UserIp = &userIp
-	return &userRespVo
+	return userRespVo
 }
 
-func GetUserPage(c *gin.Context, reqVo userVo.UserPageReqVo) (*common.PageRes, error) {
+func GetUserPage(c *gin.Context, reqVo userVo.UserPageReqVo) (common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var users []model.User
 	var count int64
+	var pageRes common.PageRes
 	// 初始条件可以放结构体里面
 	tx := db.Model(model.User{})
 
@@ -54,15 +55,16 @@ func GetUserPage(c *gin.Context, reqVo userVo.UserPageReqVo) (*common.PageRes, e
 
 	res := tx.Count(&count)
 	if res.Error != nil {
-		return nil, res.Error
+		return pageRes, res.Error
 	}
 
 	res = tx.Offset((reqVo.Page - 1) * reqVo.PageSize).Limit(reqVo.PageSize).Order("created_at").Find(&users)
 	if res.Error != nil {
-		return nil, res.Error
+		return pageRes, res.Error
 	}
-
-	return &common.PageRes{Count: count, Rows: users}, nil
+	pageRes.Count = count
+	pageRes.Rows = users
+	return pageRes, nil
 }
 
 // ResetPassword 重置密码  管理员才有权限
@@ -113,11 +115,12 @@ func saveLoginIpInfo(c *gin.Context, token string, userId uint64) {
 	db.Create(&userIp)
 }
 
-func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (*common.PageRes, error) {
+func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var userIps []model.UserIp
 	var count int64
+	var pageRes common.PageRes
 
 	tx := db.Model(&model.UserIp{})
 
@@ -139,5 +142,7 @@ func GetUserIpPage(c *gin.Context, reqVo userIpVo.UserIpPageReqVo) (*common.Page
 		Order("created_at desc").
 		Find(&userIps)
 
-	return &common.PageRes{Count: count, Rows: userIps}, nil
+	pageRes.Count = count
+	pageRes.Rows = userIps
+	return pageRes, nil
 }

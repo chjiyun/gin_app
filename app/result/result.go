@@ -12,22 +12,22 @@ type Result struct {
 }
 
 // New return a new Result instance
-func New() *Result {
-	r := &Result{}
+func New() Result {
+	r := Result{}
 	r.Code = 0
 	r.Msg = common.Success.String()
 	return r
 }
 
 // Success 成功时的返回体，返回的 Result指针是 r的副本
-func (r *Result) Success(data interface{}) *Result {
+func (r Result) Success(data interface{}) Result {
 	r.Code = 0
 	r.Data = data
 	return r
 }
 
 // Fail 失败时的输出
-func (r *Result) Fail(msg string) *Result {
+func (r Result) Fail(msg string) Result {
 	if msg == "" {
 		msg = common.Fail.String()
 	}
@@ -37,24 +37,24 @@ func (r *Result) Fail(msg string) *Result {
 }
 
 // FailType 指定错误类型（枚举）
-func (r *Result) FailType(errType common.ErrType) *Result {
+func (r Result) FailType(errType common.ErrType) Result {
 	r.Code = 1
 	r.Msg = errType.String()
 	return r
 }
 
 // FailErr 直接输出error
-func (r *Result) FailErr(err error) *Result {
+func (r Result) FailErr(err error) Result {
 	r.Code = 1
 	r.Msg = err.Error()
 	return r
 }
 
-func (r *Result) SetData(data interface{}) {
+func (r Result) SetData(data interface{}) {
 	r.Data = data
 }
 
-func (r *Result) SetCode(code int) *Result {
+func (r Result) SetCode(code int) Result {
 	r.Code = code
 	return r
 }

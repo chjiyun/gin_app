@@ -1,7 +1,8 @@
 package router
 
 import (
-	"gin_app/app/service"
+	"gin_app/app/controller/bingController"
+	"gin_app/app/service/bingService"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,8 +10,10 @@ import (
 func (r Router) Bing(g *gin.RouterGroup) {
 	rg := g.Group("/bing")
 	{
-		rg.GET("/getImg", service.GetImg)
-		rg.GET("/getAllBing", service.GetAllBing)
-		rg.GET("/zip", service.GetBingZip)
+		rg.GET("/getImg", bingService.GetImg)
+		rg.GET("/getAllBing", bingController.GetAllBing)
+		rg.GET("/wallpaper", bingController.GetWallPaper)
+		rg.GET("/zip", bingService.GetBingZip)
+		rg.POST("/wallpaper", bingController.CreateWallPaper)
 	}
 }

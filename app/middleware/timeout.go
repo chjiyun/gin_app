@@ -10,11 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// timeout middleware wraps the request context with a timeout
-func SetTimeout() func(c *gin.Context) {
-	timeout := time.Duration(config.Cfg.Server.Timeout) * time.Millisecond
+// SetTimeout middleware wraps the request context with a timeout
+func (m Middleware) SetTimeout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		timeout := time.Duration(config.Cfg.Server.Timeout) * time.Millisecond
 		// wrap the request context with a timeout
 		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 

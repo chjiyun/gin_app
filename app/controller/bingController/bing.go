@@ -5,6 +5,7 @@ import (
 	"gin_app/app/result"
 	"gin_app/app/service/bingService"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"net/http"
 )
 
@@ -40,4 +41,19 @@ func GetAllBing(c *gin.Context) {
 
 func GetImgFromBing(c *gin.Context) {
 
+}
+
+func CreateWallPaper(c *gin.Context) {
+	r := result.New()
+	var reqVo bingVo.WallPaperCreateReqVo
+	if err := c.ShouldBindWith(&reqVo, binding.FormMultipart); err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	res, err := bingService.AddWallPaper(c, reqVo)
+	if err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	c.JSON(http.StatusOK, r.Success(res))
 }

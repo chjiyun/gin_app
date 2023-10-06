@@ -65,8 +65,8 @@ func GetImg(c *gin.Context) {
 	imgInfo := bingRes.Images[0]
 
 	// 非定时任务请求时 检查本地文件是否已下载
-	today := time.Now().Format("2006-01-02")
-	res2 := db.Where("created_at >= ?", today).Limit(1).Find(&bing)
+	today := time.Now().Format(time.DateOnly)
+	res2 := db.Where("created_at >= ? and is_bing=true", today).Limit(1).Find(&bing)
 	if res2.Error != nil {
 		log.Errorln(res2.Error)
 		return
@@ -139,6 +139,7 @@ func GetImg(c *gin.Context) {
 		Hsh:       imgInfo.Hsh,
 		Desc:      imgInfo.Copyright,
 		ReleaseAt: releaseAt,
+		IsBing:    true,
 	}
 	bing.ID = id
 	db.Create(&bing)

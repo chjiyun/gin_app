@@ -12,5 +12,7 @@ type Bing struct {
 	Hsh       string    `gorm:"size:32;comment:图片唯一hash_id" json:"hsh"`
 	Desc      string    `gorm:"size:500;comment:备注描述" json:"desc"`
 	ReleaseAt time.Time `gorm:"type:date;comment:发布日期" json:"releaseAt"`
+	IsBing    bool      `gorm:"not null;comment:是否来自bing壁纸" json:"isBing"`
+	Pass      bool      `gorm:"not null;comment:审核通过状态" json:"pass"`
 	File      File      `json:"file"`
 }

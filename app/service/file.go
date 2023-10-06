@@ -8,7 +8,11 @@ import (
 	"gin_app/app/util"
 	"gin_app/config"
 	gonanoid "github.com/matoous/go-nanoid/v2"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,13 +27,8 @@ import (
 )
 
 // Upload 接收上传的文件
-func Upload(c *gin.Context) (*model.File, error) {
+func Upload(c *gin.Context, f *multipart.FileHeader) (string, error) {
 	db := c.Value("DB").(*gorm.DB)
-
-	f, err := c.FormFile("file")
-	if err != nil {
-		return nil, myError.NewET(common.FileNotFound)
-	}
 
 	ext := filepath.Ext(f.Filename)
 	// mimetype := f.Header["Content-Type"][0]
@@ -37,7 +36,7 @@ func Upload(c *gin.Context) (*model.File, error) {
 	defer mFile.Close()
 	mime, err := mimetype.DetectReader(mFile)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	mType := mime.String()
 	var filetype string
@@ -55,13 +54,13 @@ func Upload(c *gin.Context) (*model.File, error) {
 	dirname := filepath.Dir(sourcepath)
 	err = os.MkdirAll(dirname, 0666)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Upload the file to specific dst.
 	err = c.SaveUploadedFile(f, sourcepath)
 	if err != nil {
-		return nil, myError.New("文件保存失败")
+		return "", myError.New("文件保存失败")
 	}
 
 	file := model.File{
@@ -75,11 +74,10 @@ func Upload(c *gin.Context) (*model.File, error) {
 		Size:      uint(f.Size),
 	}
 	file.ID = id + ext
-	res := db.Create(&file)
-	if res.Error != nil {
-		return nil, myError.NewET(common.UnknownError)
+	if err := db.Create(&file).Error; err != nil {
+		return "", myError.NewET(common.UnknownError)
 	}
-	return &file, nil
+	return file.ID, nil
 }
 
 // Save 临时文件保存到files目录
@@ -232,6 +230,18 @@ func ExtractWord(c *gin.Context) {
 	// fmt.Println(text)
 	r.Close()
 	c.JSON(200, text)
+}
+
+// GetImageXY 获取图片宽高 px
+func GetImageXY(file io.Reader) (int, int, error) {
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return 0, 0, err
+	}
+	b := img.Bounds()
+	width := b.Max.X
+	height := b.Max.Y
+	return width, height, nil
 }
 
 // convertToWebp 图片转换成webp格式

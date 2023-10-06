@@ -7,7 +7,6 @@ import (
 	"gin_app/app/model"
 	"gin_app/app/service"
 	"gin_app/app/util"
-	"gin_app/config"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/yitter/idgenerator-go/idgen"
@@ -86,12 +85,6 @@ func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, erro
 		return false, myError.New("图片尺寸过小，请上传高分辨率的图片")
 	}
 
-	// 保存临时文件
-	sourcePath := filepath.Join(config.Cfg.Basedir, "files/temp", f.Filename)
-	if err := c.SaveUploadedFile(f, sourcePath); err != nil {
-		log.Error(err)
-		return false, myError.NewET(common.UnknownError)
-	}
 	// 保存文件 禁止转缩略图  节约资源
 	c.Set("noThumb", true)
 	fileId, err := service.Upload(c, f)

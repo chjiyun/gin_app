@@ -109,6 +109,7 @@ func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, erro
 
 func AuditWallPaper(c *gin.Context, reqVo bingVo.WallPaperAuditReqVo) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
+	log := c.Value("Logger").(*zap.SugaredLogger)
 
 	var ins model.Bing
 	err := db.Find(&ins, reqVo.ID).Error
@@ -133,6 +134,7 @@ func AuditWallPaper(c *gin.Context, reqVo bingVo.WallPaperAuditReqVo) (bool, err
 			// 审核通过 生成缩略图
 			err = service.ToWebp(c, ins.FileId)
 			if err != nil {
+				log.Error(err)
 				return myError.New("生成缩略图失败")
 			}
 		}

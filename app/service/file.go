@@ -158,9 +158,12 @@ func Download(c *gin.Context) {
 		ext = ext[1:]
 	}
 
-	res := db.Where("id = ?", id).First(&file)
-	if res.Error != nil || file.Ext != ext {
-		c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
+	err := db.Where("id = ? and ext = ?", id, ext).Take(&file).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, r.FailType(common.FileNotFound))
+			return
+		}
 		return
 	}
 	sourcePath := file.Path
@@ -171,8 +174,8 @@ func Download(c *gin.Context) {
 		if format != "" {
 			tx = tx.Where("ext = ?", format)
 		}
-		tx.Select("id", "path").First(&thumb)
-		if tx.Error != nil {
+		err = tx.Select("id", "path").First(&thumb).Error
+		if err != nil {
 			c.JSON(http.StatusNotFound, r.Fail("thumb not found"))
 			return
 		}
@@ -188,13 +191,20 @@ func Download(c *gin.Context) {
 
 func DownloadThumb(c *gin.Context) error {
 	id := c.Param("id")
-	ext := util.GetFileExt(id)
+	ext := filepath.Ext(id)
+	thumbId := strings.TrimSuffix(id, ext)
+	if ext != "" {
+		ext = ext[1:]
+	}
 	db := c.Value("DB").(*gorm.DB)
 	var thumb model.Thumb
 
-	res := db.Where("id = ?", id).First(&thumb)
-	if res.Error != nil || thumb.Ext != ext {
-		return myError.NewET(common.FileNotFound)
+	err := db.Where("id = ? and ext = ?", thumbId, ext).Take(&thumb).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return myError.NewET(common.FileNotFound)
+		}
+		return err
 	}
 	sourcePath := filepath.Join(config.Cfg.Basedir, thumb.Path)
 	if !util.CheckFileIsExist(sourcePath) {
@@ -249,7 +259,7 @@ func GetImageXY(file io.Reader) (int, int, error) {
 func ToWebp(c *gin.Context, fileId string) error {
 	db := c.Value("DB").(*gorm.DB)
 	var file model.File
-	err := db.Take(&file, fileId).Error
+	err := db.Take(&file, "id = ?", fileId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return myError.New("文件不存在")
@@ -274,7 +284,7 @@ func ToWebp(c *gin.Context, fileId string) error {
 	return nil
 }
 
-// convertToWebp 图片转换成webp格式
+// ConvertToWebp 图片转换成webp格式
 func ConvertToWebp(c *gin.Context) {
 	db := c.Value("DB").(*gorm.DB)
 	var files []model.File

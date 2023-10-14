@@ -324,11 +324,14 @@ func ToWebp(c *gin.Context, fileId string) error {
 		return err
 	}
 	defer f.Close()
-	_, _, err = GetImageXY(f)
+	width, height, err := GetImageXY(f)
 	if err != nil {
 		return err
 	}
-
+	err = toWebp(c, file, width, height)
+	if err != nil {
+		return myError.New("图片转webp失败")
+	}
 	return nil
 }
 

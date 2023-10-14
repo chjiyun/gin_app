@@ -9,5 +9,5 @@ import (
 type WallPaperCreateReqVo struct {
 	File      *multipart.FileHeader `form:"file" json:"file"`
 	Desc      string                `form:"desc" json:"desc"`
-	ReleaseAt time.Time             `form:"releaseAt" json:"releaseAt"`
+	ReleaseAt *time.Time            `form:"releaseAt" json:"releaseAt"`
 }

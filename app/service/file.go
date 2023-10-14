@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"gin_app/app/common"
 	"gin_app/app/common/myError"
 	"gin_app/app/model"
@@ -243,6 +244,34 @@ func GetImageXY(file io.Reader) (int, int, error) {
 	width := b.Max.X
 	height := b.Max.Y
 	return width, height, nil
+}
+
+func ToWebp(c *gin.Context, fileId string) error {
+	db := c.Value("DB").(*gorm.DB)
+	var file model.File
+	err := db.Take(&file, fileId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return myError.New("文件不存在")
+		}
+		return err
+	}
+	// 限制图片格式
+	if file.Ext != "image" {
+		return myError.New("文件格式错误")
+	}
+	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)
+	f, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, _, err = GetImageXY(f)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // convertToWebp 图片转换成webp格式

@@ -27,7 +27,7 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 	var respVo []bingVo.WallPaperRespVo
 	var pageRes common.PageRes
 
-	tx := db.Where("pass = ?", reqVo.Pass)
+	tx := db.Where("status = ?", reqVo.Status)
 	tx.Model(&model.Bing{}).Count(&count)
 	tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
 		Order("created_at desc").Find(&bing)
@@ -35,7 +35,9 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 	for _, item := range bing {
 		fileIds = append(fileIds, item.FileId)
 	}
-	db.Where("file_id in ? and ext = ?", fileIds, "webp").Find(&thumbs)
+	if len(fileIds) > 0 {
+		db.Where("file_id in ? and ext = ?", fileIds, "webp").Find(&thumbs)
+	}
 
 	_ = copier.Copy(&respVo, &bing)
 	// type 取file 中的ext
@@ -94,15 +96,49 @@ func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, erro
 		return false, myError.NewET(common.UnknownError)
 	}
 	db := c.Value("DB").(*gorm.DB)
-	bing := model.Bing{
-		FileId:    fileId,
-		Desc:      reqVo.Desc,
-		ReleaseAt: reqVo.ReleaseAt,
-		Pass:      false,
-	}
-	id := idgen.NextId()
-	bing.ID = id
+	var bing model.Bing
+	_ = copier.Copy(&bing, &reqVo)
+	bing.FileId = fileId
+	bing.Status = "0"
+	bing.ID = idgen.NextId()
 	if err := db.Create(&bing).Error; err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func AuditWallPaper(c *gin.Context, reqVo bingVo.WallPaperAuditReqVo) (bool, error) {
+	db := c.Value("DB").(*gorm.DB)
+
+	var ins model.Bing
+	err := db.Find(&ins, reqVo.ID).Error
+	if err != nil {
+		return false, err
+	}
+	if ins.Status == "1" {
+		return false, myError.New("已经审核过了")
+	}
+	if reqVo.Status == ins.Status {
+		return false, myError.New("不能重复审核")
+	}
+	var bing model.Bing
+	_ = copier.Copy(&bing, &reqVo)
+	// 使用事务
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err = db.Updates(&bing).Error; err != nil {
+			return err
+		}
+		// 通过
+		if reqVo.Status == "1" {
+			// 审核通过 生成缩略图
+			err = service.ToWebp(c, ins.FileId)
+			if err != nil {
+				return myError.New("生成缩略图失败")
+			}
+		}
+		return nil
+	})
+	if err != nil {
 		return false, err
 	}
 	return true, nil

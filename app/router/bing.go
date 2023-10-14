@@ -15,5 +15,6 @@ func (r Router) Bing(g *gin.RouterGroup) {
 		rg.GET("/wallpaper", bingController.GetWallPaper)
 		rg.GET("/zip", bingService.GetBingZip)
 		rg.POST("/wallpaper", bingController.CreateWallPaper)
+		rg.POST("/wallpaper/audit", bingController.AuditWallPaper)
 	}
 }

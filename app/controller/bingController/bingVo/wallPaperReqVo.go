@@ -6,6 +6,6 @@ import (
 
 type WallPaperReqVo struct {
 	common.PageReq
-	Pass    bool   `form:"pass" json:"pass"`
+	Status  string `form:"status" json:"status"`
 	Keyword string `form:"keyword" json:"keyword"`
 }

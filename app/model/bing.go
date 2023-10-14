@@ -13,6 +13,6 @@ type Bing struct {
 	Desc      string    `gorm:"size:500;comment:备注描述" json:"desc"`
 	ReleaseAt time.Time `gorm:"type:date;comment:发布日期" json:"releaseAt"`
 	IsBing    bool      `gorm:"not null;comment:是否来自bing壁纸" json:"isBing"`
-	Pass      bool      `gorm:"not null;comment:审核通过状态" json:"pass"`
+	Status    string    `gorm:"not null;comment:审核通过状态" json:"status"`
 	File      File      `json:"file"`
 }

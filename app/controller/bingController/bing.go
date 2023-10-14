@@ -57,3 +57,18 @@ func CreateWallPaper(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, r.Success(res))
 }
+
+func AuditWallPaper(c *gin.Context) {
+	r := result.New()
+	var reqVo bingVo.WallPaperAuditReqVo
+	if err := c.ShouldBindJSON(&reqVo); err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	res, err := bingService.AuditWallPaper(c, reqVo)
+	if err != nil {
+		c.JSON(http.StatusOK, r.FailErr(err))
+		return
+	}
+	c.JSON(http.StatusOK, r.Success(res))
+}

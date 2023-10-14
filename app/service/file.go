@@ -267,7 +267,7 @@ func ToWebp(c *gin.Context, fileId string) error {
 		return err
 	}
 	// 限制图片格式
-	if file.Ext != "image" {
+	if file.Type != "image" {
 		return myError.New("文件格式错误")
 	}
 	sourcePath := filepath.Join(config.Cfg.Basedir, file.Path)

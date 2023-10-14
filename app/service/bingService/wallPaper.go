@@ -126,7 +126,7 @@ func AuditWallPaper(c *gin.Context, reqVo bingVo.WallPaperAuditReqVo) (bool, err
 	_ = copier.Copy(&bing, &reqVo)
 	// 使用事务
 	err = db.Transaction(func(tx *gorm.DB) error {
-		if err = db.Updates(&bing).Error; err != nil {
+		if err = tx.Updates(&bing).Error; err != nil {
 			return err
 		}
 		// 通过

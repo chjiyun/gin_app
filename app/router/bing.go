@@ -18,6 +18,5 @@ func (r Router) Bing(g *gin.RouterGroup) {
 		rg.PUT("/wallpaper", bingController.UpdateWallPaper)
 		rg.DELETE("/wallpaper/:id", bingController.DeleteWallPaper)
 		rg.POST("/wallpaper/validate", bingController.ValidateWallPaper)
-		rg.POST("/wallpaper/audit", bingController.AuditWallPaper)
 	}
 }

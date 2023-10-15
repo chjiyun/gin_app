@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/yitter/idgenerator-go/idgen"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"mime/multipart"
 	"os"
@@ -224,45 +223,6 @@ func DeleteWallPaper(c *gin.Context, id string) (bool, error) {
 		return false, myError.New("已审核过的图片禁止删除")
 	}
 	if err := db.Delete(&ins).Error; err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func AuditWallPaper(c *gin.Context, reqVo bingVo.WallPaperAuditReqVo) (bool, error) {
-	db := c.Value("DB").(*gorm.DB)
-	log := c.Value("Logger").(*zap.SugaredLogger)
-
-	var ins model.Bing
-	err := db.Find(&ins, reqVo.ID).Error
-	if err != nil {
-		return false, err
-	}
-	if ins.Status == "1" {
-		return false, myError.New("已经审核过了")
-	}
-	if reqVo.Status == ins.Status {
-		return false, myError.New("不能重复审核")
-	}
-	var bing model.Bing
-	_ = copier.Copy(&bing, &reqVo)
-	// 使用事务
-	err = db.Transaction(func(tx *gorm.DB) error {
-		if err = tx.Updates(&bing).Error; err != nil {
-			return err
-		}
-		// 通过
-		if reqVo.Status == "1" {
-			// 审核通过 生成缩略图
-			err = service.ToWebp(c, ins.FileId)
-			if err != nil {
-				log.Error(err)
-				return myError.New("生成缩略图失败")
-			}
-		}
-		return nil
-	})
-	if err != nil {
 		return false, err
 	}
 	return true, nil

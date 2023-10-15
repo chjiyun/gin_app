@@ -152,7 +152,7 @@ func ValidateWallPaper(c *gin.Context, f *multipart.FileHeader) (string, error) 
 		return "", err
 	}
 	// 审核前禁止转webp
-	c.Set("noThumb", "1")
+	c.Set("genThumb", false)
 	fileId, err := service.Upload(c, f)
 	if err != nil {
 		return "", err

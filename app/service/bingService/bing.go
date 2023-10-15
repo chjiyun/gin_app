@@ -126,6 +126,7 @@ func GetImg(c *gin.Context) {
 	if _, err = io.Copy(out, imgReader); err != nil {
 		return
 	}
+	c.Set("genThumb", false)
 	fileId, err := service.Save(c, out)
 	if err != nil {
 		log.Error(err)

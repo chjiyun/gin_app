@@ -90,7 +90,7 @@ func Upload(c *gin.Context, f *multipart.FileHeader) (string, error) {
 	}
 
 	// 默认不传此参数
-	if _, ok := c.Value("noThumb").(bool); ok {
+	if genThumb, ok := c.Value("genThumb").(bool); !ok || !genThumb {
 		return file.ID, nil
 	}
 	// 关键：重置offset
@@ -169,6 +169,9 @@ func Save(c *gin.Context, f *os.File) (string, error) {
 	file.ID = id + ext
 	if err = db.Create(&file).Error; err != nil {
 		return "", myError.NewET(common.UnknownError)
+	}
+	if genThumb, ok := c.Value("genThumb").(bool); !ok || !genThumb {
+		return file.ID, nil
 	}
 	// 关键：重置offset
 	_, _ = f.Seek(0, 0)

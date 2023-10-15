@@ -5,8 +5,9 @@ import (
 )
 
 // 接收post form参数
-type WallPaperCreateReqVo struct {
-	FileId    string     `json:"fileId" binding:"required"`
+type WallPaperUpdateReqVo struct {
+	ID        string     `json:"id" binding:"required"`
+	FileId    string     `json:"fileId"`
 	Desc      string     `form:"desc" json:"desc"`
 	ReleaseAt *time.Time `form:"releaseAt" json:"releaseAt"`
 }

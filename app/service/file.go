@@ -214,6 +214,21 @@ func DownloadThumb(c *gin.Context) error {
 	return nil
 }
 
+func GetFile(c *gin.Context, id string) (model.File, error) {
+	db := c.Value("DB").(*gorm.DB)
+	var file model.File
+
+	err := db.Where("id = ?", id).Take(&file).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return file, myError.NewET(common.FileNotFound)
+		}
+		return file, err
+	}
+	file.Path = filepath.Join(config.Cfg.Basedir, file.Path)
+	return file, nil
+}
+
 // DownloadFromUrl 下载 url返回的数据，可下载第三方媒体文件
 func DownloadFromUrl(c *gin.Context) {
 	r := result.New()

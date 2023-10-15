@@ -1,17 +1,21 @@
 package bingService
 
 import (
+	"errors"
 	"gin_app/app/common"
 	"gin_app/app/common/myError"
 	"gin_app/app/controller/bingController/bingVo"
 	"gin_app/app/model"
 	"gin_app/app/service"
 	"gin_app/app/util"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/yitter/idgenerator-go/idgen"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"mime/multipart"
+	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -30,7 +34,7 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 	tx := db.Where("status = ?", reqVo.Status)
 	tx.Model(&model.Bing{}).Count(&count)
 	tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
-		Order("created_at desc").Find(&bing)
+		Order("release_at desc").Order("created_at desc").Find(&bing)
 	fileIds := make([]string, 0, len(bing))
 	for _, item := range bing {
 		fileIds = append(fileIds, item.FileId)
@@ -62,46 +66,161 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 
 // AddWallPaper 手动上传壁纸 审核通过后方可进入file
 func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, error) {
-	log := c.Value("Logger").(*zap.SugaredLogger)
 	// 校验图片格式和质量  大小 分辨率
-	f := reqVo.File
+	file, err := service.GetFile(c, reqVo.FileId)
+	if err != nil {
+		return false, err
+	}
+	f, err := os.Open(file.Path)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+	if err := validateLocalImage(f); err != nil {
+		return false, err
+	}
+
+	db := c.Value("DB").(*gorm.DB)
+	var bing model.Bing
+	_ = copier.Copy(&bing, &reqVo)
+	bing.Status = "0"
+	bing.IsBing = false
+	bing.ID = idgen.NextId()
+	if err := db.Create(&bing).Error; err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// 校验用户上传的壁纸
+func validateWallPaper(f *multipart.FileHeader) error {
 	ext := filepath.Ext(f.Filename)
 	imgSuffix := regexp.MustCompile(`jpg|jpeg|png$`)
 	if !imgSuffix.MatchString(ext) {
-		return false, myError.NewET(common.InValidFile)
+		return myError.NewET(common.InValidFile)
 	}
 	contentTypes := f.Header["Content-Type"]
 	isImage := slices.ContainsFunc(contentTypes, func(s string) bool {
 		return strings.Contains(s, "image")
 	})
 	if !isImage {
-		return false, myError.NewET(common.InValidFile)
+		return myError.NewET(common.InValidFile)
+	}
+	if f.Size > 1024*1024*10 {
+		return myError.New("图片大小不能超过10M")
 	}
 
 	mFile, _ := f.Open()
 	defer mFile.Close()
 	width, height, err := service.GetImageXY(mFile)
 	if err != nil {
-		return false, myError.New("文件解码失败")
+		return myError.New("文件解码失败")
 	}
 	if width < 256 || height < 256 {
-		return false, myError.New("图片尺寸过小，请上传高分辨率的图片")
+		return myError.New("图片尺寸过小，请上传高分辨率的图片")
 	}
+	return nil
+}
 
-	// 保存文件 禁止转缩略图  节约资源
-	c.Set("noThumb", true)
+func ValidateWallPaper(c *gin.Context, f *multipart.FileHeader) (string, error) {
+	if err := validateWallPaper(f); err != nil {
+		return "", err
+	}
+	// 审核前禁止转webp
+	c.Set("noThumb", "1")
 	fileId, err := service.Upload(c, f)
 	if err != nil {
-		log.Error(err)
-		return false, myError.NewET(common.UnknownError)
+		return "", err
 	}
+	return fileId, nil
+}
+
+// 识别已上传的图片文件
+func validateLocalImage(f *os.File) error {
+	fileInfo, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	ext := filepath.Ext(fileInfo.Name())
+	imgSuffix := regexp.MustCompile(`jpg|jpeg|png$`)
+	if !imgSuffix.MatchString(ext) {
+		return myError.NewET(common.InValidFile)
+	}
+	mime, err := mimetype.DetectReader(f)
+	if err != nil {
+		return myError.New("无效文件：mime识别失败")
+	}
+	mType := mime.String()
+	index := strings.Index(mType, "/")
+	if index < 0 || !strings.Contains(mType[:index], "image") {
+		return myError.NewET(common.InValidFile)
+	}
+	if fileInfo.Size() > 1024*1024*10 {
+		return myError.New("图片大小不能超过10M")
+	}
+
+	width, height, err := service.GetImageXY(f)
+	if err != nil {
+		return myError.New("文件解码失败")
+	}
+	if width < 256 || height < 256 {
+		return myError.New("图片尺寸过小，请上传高分辨率的图片")
+	}
+	return nil
+}
+
+func UpdateWallPaper(c *gin.Context, reqVo bingVo.WallPaperUpdateReqVo) (bool, error) {
 	db := c.Value("DB").(*gorm.DB)
+	var ins model.Bing
+
+	if err := db.Take(&ins, "id = ?", reqVo.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, myError.New("数据不存在")
+		}
+		return false, err
+	}
+	if ins.IsBing {
+		return false, myError.NewET(common.IllegalVisit)
+	}
+	// 校验图片格式和质量  大小 分辨率
+	if reqVo.FileId != "" && reqVo.FileId != ins.FileId {
+		var file model.File
+		file, err := service.GetFile(c, reqVo.FileId)
+		if err != nil {
+			return false, err
+		}
+		f, err := os.Open(file.Path)
+		if err != nil {
+			return false, err
+		}
+		defer f.Close()
+		if err = validateLocalImage(f); err != nil {
+			return false, err
+		}
+	}
 	var bing model.Bing
 	_ = copier.Copy(&bing, &reqVo)
-	bing.FileId = fileId
 	bing.Status = "0"
-	bing.ID = idgen.NextId()
-	if err := db.Create(&bing).Error; err != nil {
+	if err := db.Updates(&bing).Error; err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func DeleteWallPaper(c *gin.Context, id string) (bool, error) {
+	db := c.Value("DB").(*gorm.DB)
+	var ins model.Bing
+
+	if err := db.Take(&ins, "id = ?", id).Error; err != nil {
+		return false, err
+	}
+	if ins.IsBing {
+		return false, myError.NewET(common.IllegalVisit)
+	}
+	if ins.Status != "0" {
+		return false, myError.New("已审核过的图片禁止删除")
+	}
+	if err := db.Delete(&ins).Error; err != nil {
 		return false, err
 	}
 	return true, nil

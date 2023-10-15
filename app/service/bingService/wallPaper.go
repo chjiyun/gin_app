@@ -96,12 +96,7 @@ func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, erro
 	if err != nil {
 		return false, err
 	}
-	f, err := os.Open(file.Path)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-	if err := validateLocalImage(f); err != nil {
+	if err := validateLocalImage(file.Path); err != nil {
 		return false, err
 	}
 
@@ -161,7 +156,12 @@ func ValidateWallPaper(c *gin.Context, f *multipart.FileHeader) (string, error) 
 }
 
 // 识别已上传的图片文件
-func validateLocalImage(f *os.File) error {
+func validateLocalImage(sourcePath string) error {
+	f, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 	fileInfo, err := f.Stat()
 	if err != nil {
 		return err
@@ -183,7 +183,9 @@ func validateLocalImage(f *os.File) error {
 	if fileInfo.Size() > 1024*1024*10 {
 		return myError.New("图片大小不能超过10M")
 	}
-
+	if _, err = f.Seek(0, 0); err != nil {
+		return err
+	}
 	width, height, err := service.GetImageXY(f)
 	if err != nil {
 		return myError.New("文件解码失败")
@@ -214,12 +216,7 @@ func UpdateWallPaper(c *gin.Context, reqVo bingVo.WallPaperUpdateReqVo) (bool, e
 		if err != nil {
 			return false, err
 		}
-		f, err := os.Open(file.Path)
-		if err != nil {
-			return false, err
-		}
-		defer f.Close()
-		if err = validateLocalImage(f); err != nil {
+		if err = validateLocalImage(file.Path); err != nil {
 			return false, err
 		}
 	}

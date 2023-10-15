@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, error) {
+func GetWallPaperPage(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var bing []model.Bing
@@ -60,10 +60,33 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 		respVo[i].Height = thumb.Height
 		respVo[i].Ext = util.GetFileExt(respVo[i].FileId)
 		respVo[i].ThumbId = util.WriteString(util.ToString(thumb.ID), ".", thumb.Ext)
+		respVo[i].FileId = ""
 	}
 	pageRes.Count = count
 	pageRes.Rows = respVo
 	return pageRes, nil
+}
+
+func GetWallPaper(c *gin.Context, id string) (bingVo.WallPaperRespVo, error) {
+	db := c.Value("DB").(*gorm.DB)
+	var bing model.Bing
+	var thumb model.Thumb
+	var respVo bingVo.WallPaperRespVo
+
+	if err := db.Take(&bing, "id = ?", id).Error; err != nil {
+		return respVo, err
+	}
+	_ = copier.Copy(&respVo, &bing)
+	err := db.Where("file_id = ? and ext = ?", bing.FileId, "webp").First(&thumb).Error
+	if err != nil {
+		return respVo, err
+	}
+	respVo.Name = thumb.Name
+	respVo.Width = thumb.Width
+	respVo.Height = thumb.Height
+	respVo.Ext = util.GetFileExt(respVo.FileId)
+	respVo.ThumbId = util.WriteString(util.ToString(thumb.ID), ".", thumb.Ext)
+	return respVo, nil
 }
 
 // AddWallPaper 手动上传壁纸 审核通过后方可进入file

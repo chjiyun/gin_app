@@ -8,7 +8,7 @@ import (
 func (r Router) Admin(g *gin.RouterGroup) {
 	rg := g.Group("/admin")
 	{
-		rg.GET("/wallpaper", adminController.GetWallPaper)
+		rg.GET("/wallpaper", adminController.GetWallPaperPage)
 		rg.POST("/wallpaper/audit", adminController.AuditWallPaper)
 	}
 }

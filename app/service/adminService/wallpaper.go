@@ -14,7 +14,7 @@ import (
 	"slices"
 )
 
-func GetWallpaper(c *gin.Context, reqVo adminVo.WallPaperReqVo) (common.PageRes, error) {
+func GetWallpaperPage(c *gin.Context, reqVo adminVo.WallPaperReqVo) (common.PageRes, error) {
 	db := c.Value("DB").(*gorm.DB)
 
 	var bing []model.Bing

@@ -8,14 +8,14 @@ import (
 	"net/http"
 )
 
-func GetWallPaper(c *gin.Context) {
+func GetWallPaperPage(c *gin.Context) {
 	r := result.New()
 	var reqVo adminVo.WallPaperReqVo
 	if err := c.ShouldBindQuery(&reqVo); err != nil {
 		c.JSON(http.StatusOK, r.FailErr(err))
 		return
 	}
-	res, err := adminService.GetWallpaper(c, reqVo)
+	res, err := adminService.GetWallpaperPage(c, reqVo)
 	if err != nil {
 		c.JSON(http.StatusOK, r.FailErr(err))
 		return

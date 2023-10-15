@@ -8,7 +8,7 @@ import (
 // WallPaperRespVo 壁纸相应Vo
 type WallPaperRespVo struct {
 	common.BaseModel
-	FileId    string    `gorm:"not null;comment:外键" json:"-"`
+	FileId    string    `gorm:"not null;comment:外键" json:"file_id"`
 	Desc      string    `gorm:"size:500;comment:备注描述" json:"desc"`
 	ReleaseAt time.Time `gorm:"type:date;comment:发布日期" json:"releaseAt"`
 	Width     uint      `gorm:"comment:宽度" json:"width"`

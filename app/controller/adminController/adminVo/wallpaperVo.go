@@ -27,9 +27,10 @@ type WallPaperRespVo struct {
 	ThumbId   string    `json:"thumb_id"`
 }
 
+// WallPaperAuditReqVo 图片审核列表搜索条件
 type WallPaperAuditReqVo struct {
 	ID        uint64     `json:"id" binding:"required"`
-	Status    string     `json:"status" binding:"oneof=1 2"`
+	Status    string     `json:"status" binding:"required,oneof=1 2"`
 	Remarks   string     `json:"remarks"`
 	ReleaseAt *time.Time `json:"releaseAt"`
 }

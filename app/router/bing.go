@@ -12,11 +12,12 @@ func (r Router) Bing(g *gin.RouterGroup) {
 	{
 		rg.GET("/getImg", bingService.GetImg)
 		rg.GET("/getAllBing", bingController.GetAllBing)
-		rg.GET("/wallpaper", bingController.GetWallPaper)
-		rg.GET("/zip", bingService.GetBingZip)
+		rg.GET("/wallpaper", bingController.GetWallPaperPage)
+		rg.GET("/wallpaper/:id", bingController.GetWallPaper)
 		rg.POST("/wallpaper", bingController.CreateWallPaper)
 		rg.PUT("/wallpaper", bingController.UpdateWallPaper)
 		rg.DELETE("/wallpaper/:id", bingController.DeleteWallPaper)
 		rg.POST("/wallpaper/validate", bingController.ValidateWallPaper)
+		rg.GET("/zip", bingService.GetBingZip)
 	}
 }

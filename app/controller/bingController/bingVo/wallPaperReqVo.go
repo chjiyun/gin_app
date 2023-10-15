@@ -2,10 +2,12 @@ package bingVo
 
 import (
 	"gin_app/app/common"
+	"time"
 )
 
 type WallPaperReqVo struct {
 	common.PageReq
-	Status  string `form:"status" json:"status"`
-	Keyword string `form:"keyword" json:"keyword"`
+	Keyword        string     `form:"keyword" json:"keyword"`
+	ReleaseAtStart *time.Time `form:"releaseAtStart" json:"releaseAtStart"`
+	ReleaseAtEnd   *time.Time `form:"releaseAtEnd" json:"releaseAtEnd"`
 }

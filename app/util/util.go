@@ -383,3 +383,7 @@ func GetFileExt(path string) string {
 	}
 	return ""
 }
+
+func SqlLike(s string) string {
+	return WriteString("%", s, "%")
+}

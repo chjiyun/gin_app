@@ -31,7 +31,10 @@ func GetWallPaper(c *gin.Context, reqVo bingVo.WallPaperReqVo) (common.PageRes, 
 	var respVo []bingVo.WallPaperRespVo
 	var pageRes common.PageRes
 
-	tx := db.Where("status = ?", reqVo.Status)
+	tx := db.Where("status = ?", "1")
+	if reqVo.Keyword != "" {
+		tx.Where("desc like ?", util.SqlLike(reqVo.Keyword))
+	}
 	tx.Model(&model.Bing{}).Count(&count)
 	tx.Limit(reqVo.PageSize).Offset((reqVo.Page - 1) * reqVo.PageSize).
 		Order("release_at desc").Order("created_at desc").Find(&bing)

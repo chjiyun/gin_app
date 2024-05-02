@@ -13,3 +13,4 @@ hashkey.txt
 .vscode/
 .github/
 .idea
+examples/**/*.exe

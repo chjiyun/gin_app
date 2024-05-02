@@ -91,8 +91,18 @@ func GetWallPaper(c *gin.Context, id string) (bingVo.WallPaperRespVo, error) {
 
 // AddWallPaper 手动上传壁纸 审核通过后方可进入file
 func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, error) {
+	db := c.Value("DB").(*gorm.DB)
+	var isExist int
+	err := db.Select("1").Where("file_id = ? and status = ?", reqVo.FileId, "0").Scan(&isExist).Error
+	if err != nil {
+		return false, err
+	}
+	if isExist == 1 {
+		return false, myError.New("存在待审核的图片")
+	}
 	// 校验图片格式和质量  大小 分辨率
 	file, err := service.GetFile(c, reqVo.FileId)
+	// 文件待审核去重
 	if err != nil {
 		return false, err
 	}
@@ -100,7 +110,6 @@ func AddWallPaper(c *gin.Context, reqVo bingVo.WallPaperCreateReqVo) (bool, erro
 		return false, err
 	}
 
-	db := c.Value("DB").(*gorm.DB)
 	var bing model.Bing
 	_ = copier.Copy(&bing, &reqVo)
 	bing.Status = "0"

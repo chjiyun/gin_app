@@ -4,7 +4,7 @@
   // and so we should scroll the next message into view when received.
   let expectingMessage = false
   function dial() {
-    const protocol = location.protocol === 'https' ? 'wss' : 'ws';
+    const protocol = location.protocol.includes('https') ? 'wss' : 'ws';
     const conn = new WebSocket(`${protocol}://${location.host}/subscribe`)
 
     conn.addEventListener('close', ev => {

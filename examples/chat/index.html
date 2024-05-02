@@ -1,21 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat</title>
-  <link rel="stylesheet" href="./index.css">
-  <script src="https://cdn.bootcdn.net/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
-</head>
-<body>
-  <div id="content">
-    
-  </div>
-  <form>
-    <input class="input" type="text">
-    <button class="btn">输入</button>
-  </form>
-  <script src="./index.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chat Example</title>
+    <meta name="viewport" content="width=device-width" />
+
+    <link href="https://unpkg.com/sanitize.css" rel="stylesheet" />
+    <link href="https://unpkg.com/sanitize.css/typography.css" rel="stylesheet" />
+    <link href="https://unpkg.com/sanitize.css/forms.css" rel="stylesheet" />
+    <link href="./index.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root">
+      <div id="message-log"></div>
+      <div id="publish-form-container">
+        <form id="publish-form">
+          <input name="message" id="message-input" type="text" />
+          <input value="Submit" type="submit" />
+        </form>
+      </div>
+    </div>
+    <script type="text/javascript" src="./index.js"></script>
+  </body>
 </html>

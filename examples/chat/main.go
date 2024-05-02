@@ -13,14 +13,15 @@ import (
 func main() {
 	log.SetFlags(0)
 
-	listener, err := net.Listen("tcp", "localhost:8008")
+	listener, err := net.Listen("tcp", "localhost:8888")
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("listening on http://%v", listener.Addr())
+	log.Printf("listening on ws://%v", listener.Addr())
 
+	cs := newChatServer()
 	s := &http.Server{
-		Handler:      chatServer{},
+		Handler:      cs,
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 10,
 	}
@@ -41,5 +42,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	s.Shutdown(ctx)
+	err = s.Shutdown(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

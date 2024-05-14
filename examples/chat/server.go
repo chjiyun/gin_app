@@ -48,7 +48,7 @@ func newChatServer() *chatServer {
 		subscribers:             make(map[*subscriber]struct{}),
 		publishLimiter:          rate.NewLimiter(rate.Every(time.Millisecond*100), 8),
 	}
-	// cs.serveMux.Handle("/", http.FileServer(http.Dir(".")))
+	cs.serveMux.Handle("/", http.FileServer(http.Dir(".")))
 	cs.serveMux.HandleFunc("/subscribe", cs.subscribeHandler)
 	cs.serveMux.HandleFunc("/publish", cs.publishHandler)
 
@@ -182,7 +182,7 @@ func (cs *chatServer) publish(msg []byte) {
 func (cs *chatServer) addSubscriber(s *subscriber) {
 	cs.subscribersMu.Lock()
 	cs.subscribers[s] = struct{}{}
-	cs.publishJsonMsg(s, msgH{"members": len(cs.subscribers)})
+	cs.publishJsonMsg(msgH{"members": len(cs.subscribers)})
 	cs.subscribersMu.Unlock()
 }
 
@@ -190,7 +190,7 @@ func (cs *chatServer) addSubscriber(s *subscriber) {
 func (cs *chatServer) deleteSubscriber(s *subscriber) {
 	cs.subscribersMu.Lock()
 	delete(cs.subscribers, s)
-	cs.publishJsonMsg(s, msgH{"members": len(cs.subscribers)})
+	cs.publishJsonMsg(msgH{"members": len(cs.subscribers)})
 	cs.subscribersMu.Unlock()
 }
 
@@ -202,7 +202,7 @@ func writeTimeout(ctx context.Context, timeout time.Duration, c *websocket.Conn,
 }
 
 // publishJsonMsg 服务端发送消息  不加锁
-func (cs *chatServer) publishJsonMsg(s *subscriber, msg msgH) {
+func (cs *chatServer) publishJsonMsg(msg msgH) {
 	msgByte, _ := sonic.Marshal(msg)
 
 	// 如果case阻塞 将走default

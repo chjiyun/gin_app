@@ -6,20 +6,28 @@
   function dial() {
     const protocol = location.protocol.includes('https') ? 'wss' : 'ws';
     const conn = new WebSocket(`${protocol}://${location.host}/subscribe`)
+    const heartBeat = heartBeatCheck()
 
     conn.addEventListener('close', ev => {
-      appendLog(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`, true)
+      heartBeat.reset();
+      appendLog('Connection closed', true)
+      console.error(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`)
       if (ev.code !== 1001) {
-        appendLog('Reconnecting in 1s', true)
+        appendLog('try to reconnect...', true)
         setTimeout(dial, 1000)
       }
     })
     conn.addEventListener('open', ev => {
       console.info('websocket connected')
+      // heartBeat.start();
+      setTimeout(() => {
+        conn.send('ping')
+      }, 3000)
     })
 
     // This is where we handle messages received.
     conn.addEventListener('message', ev => {
+      // heartBeat.start();
       if (typeof ev.data !== 'string') {
         console.error('unexpected message type', typeof ev.data)
         return
@@ -40,6 +48,38 @@
         }
       }
     })
+    conn.addEventListener('error', ev => {
+      heartBeat.reset();
+    })
+    
+    function heartBeatCheck() {
+      return {
+        timeout: 10 * 1000, // 每10s向服务端发送一次消息
+        serverTimeout: 30 * 1000, // 30s收不到服务端消息算超时
+        timer: null,
+        serverTimer: null,
+        reset() { // 心跳检测重置
+          clearTimeout(this.timer);
+          clearTimeout(this.serverTimer);
+          this.timer = null;
+          this.serverTimer = null;
+          return this;
+        },
+        start() { // 心跳检测启动
+          this.reset();
+          this.timer = setTimeout(() => { 
+            conn.send('ping'); // 定时向服务端发送消息
+            if (!this.serverTimer) {
+              this.serverTimer = setTimeout(() => {
+                // 关闭连接触发重连
+                console.log(new Date().toLocaleString(), "not received pong, close the websocket");
+                conn.close();
+              }, this.serverTimeout);
+            }
+          }, this.timeout);
+        },
+      }
+    }
   }
   dial()
 

@@ -4,13 +4,13 @@ go 1.20
 
 require (
 	github.com/bytedance/sonic v1.11.3
-	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f // indirect
+	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f
 	github.com/elliotchance/pie/v2 v2.5.2
 	github.com/gabriel-vasile/mimetype v1.4.3
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.19.0
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/imroc/req/v3 v3.41.4
 	github.com/jinzhu/copier v0.3.2
 	github.com/matoous/go-nanoid/v2 v2.0.0

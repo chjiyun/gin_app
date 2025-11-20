@@ -1,10 +1,10 @@
 module gin_app
 
-go 1.20
+go 1.24.0
 
 require (
 	github.com/bytedance/sonic v1.11.3
-	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f // indirect
+	github.com/discord/lilliput v0.0.0-20210720001558-e1547514bd5f
 	github.com/elliotchance/pie/v2 v2.5.2
 	github.com/gabriel-vasile/mimetype v1.4.3
 	github.com/gin-gonic/gin v1.9.1
@@ -18,7 +18,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/yitter/idgenerator-go v1.2.1
 	go.uber.org/zap v1.25.0
-	golang.org/x/crypto v0.22.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/time v0.2.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -70,11 +70,11 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
 	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb // indirect
-	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.12.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
